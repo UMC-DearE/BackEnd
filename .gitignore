@@ -38,3 +38,6 @@ out/
 
 ### .env ###
 .env
+
+# Spring Boot config
+src/main/resources/application.yaml
