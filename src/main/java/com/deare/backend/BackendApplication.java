@@ -7,7 +7,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class BackendApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(BackendApplication.class, args);
+        // ▼▼▼ 이 줄을 추가해서 실행 창(Console) 로그를 확인해 주세요 ▼▼▼
+        System.out.println(">>> CHECK DB_URL: " + System.getenv("DB_URL"));
+
+        SpringApplication.run(BackendApplication.class, args);
 	}
 
 }
