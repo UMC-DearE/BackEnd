@@ -3,9 +3,12 @@ spring:
     name: api
 
   datasource:
-    url: jdbc:mysql://localhost:3306/DB명?serverTimezone=Asia/Seoul
-    username: DB계정
-    password: DB비밀번호
+    url: ${DB_URL}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+#    url: jdbc:mysql://localhost:3306/deare_db?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+#    username: root
+#    password: ownue
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
