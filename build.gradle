@@ -30,14 +30,34 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
+
+    // QueryDSL (Spring Boot 3.x = jakarta)
+    implementation "com.querydsl:querydsl-jpa:5.1.0:jakarta"
+    annotationProcessor "com.querydsl:querydsl-apt:5.1.0:jakarta"
+    // (권장) Q 클래스 생성 시 jakarta 어노테이션 인식 보강
+    annotationProcessor "jakarta.annotation:jakarta.annotation-api"
+    annotationProcessor "jakarta.persistence:jakarta.persistence-api"
+
 	compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+
 	runtimeOnly 'com.mysql:mysql-connector-j'
-	annotationProcessor 'org.projectlombok:lombok'
+
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.security:spring-security-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
     implementation 'me.paulschwarz:spring-dotenv:4.0.0'
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.14'
+}
+
+def generated = "build/generated/sources/annotationProcessor/java/main"
+sourceSets {
+    main {
+        java {
+            srcDirs += [generated]
+        }
+    }
 }
 
 tasks.named('test') {
