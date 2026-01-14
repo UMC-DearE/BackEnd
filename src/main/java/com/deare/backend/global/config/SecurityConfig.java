@@ -16,7 +16,7 @@ public class SecurityConfig {
         return http
                 .csrf(csrf -> csrf.disable()) // 테스트/REST면 보통 꺼둠
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/test/**").permitAll() // 테스트 API 열기
+                        .requestMatchers("/test/**","/swagger-ui/**", "/v3/api-docs/**").permitAll() // 테스트 API 열기
                         .anyRequest().authenticated()
                 )
                 .httpBasic(Customizer.withDefaults()) // 기본 인증
