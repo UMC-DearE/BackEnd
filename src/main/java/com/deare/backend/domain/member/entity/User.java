@@ -8,8 +8,8 @@ import lombok.*;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
-@Table(name = "member")
-public class Member {
+@Table(name = "users")
+public class User {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -20,7 +20,7 @@ public class Member {
     @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false)
     @Builder.Default
-    private Role role = Role.ROLE_MEMBER;
+    private Role role = Role.ROLE_USER;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
