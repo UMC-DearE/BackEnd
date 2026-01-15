@@ -1,4 +1,4 @@
-package com.deare.backend.domain.member.entity;
+package com.deare.backend.domain.user.entity;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

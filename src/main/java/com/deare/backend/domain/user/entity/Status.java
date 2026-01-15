@@ -1,4 +1,4 @@
-package com.deare.backend.domain.member.entity;
+package com.deare.backend.domain.user.entity;
 
 public enum Status {
 
