@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <!-- 공통 -->
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+    <include resource="org/springframework/boot/logging/logback/console-appender.xml"/>
+
+    <!-- DEV -->
+    <springProfile name="dev">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+        </root>
+
+        <logger name="com.deare.backend" level="DEBUG"/>
+        <logger name="p6spy" level="INFO"/>
+        <logger name="com.p6spy" level="INFO"/>
+    </springProfile>
+
+    <!-- PROD -->
+    <springProfile name="prod">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+        </root>
+
+        <logger name="com.deare.backend" level="INFO"/>
+        <logger name="p6spy" level="OFF"/>
+        <logger name="com.p6spy" level="OFF"/>
+    </springProfile>
+
+    <!-- default -->
+    <springProfile name="default">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+        </root>
+    </springProfile>
+
+</configuration>
