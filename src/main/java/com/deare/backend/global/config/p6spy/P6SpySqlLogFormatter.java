@@ -11,11 +11,11 @@ import java.util.function.Predicate;
 
 import static java.util.Arrays.stream;
 
-public class P6spyPrettySqlFormatter implements MessageFormattingStrategy {
+public class P6SpySqlLogFormatter implements MessageFormattingStrategy {
 
     private static final String NEW_LINE = System.lineSeparator();
-    private static final String P6SPY_FORMATTER = "P6spyPrettySqlFormatter";
-    private static final String PACKAGE = "io.p6spy";
+    private static final String P6SPY_FORMATTER = "P6SpySqlLogFormatter";
+    private static final String APP_PACKAGE = "com.deare.backend";
     private static final String CREATE = "create";
     private static final String ALTER = "alter";
     private static final String COMMENT = "comment";
@@ -23,31 +23,27 @@ public class P6spyPrettySqlFormatter implements MessageFormattingStrategy {
     @Override
     public String formatMessage(int connectionId, String now, long elapsed, String category, String prepared,
                                 String sql, String url) {
-        return sqlFormatToUpper(sql, category, getMessage(connectionId, elapsed, getStackBuilder()));
+        return formatSql(sql, category, getMessage(connectionId, elapsed, getStackBuilder()));
     }
 
-    private String sqlFormatToUpper(String sql, String category, String message) {
-        if (sql.trim().isEmpty()) {
+    private String formatSql(String sql, String category, String message) {
+        if (sql == null || sql.trim().isEmpty()) {
             return "";
         }
         return NEW_LINE
-                + sqlFormatToUpper(sql, category)
+                + formatSql(sql, category)
                 + message;
     }
 
-    private String sqlFormatToUpper(String sql, String category) {
+    private String formatSql(String sql, String category) {
         if (isStatementDDL(sql, category)) {
             return FormatStyle.DDL
                     .getFormatter()
-                    .format(sql)
-                    .toUpperCase(Locale.ROOT)
-                    .replace("+0900", "");
+                    .format(sql);
         }
         return FormatStyle.BASIC
                 .getFormatter()
-                .format(sql)
-                .toUpperCase(Locale.ROOT)
-                .replace("+0900", "");
+                .format(sql);
     }
 
     private boolean isStatementDDL(String sql, String category) {
@@ -80,7 +76,7 @@ public class P6spyPrettySqlFormatter implements MessageFormattingStrategy {
         Stack<String> callStack = new Stack<>();
         stream(new Throwable().getStackTrace())
                 .map(StackTraceElement::toString)
-                .filter(isExcludeWords())
+                .filter(shouldIncludeInCallStack())
                 .forEach(callStack::push);
 
         int order = 1;
@@ -91,7 +87,8 @@ public class P6spyPrettySqlFormatter implements MessageFormattingStrategy {
         return callStackBuilder;
     }
 
-    private Predicate<? super String> isExcludeWords() {
-        return charSequence -> charSequence.startsWith(PACKAGE) && !charSequence.contains(P6SPY_FORMATTER);
+    private Predicate<? super String> shouldIncludeInCallStack() {
+        return frame -> frame.startsWith(APP_PACKAGE) && !frame.contains(P6SPY_FORMATTER);
     }
+
 }
