@@ -4,7 +4,6 @@ import com.p6spy.engine.logging.Category;
 import com.p6spy.engine.spy.appender.MessageFormattingStrategy;
 import org.hibernate.engine.jdbc.internal.FormatStyle;
 
-import java.text.MessageFormat;
 import java.util.Locale;
 import java.util.Stack;
 import java.util.function.Predicate;
@@ -19,16 +18,19 @@ public class P6SpySqlLogFormatter implements MessageFormattingStrategy {
     private static final String CREATE = "create";
     private static final String ALTER = "alter";
     private static final String COMMENT = "comment";
+    private static final long STACKTRACE_THRESHOLD_MS = 200;
 
     @Override
     public String formatMessage(int connectionId, String now, long elapsed, String category, String prepared,
                                 String sql, String url) {
-        return formatSql(sql, category, getMessage(connectionId, elapsed, getStackBuilder()));
+        // 실행 시간이 STACKTRACE_THRESHOLD_MS ms 이상일 때만 콜스택 출력
+        StringBuilder callStack = (elapsed >= STACKTRACE_THRESHOLD_MS) ? getStackBuilder() : new StringBuilder("(skip stack)");
+        return formatSql(sql, category, getMessage(connectionId, elapsed, callStack));
     }
 
     private String formatSql(String sql, String category, String message) {
         if (sql == null || sql.trim().isEmpty()) {
-            return "";
+            return NEW_LINE + "[P6Spy] (empty sql)" + message;
         }
         return NEW_LINE
                 + formatSql(sql, category)
@@ -74,21 +76,40 @@ public class P6SpySqlLogFormatter implements MessageFormattingStrategy {
 
     private StringBuilder getStackBuilder() {
         Stack<String> callStack = new Stack<>();
-        stream(new Throwable().getStackTrace())
+        StackTraceElement[] traces = new Throwable().getStackTrace();
+
+        stream(traces)
                 .map(StackTraceElement::toString)
                 .filter(shouldIncludeInCallStack())
                 .forEach(callStack::push);
 
+        // fallback: app 프레임이 없으면 원본 상위 5줄
+        if (callStack.isEmpty()) {
+            StringBuilder fb = new StringBuilder("[P6Spy] (no app frames)");
+            int limit = Math.min(5, traces.length);
+            for (int i = 0; i < limit; i++) {
+                fb.append(NEW_LINE)
+                        .append("\t\t")
+                        .append(i + 1)
+                        .append(". ")
+                        .append(traces[i]);
+            }
+            return fb;
+        }
+
         int order = 1;
         StringBuilder callStackBuilder = new StringBuilder();
         while (!callStack.empty()) {
-            callStackBuilder.append(MessageFormat.format("{0}\t\t{1}. {2}", NEW_LINE, order++, callStack.pop()));
+            callStackBuilder.append(NEW_LINE)
+                    .append("\t\t")
+                    .append(order++)
+                    .append(". ")
+                    .append(callStack.pop());
         }
         return callStackBuilder;
     }
 
-    private Predicate<? super String> shouldIncludeInCallStack() {
+    private Predicate<String> shouldIncludeInCallStack() {
         return frame -> frame.startsWith(APP_PACKAGE) && !frame.contains(P6SPY_FORMATTER);
     }
-
 }
