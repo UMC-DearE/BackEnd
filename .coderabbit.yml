@@ -1,0 +1,27 @@
+version: "0.1"
+language: "ko-KR"
+
+reviews:
+  auto_review:
+    enabled: false
+    drafts: false
+  poem: false
+
+  ignore:
+    - "**/*.xml"
+    - "**/*.gradle"
+    - "**/test/**"
+    - "**/build/**"
+    - "**/out/**"
+
+  system_instructions: |
+    너는 Spring Boot 백엔드 개발자 관점에서 PR을 리뷰한다.
+
+    1) System.out.println / printStackTrace 사용이 보이면
+       로깅 프레임워크 사용을 권장한다.
+
+    2) Controller에서 DB 접근이나 비즈니스 로직이 직접 수행되는 경우
+       Service 레이어로 위임하는 것을 권장한다.
+
+    3) Java 코드에서 명백히 어색한 네이밍(camelCase 위반 등)이 있으면
+       가볍게 코멘트한다.
