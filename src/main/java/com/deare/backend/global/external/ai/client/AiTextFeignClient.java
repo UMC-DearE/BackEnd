@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 @FeignClient(
         name="aiTextClient",
-        url="http://${external.ai.base-url}",
+        url="${external.ai.base-url}",
         configuration = FeignConfig.class
 )
 public interface AiTextFeignClient {
