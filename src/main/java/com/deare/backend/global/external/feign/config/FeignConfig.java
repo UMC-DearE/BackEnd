@@ -1,6 +1,5 @@
 package com.deare.backend.global.external.feign.config;
 
-import feign.Logger;
 import feign.codec.ErrorDecoder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,8 +15,4 @@ public class FeignConfig {
         return new FeignErrorDecoder();
     }
 
-    @Bean
-    Logger.Level feignLoggerLevel() {
-        return Logger.Level.FULL;
-    }
 }
