@@ -1,6 +1,6 @@
 package com.deare.backend.api.test.service;
 
-import com.deare.backend.global.external.ai.adapter.AiTextClientAdapter;
+import com.deare.backend.global.external.ai.adapter.AiTextClient;
 import com.deare.backend.global.external.ai.dto.response.AiAnalyzeResponseDTO;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -11,15 +11,15 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 @Slf4j
 public class AiTestService {
-    private final AiTextClientAdapter aiTextClientAdapter;
+    private final AiTextClient aiTextClient;
 
     @PostConstruct
     public void init() {
-        log.info("🔥 aiTextClientAdapter = {}", aiTextClientAdapter);
+        log.info("🔥 aiTextClientAdapter = {}", aiTextClient);
     }
 
     public AiAnalyzeResponseDTO analyze(String text) {
         log.info("AI 분석 요청 시작");
-        return aiTextClientAdapter.analyze(text);
+        return aiTextClient.analyze(text);
     }
 }
