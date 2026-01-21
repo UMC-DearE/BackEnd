@@ -1,8 +1,7 @@
 package com.deare.backend.api.test.service;
 
-import com.deare.backend.global.external.ai.client.AiTextFeignClient;
-import com.deare.backend.global.external.ai.dto.request.AiAnalyzeRequest;
-import com.deare.backend.global.external.ai.dto.response.AiAnalyzeResponse;
+import com.deare.backend.global.external.ai.adapter.AiTextClientAdapter;
+import com.deare.backend.global.external.ai.dto.response.AiAnalyzeResponseDTO;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,18 +11,15 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 @Slf4j
 public class AiTestService {
-    private final AiTextFeignClient aiTextFeignClient;
+    private final AiTextClientAdapter aiTextClientAdapter;
 
     @PostConstruct
     public void init() {
-        log.info("🔥 aiTextFeignClient = {}", aiTextFeignClient);
+        log.info("🔥 aiTextClientAdapter = {}", aiTextClientAdapter);
     }
 
-    public AiAnalyzeResponse analyze(String text) {
-        log.info("Feign 호출 전");
-        AiAnalyzeRequest request=new AiAnalyzeRequest(text);
-        log.info("Feign 호출 후");
-
-        return aiTextFeignClient.analyze(request);
+    public AiAnalyzeResponseDTO analyze(String text) {
+        log.info("AI 분석 요청 시작");
+        return aiTextClientAdapter.analyze(text);
     }
 }
