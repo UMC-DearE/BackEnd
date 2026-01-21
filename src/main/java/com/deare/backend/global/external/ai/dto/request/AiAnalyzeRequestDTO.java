@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-public class AiAnalyzeRequest {
+public class AiAnalyzeRequestDTO {
     //text: 편지글
     private String text;
 }

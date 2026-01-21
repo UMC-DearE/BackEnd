@@ -1,7 +1,7 @@
 package com.deare.backend.global.external.ai.adapter;
 
-import com.deare.backend.global.external.ai.dto.response.AiAnalyzeResponse;
+import com.deare.backend.global.external.ai.dto.response.AiAnalyzeResponseDTO;
 
 public interface AiTextClient {
-    AiAnalyzeResponse analyze(String text);
+    AiAnalyzeResponseDTO analyze(String text);
 }

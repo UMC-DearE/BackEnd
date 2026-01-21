@@ -9,11 +9,11 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class AiAnalyzeResponse {
+public class AiAnalyzeResponseDTO {
     /**
      * summary: ai 한 줄 요약
      * emotion: 감정 태그
      */
     private String summary;
-    private List<String> emotion;
+    private List<String> emotion=List.of();
 }

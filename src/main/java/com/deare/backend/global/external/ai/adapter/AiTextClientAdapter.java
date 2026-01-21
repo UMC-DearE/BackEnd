@@ -1,8 +1,8 @@
 package com.deare.backend.global.external.ai.adapter;
 
 import com.deare.backend.global.external.ai.client.AiTextFeignClient;
-import com.deare.backend.global.external.ai.dto.request.AiAnalyzeRequest;
-import com.deare.backend.global.external.ai.dto.response.AiAnalyzeResponse;
+import com.deare.backend.global.external.ai.dto.request.AiAnalyzeRequestDTO;
+import com.deare.backend.global.external.ai.dto.response.AiAnalyzeResponseDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -13,8 +13,8 @@ public class AiTextClientAdapter implements AiTextClient {
     private final AiTextFeignClient feignClient;
 
     @Override
-    public AiAnalyzeResponse analyze(String text) {
-        AiAnalyzeRequest request = new AiAnalyzeRequest(text);
+    public AiAnalyzeResponseDTO analyze(String text) {
+        AiAnalyzeRequestDTO request = new AiAnalyzeRequestDTO(text);
         return feignClient.analyze(request);
     }
 }
