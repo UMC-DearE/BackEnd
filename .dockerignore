@@ -1,0 +1,33 @@
+# Build outputs / caches
+.gradle/
+build/
+out/
+
+# IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# Logs / OS
+*.log
+.DS_Store
+Thumbs.db
+
+# Git metadata (optional)
+.git/
+
+# Environment (DO NOT COPY INTO IMAGE)
+.env
+.env.*
+*.env
+
+# Docs (optional - 빌드에 필요 없으면 제외)
+README.md
+*.md
+
+# =========================
+# IMPORTANT: Do NOT ignore build inputs
+# - Dockerfile/.dockerignore/.github 는 컨텍스트에 있어도 무방
+# - gradle wrapper/gradlew/src/build.gradle/settings.gradle 은 반드시 포함되어야 함
+# =========================
