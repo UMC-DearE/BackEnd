@@ -1,6 +1,7 @@
 package com.deare.backend.domain.user.entity;
 
 import com.deare.backend.global.common.entity.BaseEntity;
+import com.deare.backend.domain.image.entity.Image;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -36,6 +37,7 @@ public class User extends BaseEntity {
     @Column(name = "intro", nullable = true, length = 50)
     private String intro;
 
-    // S3 Image 매핑 대기
-
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "image_id")
+    private Image image;
 }
