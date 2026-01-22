@@ -25,7 +25,9 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build with Gradle
-        run: ./gradlew clean build
+        run: ./gradlew clean test
+        env:
+          SPRING_PROFILES_ACTIVE: test
 
       - name: Upload test results (only on failure)
         if: failure()
