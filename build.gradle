@@ -31,6 +31,9 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 
+	implementation platform("software.amazon.awssdk:bom:2.25.59")
+	implementation "software.amazon.awssdk:s3"
+
     // QueryDSL (Spring Boot 3.x = jakarta)
     implementation "com.querydsl:querydsl-jpa:5.1.0:jakarta"
     annotationProcessor "com.querydsl:querydsl-apt:5.1.0:jakarta"
