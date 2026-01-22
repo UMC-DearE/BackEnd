@@ -1,0 +1,102 @@
+# ===================================
+# Docker Compose - Production (EC2 배포용)
+# - SpringBoot + MySQL + Redis (모두 컨테이너)
+# - 민감정보는 .env.production 에서만 주입 (gitignore)
+# - Nginx는 나중에 추가 예정
+# 실행: docker compose -f docker-compose.prod.yaml --env-file .env.production up -d
+# 종료: docker compose -f docker-compose.prod.yaml down
+
+version: "3.8"
+
+services:
+
+  # Nginx (나중에 추가 예정)
+  # nginx:
+  #   image: nginx:1.25-alpine
+  #   container_name: deare-nginx-prod
+  #   restart: unless-stopped
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #   volumes:
+  #     - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+  #   depends_on:
+  #     app:
+  #       condition: service_started
+  #   networks:
+  #     - deare-network
+
+  app:
+    image: ${DOCKER_USERNAME}/deare-backend:latest
+    container_name: deare-backend-prod
+    restart: unless-stopped
+    ports:
+      - "${SERVER_PORT:-8080}:${SERVER_PORT:-8080}"
+    env_file:
+      - .env.production
+    environment:
+      # 컨테이너 내부 통신: 서비스명(mysql/redis)로 접근
+      - DB_URL=jdbc:mysql://mysql:3306/${DB_NAME}?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - SPRING_PROFILES_ACTIVE=prod
+      - SERVER_PORT=${SERVER_PORT:-8080}
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - deare-network
+
+  mysql:
+    image: mysql:8.0
+    container_name: deare-mysql-prod
+    restart: unless-stopped
+    env_file:
+      - .env.production
+    environment:
+      # .env.production의 값을 mysql 공식 변수로 매핑
+      - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
+      - MYSQL_DATABASE=${DB_NAME}
+      - MYSQL_CHARACTER_SET_SERVER=utf8mb4
+      - MYSQL_COLLATION_SERVER=utf8mb4_unicode_ci
+      # 필요 시 앱 전용 계정 사용 권장(선택)
+      # - MYSQL_USER=${DB_USER}
+      # - MYSQL_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - mysql-data-prod:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -p$${MYSQL_ROOT_PASSWORD} || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+    networks:
+      - deare-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: deare-redis-prod
+    restart: unless-stopped
+    volumes:
+      - redis-data-prod:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 20
+      start_period: 5s
+    networks:
+      - deare-network
+
+volumes:
+  mysql-data-prod:
+  redis-data-prod:
+
+networks:
+  deare-network:
+    driver: bridge
