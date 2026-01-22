@@ -3,7 +3,11 @@ package com.deare.backend.global.external.feign.config;
 import feign.Response;
 import feign.codec.ErrorDecoder;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Profile;
+import org.springframework.stereotype.Component;
 
+@Profile("dev")
+@Component
 @Slf4j
 public class FeignErrorDecoder implements ErrorDecoder {
     private final ErrorDecoder defaultErrorDecoder = new Default();
@@ -14,7 +18,7 @@ public class FeignErrorDecoder implements ErrorDecoder {
         String url=response.request().url();
         String reason=response.reason();
 
-        String responseBody=extractResponseBody(response);
+        byte[] responseBody=extractResponseBody(response);
 
         if (status >= 500) {
             log.error(
@@ -24,7 +28,7 @@ public class FeignErrorDecoder implements ErrorDecoder {
                     url,
                     status,
                     reason,
-                    responseBody
+                    formatBody(responseBody)
             );
         } else {
             log.warn(
@@ -34,26 +38,41 @@ public class FeignErrorDecoder implements ErrorDecoder {
                     url,
                     status,
                     reason,
-                    responseBody
+                    formatBody(responseBody)
             );
         }
 
         //추후에 ExternalApiException으로 감쌀 예정
-        return defaultErrorDecoder.decode(methodKey, response);
+        Response newResponse=rebuildResponse(response, responseBody);
+        return defaultErrorDecoder.decode(methodKey, newResponse);
 
     }
 
-    private String extractResponseBody(Response response) {
+    private byte[] extractResponseBody(Response response) {
         if (response.body() == null) {
-            return "EMPTY";
+            return new byte[0];
         }
 
         try {
-            String body = new String(response.body().asInputStream().readAllBytes());
+            return response.body().asInputStream().readAllBytes();
 
-            return body.length() > 500 ? body.substring(0, 500) + "...(truncated)" : body;
         } catch (Exception e) {
-            return "FAILED_TO_READ_BODY";
+            return new byte[0];
         }
+    }
+
+    private String formatBody(byte[] bodyData){
+        if(bodyData.length==0){
+            return "EMPTY";
+        }
+
+        String body=new String(bodyData);
+        return body.length() > 500 ? body.substring(0, 500) + "...(truncated)" : body;
+    }
+
+    private Response rebuildResponse(Response response, byte[] bodyData){
+        return response.toBuilder()
+                .body(bodyData)
+                .build();
     }
 }
