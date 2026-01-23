@@ -1,30 +1,29 @@
-name: DearE CI - build and test
+name: CI - test on PR to develop
 
 on:
   pull_request:
-    branches:
-      - main
-      - develop
+    branches: [ "develop" ]
+    types: [ "opened", "synchronize", "reopened" ]
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Set up JDK 17 (Temurin) + Gradle cache
         uses: actions/setup-java@v4
         with:
-          java-version: "17"
           distribution: "temurin"
+          java-version: "17"
           cache: "gradle"
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Build with Gradle
+      - name: Run tests (test profile only)
         run: ./gradlew clean test
         env:
           SPRING_PROFILES_ACTIVE: test
@@ -34,4 +33,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: test-results
-          path: build/reports/tests/**
+          path: build/reports/tests/test
