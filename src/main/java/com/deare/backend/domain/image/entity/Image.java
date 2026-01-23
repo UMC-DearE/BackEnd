@@ -15,13 +15,13 @@ public class Image extends BaseEntity {
     @Column(name = "image_id")
     private Long id;
 
-    @Column(name = "image_key", nullable = false, length = 255)
+    @Column(name = "image_key", nullable = false, length = 512)
     private String imageKey;
 
-    @Column(name = "image_url", nullable = false, length = 255)
+    @Column(name = "image_url", nullable = false, length = 1000)
     private String imageUrl;
 
-    @Column(name = "original_file_name")
+    @Column(name = "original_file_name", nullable = false, length = 512)
     private String originalFileName;
 
     @Enumerated(EnumType.STRING)
