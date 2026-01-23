@@ -1,5 +1,6 @@
 package com.deare.backend.domain.folder.entity;
 
+import com.deare.backend.domain.image.entity.Image;
 import com.deare.backend.domain.user.entity.User;
 import com.deare.backend.global.common.entity.BaseEntity;
 import jakarta.persistence.*;
@@ -29,8 +30,9 @@ public class Folder extends BaseEntity {
      * 일단은 Long으로 설정해둠
      * 엔티티 합칠때 수정 필요
      */
-    @Column(name="image_id")
-    private Long imageId;
+    @OneToOne(fetch = FetchType.LAZY, optional = true)
+    @JoinColumn(name="image_id")
+    private Image image;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name="user_id", nullable = false)
@@ -44,7 +46,7 @@ public class Folder extends BaseEntity {
     ){
         this.name = name;
         this.folderOrder = order;
-        this.imageId = imageId;
+        this.image = image;
         this.user = user;
     }
 
@@ -56,7 +58,7 @@ public class Folder extends BaseEntity {
         this.folderOrder = order;
     }
 
-    public void changeImageId(Long imageId){
-        this.imageId = imageId;
+    public void changeImage(Image image){
+        this.image = image;
     }
 }

@@ -1,5 +1,6 @@
 package com.deare.backend.domain.letter.entity;
 
+import com.deare.backend.domain.image.entity.Image;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -22,14 +23,9 @@ public class LetterImage {
     @JoinColumn(name="letter_id", nullable = false)
     private Letter letter;
 
-    /**
-     * 현재 Image 엔티티 구성이 없어서 String으로만 넣어둠
-     * Image 구현 후 매핑 필요
-     */
-    //@ManyToOne(fetch = FetchType.LAZY, optional = false)
-    //@JoinColumn(name="image_id", nullable = false)
-    @Column(name="image_id",nullable=false)
-    private String image;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name="image_id", nullable = false)
+    private Image image;
 
     void setLetter(Letter letter){
         this.letter = letter;
