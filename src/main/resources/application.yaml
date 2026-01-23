@@ -1,0 +1,27 @@
+spring:
+
+  config:
+    import:
+      - optional:file:.env[.properties]
+      - optional:file:.env.${spring.profiles.active}[.properties]
+
+  application:
+    name: api
+
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+decorator:
+  datasource:
+    p6spy:
+      enable-logging: true
+      logging: slf4j
+      multiline: true

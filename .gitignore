@@ -42,4 +42,4 @@ out/
 .env.prod
 
 # Spring Boot config
-src/main/resources/application.yaml
+#src/main/resources/application.yaml
