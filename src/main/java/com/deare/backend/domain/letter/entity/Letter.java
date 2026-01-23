@@ -92,6 +92,11 @@ public class Letter extends BaseEntity {
         this.folder = folder;
     }
 
+    public void addLetterImage(LetterImage letterImage){
+        letterImages.add(letterImage);
+        letterImage.setLetter(this);
+    }
+
     public void updateReply(String reply){
         this.reply = reply;
     }

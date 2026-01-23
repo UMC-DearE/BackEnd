@@ -30,4 +30,8 @@ public class LetterImage {
     //@JoinColumn(name="image_id", nullable = false)
     @Column(name="image_id",nullable=false)
     private String image;
+
+    void setLetter(Letter letter){
+        this.letter = letter;
+    }
 }
