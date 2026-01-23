@@ -20,14 +20,15 @@ spring:
       hibernate:
         format_sql: true
 
+# P6Spy 설정 (test에서는 로그 비활성)
 decorator:
   datasource:
     p6spy:
       enable-logging: false
 
-external:
-  ai:
-    base-url: "localhost:9999"
+# FeignClient 테스트용 더미 설정
+external-ai:
+  base-url: "http://localhost:9999"
 
 server:
   port: 0
