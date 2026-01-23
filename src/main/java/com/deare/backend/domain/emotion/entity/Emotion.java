@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
-@Table(name="emotion")
+@Table(name="emotions")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Emotion {
     @Id
@@ -19,7 +19,7 @@ public class Emotion {
     private String name;
 
     @ManyToOne(fetch=FetchType.LAZY, optional = false)
-    @JoinColumn(name="categry_id", nullable = false)
+    @JoinColumn(name="category_id", nullable = false)
     private EmotionCategory emotionCategory;
 
     private Emotion(String name, EmotionCategory emotionCategory) {
