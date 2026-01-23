@@ -33,7 +33,7 @@ public class LetterEmotion {
     @JoinColumn(name="emotion_id", nullable = false)
     private Emotion emotion;
 
-    private LetterEmotion(Letter letter, Emotion emotion) {
+    public LetterEmotion(Letter letter, Emotion emotion) {
         this.letter = letter;
         this.emotion = emotion;
     }

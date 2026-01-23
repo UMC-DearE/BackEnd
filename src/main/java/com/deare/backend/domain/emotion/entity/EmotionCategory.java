@@ -24,7 +24,7 @@ public class EmotionCategory {
     @Column(name="font_color", nullable = false)
     private String fontColor;
 
-    private EmotionCategory(String type, String bgColor, String fontColor) {
+    public EmotionCategory(String type, String bgColor, String fontColor) {
         this.type = type;
         this.bgColor = bgColor;
         this.fontColor = fontColor;

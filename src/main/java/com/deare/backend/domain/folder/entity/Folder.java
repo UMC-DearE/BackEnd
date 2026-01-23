@@ -36,7 +36,7 @@ public class Folder extends BaseEntity {
     @JoinColumn(name="user_id", nullable = false)
     private User user;
 
-    private Folder(
+    public Folder(
             String name,
             int order,
             Long imageId,

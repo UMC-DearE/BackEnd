@@ -30,7 +30,7 @@ public class From extends BaseEntity {
     @JoinColumn(name="user_id", nullable = false)
     private User user;
 
-    private From(
+    public From(
             String name,
             String backgroundColor,
             String fontColor,

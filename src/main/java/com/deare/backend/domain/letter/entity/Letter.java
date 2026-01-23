@@ -72,7 +72,7 @@ public class Letter extends BaseEntity {
     private List<LetterImage> letterImages=new ArrayList<>();
 
 
-    private Letter(
+    public Letter(
             String content,
             LocalDateTime receivedAt,
             String aiSummary,
