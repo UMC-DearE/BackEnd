@@ -28,7 +28,7 @@ decorator:
 
 # FeignClient 테스트용 더미 설정
 external-ai:
-  base-url: "http://localhost:9999"
+  base-url: "localhost:9999"
 
 server:
   port: 0
