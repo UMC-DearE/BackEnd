@@ -15,13 +15,13 @@ public class EmotionCategory {
     @Column(name="category_id")
     private Long id;
 
-    @Column(name="type", nullable = false)
+    @Column(name="type", nullable = false , length=20)
     private String type;
 
-    @Column(name="bg_color", nullable = false)
+    @Column(name="bg_color", nullable = false, length = 16)
     private String bgColor;
 
-    @Column(name="font_color", nullable = false)
+    @Column(name="font_color", nullable = false, length = 16)
     private String fontColor;
 
     public EmotionCategory(String type, String bgColor, String fontColor) {
