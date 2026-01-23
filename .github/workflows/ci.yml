@@ -24,7 +24,7 @@ jobs:
         run: chmod +x gradlew
 
       - name: Run tests (test profile only)
-        run: ./gradlew clean test --stacktrace
+        run: ./gradlew clean test
 
         env:
           SPRING_PROFILES_ACTIVE: test
