@@ -1,5 +1,7 @@
 package com.deare.backend.domain.user.entity;
 
+import com.deare.backend.global.common.entity.BaseEntity;
+import com.deare.backend.domain.image.entity.Image;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -7,12 +9,14 @@ import lombok.*;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "users")
-public class User {
+public class User extends BaseEntity {
 
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "user_id")
     private Long id;
 
-    @Column(name = "nickname", nullable = false, length = 10)
+    @Column(name = "nickname", nullable = false, length = 20)
     private String nickname;
 
     @Enumerated(EnumType.STRING)
@@ -27,12 +31,13 @@ public class User {
     @Column(name = "provider", nullable = false)
     private Provider provider;
 
-    @Column(name = "provider_id", nullable = false)
+    @Column(name = "provider_id", nullable = false, length = 100)
     private String providerId;
 
-    @Column(name = "intro", nullable = true, length = 255)
+    @Column(name = "intro", nullable = true, length = 50)
     private String intro;
 
-    // S3 Image 매핑 대기
-
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "image_id")
+    private Image image;
 }
