@@ -31,3 +31,8 @@ aws:
     region: ${AWS_REGION}
     access-key: ${AWS_ACCESS_KEY_ID}
     secret-key: ${AWS_SECRET_ACCESS_KEY}
+
+# FeignClient - 더미 데이터임
+external:
+  ai:
+    base-url: "https://example.com"
