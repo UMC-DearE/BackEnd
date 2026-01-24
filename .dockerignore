@@ -1,0 +1,17 @@
+.gradle
+build/
+
+.idea
+*.iml
+out/
+
+.git
+.gitattributes
+
+.DS_Store
+Thumbs.db
+
+*.log
+
+.env
+.env.*

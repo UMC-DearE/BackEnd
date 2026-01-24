@@ -54,6 +54,9 @@ dependencies {
 
     // P6Spy
     implementation "com.github.gavlyukovskiy:p6spy-spring-boot-starter:1.9.2"
+
+    // CI - test H2
+    testImplementation 'com.h2database:h2'
 }
 
 def generated = "build/generated/sources/annotationProcessor/java/main"
@@ -77,4 +80,11 @@ dependencyManagement {
 
 tasks.named('test') {
 	useJUnitPlatform()
+}
+
+jar {
+    enabled = false
+}
+bootJar {
+    enabled = true
 }
