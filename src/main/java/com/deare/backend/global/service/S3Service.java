@@ -1,5 +1,7 @@
 package com.deare.backend.global.service;
 
+import com.deare.backend.global.common.exception.GeneralException;
+import com.deare.backend.global.common.exception.S3ErrorCode;
 import com.deare.backend.global.config.S3Properties;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
@@ -8,23 +10,30 @@ import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.*;
 
+import software.amazon.awssdk.services.s3.presigner.S3Presigner;
+import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
+import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
+
 import java.io.IOException;
+import java.time.Duration;
 import java.util.UUID;
 
 @Service
 public class S3Service {
 
     private final S3Client s3Client;
+    private final S3Presigner presigner;
     private final S3Properties props;
 
-    public S3Service(S3Client s3Client, S3Properties props) {
+    public S3Service(S3Client s3Client, S3Presigner presigner, S3Properties props) {
         this.s3Client = s3Client;
+        this.presigner = presigner;
         this.props = props;
     }
 
     public UploadedFile upload(MultipartFile file, String dir) {
         if (file == null || file.isEmpty()) {
-            throw new IllegalArgumentException("파일이 비어 있습니다.");
+            throw new GeneralException(S3ErrorCode.EMPTY_FILE);
         }
 
         String key = buildKey(dir, file.getOriginalFilename());
@@ -32,32 +41,35 @@ public class S3Service {
                 ? file.getContentType()
                 : MediaType.APPLICATION_OCTET_STREAM_VALUE;
 
-        try {
-            PutObjectRequest request = PutObjectRequest.builder()
+        long contentLength = file.getSize();
+
+        try (var inputStream = file.getInputStream()) {
+            PutObjectRequest putReq = PutObjectRequest.builder()
                     .bucket(props.bucket())
                     .key(key)
                     .contentType(contentType)
+                    .contentLength(contentLength)
                     .build();
 
-            s3Client.putObject(request, RequestBody.fromBytes(file.getBytes()));
+            s3Client.putObject(putReq, RequestBody.fromInputStream(inputStream, contentLength));
 
-            String url = "https://%s.s3.%s.amazonaws.com/%s"
-                    .formatted(props.bucket(), props.region(), key);
-
+            String url = presignGetUrl(key, Duration.ofMinutes(10));
             return new UploadedFile(key, url);
 
         } catch (IOException e) {
-            throw new RuntimeException("파일 업로드 중 IO 오류", e);
+            throw new GeneralException(S3ErrorCode.IO_ERROR);
         } catch (S3Exception e) {
-            throw new RuntimeException(
-                    "S3 업로드 실패: " + e.awsErrorDetails().errorMessage(), e
-            );
+            System.out.println("[S3 UPLOAD FAILED] status=" + e.statusCode()
+                    + " awsErrorCode=" + (e.awsErrorDetails() != null ? e.awsErrorDetails().errorCode() : "null")
+                    + " message=" + e.getMessage());
+            throw new GeneralException(S3ErrorCode.UPLOAD_FAILED);
         }
+
     }
 
     public void delete(String key) {
         if (key == null || key.isBlank()) {
-            throw new IllegalArgumentException("key가 비어 있습니다.");
+            throw new GeneralException(S3ErrorCode.EMPTY_KEY);
         }
 
         try {
@@ -69,9 +81,27 @@ public class S3Service {
             s3Client.deleteObject(request);
 
         } catch (S3Exception e) {
-            throw new RuntimeException(
-                    "S3 삭제 실패: " + e.awsErrorDetails().errorMessage(), e
-            );
+            throw new GeneralException(S3ErrorCode.DELETE_FAILED);
+        }
+    }
+
+    private String presignGetUrl(String key, Duration ttl) {
+        try {
+            GetObjectRequest getReq = GetObjectRequest.builder()
+                    .bucket(props.bucket())
+                    .key(key)
+                    .build();
+
+            GetObjectPresignRequest presignReq = GetObjectPresignRequest.builder()
+                    .signatureDuration(ttl)
+                    .getObjectRequest(getReq)
+                    .build();
+
+            PresignedGetObjectRequest presigned = presigner.presignGetObject(presignReq);
+            return presigned.url().toString();
+
+        } catch (S3Exception e) {
+            throw new GeneralException(S3ErrorCode.UPLOAD_FAILED);
         }
     }
 
