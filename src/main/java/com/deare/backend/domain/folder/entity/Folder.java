@@ -19,7 +19,7 @@ public class Folder extends BaseEntity {
     @Column(name="user_folder_id")
     private Long id;
 
-    @Column(name="folder_name", nullable = false, length = 7)
+    @Column(name="folder_name", nullable = false, length = 6)
     private String name;
 
     @Column(name="folder_order", nullable = false)
