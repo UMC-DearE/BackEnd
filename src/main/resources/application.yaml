@@ -3,7 +3,6 @@ spring:
   config:
     import:
       - optional:file:.env[.properties]
-      - optional:file:.env.${spring.profiles.active}[.properties]
 
   application:
     name: api
@@ -25,3 +24,10 @@ decorator:
       enable-logging: true
       logging: slf4j
       multiline: true
+
+aws:
+  s3:
+    bucket: ${AWS_S3_BUCKET}
+    region: ${AWS_REGION}
+    access-key: ${AWS_ACCESS_KEY_ID}
+    secret-key: ${AWS_SECRET_ACCESS_KEY}
