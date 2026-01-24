@@ -41,7 +41,7 @@ public class Folder extends BaseEntity {
     public Folder(
             String name,
             int order,
-            Long imageId,
+            Image image,
             User user
     ){
         this.name = name;
