@@ -3,6 +3,8 @@ package com.deare.backend.global.service;
 import com.deare.backend.global.common.exception.GeneralException;
 import com.deare.backend.global.common.exception.S3ErrorCode;
 import com.deare.backend.global.config.S3Properties;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -21,6 +23,8 @@ import java.util.UUID;
 @Service
 public class S3Service {
 
+    private static final Logger log = LoggerFactory.getLogger(S3Service.class);
+
     private final S3Client s3Client;
     private final S3Presigner presigner;
     private final S3Properties props;
@@ -37,6 +41,7 @@ public class S3Service {
         }
 
         String key = buildKey(dir, file.getOriginalFilename());
+
         String contentType = (file.getContentType() != null)
                 ? file.getContentType()
                 : MediaType.APPLICATION_OCTET_STREAM_VALUE;
@@ -57,14 +62,17 @@ public class S3Service {
             return new UploadedFile(key, url);
 
         } catch (IOException e) {
+            log.warn("[S3] IO error while reading file. key={}", key, e);
             throw new GeneralException(S3ErrorCode.IO_ERROR);
         } catch (S3Exception e) {
-            System.out.println("[S3 UPLOAD FAILED] status=" + e.statusCode()
-                    + " awsErrorCode=" + (e.awsErrorDetails() != null ? e.awsErrorDetails().errorCode() : "null")
-                    + " message=" + e.getMessage());
+            log.error("[S3] Upload failed. status={} awsErrorCode={} message={}",
+                    e.statusCode(),
+                    e.awsErrorDetails() != null ? e.awsErrorDetails().errorCode() : "null",
+                    e.getMessage(),
+                    e
+            );
             throw new GeneralException(S3ErrorCode.UPLOAD_FAILED);
         }
-
     }
 
     public void delete(String key) {
@@ -81,6 +89,13 @@ public class S3Service {
             s3Client.deleteObject(request);
 
         } catch (S3Exception e) {
+            log.error("[S3] Delete failed. key={} status={} awsErrorCode={} message={}",
+                    key,
+                    e.statusCode(),
+                    e.awsErrorDetails() != null ? e.awsErrorDetails().errorCode() : "null",
+                    e.getMessage(),
+                    e
+            );
             throw new GeneralException(S3ErrorCode.DELETE_FAILED);
         }
     }
@@ -101,7 +116,14 @@ public class S3Service {
             return presigned.url().toString();
 
         } catch (S3Exception e) {
-            throw new GeneralException(S3ErrorCode.UPLOAD_FAILED);
+            log.error("[S3] Presign failed. key={} status={} awsErrorCode={} message={}",
+                    key,
+                    e.statusCode(),
+                    e.awsErrorDetails() != null ? e.awsErrorDetails().errorCode() : "null",
+                    e.getMessage(),
+                    e
+            );
+            throw new GeneralException(S3ErrorCode.PRESIGN_FAILED);
         }
     }
 

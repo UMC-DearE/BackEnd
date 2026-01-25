@@ -11,7 +11,8 @@ public enum S3ErrorCode implements BaseErrorCode {
     // 500
     IO_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "S3_500_1", "파일 처리 중 오류가 발생했습니다."),
     UPLOAD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "S3_500_2", "S3 업로드에 실패했습니다."),
-    DELETE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "S3_500_3", "S3 삭제에 실패했습니다.");
+    DELETE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "S3_500_3", "S3 삭제에 실패했습니다."),
+    PRESIGN_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "S3_500_4", "Presigned URL 생성에 실패했습니다.");
 
     private final HttpStatus status;
     private final String code;
