@@ -5,6 +5,7 @@ import com.deare.backend.global.common.exception.S3ErrorCode;
 import com.deare.backend.global.config.S3Properties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -20,6 +21,7 @@ import java.io.IOException;
 import java.time.Duration;
 import java.util.UUID;
 
+@Profile("!test")
 @Service
 public class S3Service {
 
