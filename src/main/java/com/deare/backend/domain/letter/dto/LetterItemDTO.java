@@ -7,7 +7,7 @@ public record LetterItemDTO(
         long id,
         String content,
         boolean isLiked,
-        LocalDate receiveAt,
+        LocalDate receivedAt,
         LocalDateTime createdAt,
         long fromId,
         String fromName,
