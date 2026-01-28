@@ -1,11 +1,14 @@
 package com.deare.backend.global.external.gemini.adapter.test;
 
 import com.deare.backend.global.external.gemini.client.GeminiFeignClient;
-import com.deare.backend.global.external.gemini.dto.request.GeminiTextRequestDTO;
+import com.deare.backend.global.external.gemini.dto.request.analyze.GeminiTextRequestDTO;
+import com.deare.backend.global.external.gemini.dto.request.ocr.GeminiOcrRequestDTO;
 import com.deare.backend.global.external.gemini.dto.response.GeminiTextResponseDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
@@ -27,9 +30,21 @@ public class GeminiTestClientAdapter implements GeminiTestClient {
 
         GeminiTextRequestDTO request = GeminiTextRequestDTO.fromLetterText(prompt);
 
-        GeminiTextResponseDTO response = geminiFeignClient.chat(
+        GeminiTextResponseDTO response = geminiFeignClient.chatText(
                 "Bearer " + apiKey,
                 request);
+
+        return response.getChoices().get(0).getMessage().getContent();
+    }
+
+    @Override
+    public String geminiOcrTest(String instruction, List<String> base64Images) {
+        GeminiOcrRequestDTO request = GeminiOcrRequestDTO.fromImages(instruction, base64Images);
+
+        GeminiTextResponseDTO response = geminiFeignClient.chatOcr(
+                "Bearer " + apiKey,
+                request
+        );
 
         return response.getChoices().get(0).getMessage().getContent();
     }
