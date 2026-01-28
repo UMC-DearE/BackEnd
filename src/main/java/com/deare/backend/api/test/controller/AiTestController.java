@@ -4,6 +4,8 @@ import com.deare.backend.api.test.service.AiTestService;
 import com.deare.backend.global.common.response.ApiResponse;
 import com.deare.backend.global.external.ai.dto.request.AiAnalyzeRequestDTO;
 import com.deare.backend.global.external.ai.dto.response.AiAnalyzeResponseDTO;
+import com.deare.backend.global.external.gemini.adapter.test.GeminiTestClientAdapter;
+import com.deare.backend.global.external.gemini.dto.request.test.GeminiTestRequestDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;
@@ -19,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Profile("dev")
 public class AiTestController {
     private final AiTestService aiTestService;
+    private final GeminiTestClientAdapter  geminiTestClientAdapter;
 
     @PostMapping("/ai/analyze")
     public ApiResponse<AiAnalyzeResponseDTO> analyze(@RequestBody AiAnalyzeRequestDTO request){
@@ -27,5 +30,10 @@ public class AiTestController {
         log.info("Controller 리턴 직전");
 
         return ApiResponse.success(dto);
+    }
+
+    @PostMapping("/gemini")
+    public ApiResponse<String> gemini(@RequestBody GeminiTestRequestDTO text) {
+        return ApiResponse.success(geminiTestClientAdapter.geminiTest(text.getText()));
     }
 }
