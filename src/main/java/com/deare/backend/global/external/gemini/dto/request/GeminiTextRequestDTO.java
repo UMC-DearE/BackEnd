@@ -9,12 +9,12 @@ import java.util.List;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-public class GeminiRequestDTO {
+public class GeminiTextRequestDTO {
     private String model;
     private List<Message> messages;
 
-    public static GeminiRequestDTO fromUserText(String text) {
-        return new GeminiRequestDTO(
+    public static GeminiTextRequestDTO fromLetterText(String text) {
+        return new GeminiTextRequestDTO(
                 "gemini-3-flash-preview",
                 List.of(new Message("user", text))
         );
