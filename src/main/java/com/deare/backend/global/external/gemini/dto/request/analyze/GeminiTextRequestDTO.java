@@ -1,4 +1,4 @@
-package com.deare.backend.global.external.gemini.dto.request;
+package com.deare.backend.global.external.gemini.dto.request.analyze;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
