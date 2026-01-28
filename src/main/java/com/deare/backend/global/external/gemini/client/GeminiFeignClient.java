@@ -4,7 +4,7 @@ import com.deare.backend.global.external.feign.config.FeignConfig;
 import com.deare.backend.global.external.feign.config.FeignDevConfig;
 import com.deare.backend.global.external.feign.config.FeignProdConfig;
 import com.deare.backend.global.external.gemini.dto.request.GeminiTextRequestDTO;
-import com.deare.backend.global.external.gemini.dto.response.GeminiResponseDTO;
+import com.deare.backend.global.external.gemini.dto.response.GeminiTextResponseDTO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -26,7 +26,7 @@ public interface GeminiFeignClient {
             value = "/chat/completions",
             consumes = MediaType.APPLICATION_JSON_VALUE
     )
-    GeminiResponseDTO chat(
+    GeminiTextResponseDTO chat(
             @RequestHeader("Authorization") String authorization,
             @RequestBody GeminiTextRequestDTO request
     );
