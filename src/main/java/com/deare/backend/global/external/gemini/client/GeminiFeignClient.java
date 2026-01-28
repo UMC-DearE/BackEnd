@@ -3,7 +3,7 @@ package com.deare.backend.global.external.gemini.client;
 import com.deare.backend.global.external.feign.config.FeignConfig;
 import com.deare.backend.global.external.feign.config.FeignDevConfig;
 import com.deare.backend.global.external.feign.config.FeignProdConfig;
-import com.deare.backend.global.external.gemini.dto.request.GeminiRequestDTO;
+import com.deare.backend.global.external.gemini.dto.request.GeminiTextRequestDTO;
 import com.deare.backend.global.external.gemini.dto.response.GeminiResponseDTO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
@@ -28,6 +28,6 @@ public interface GeminiFeignClient {
     )
     GeminiResponseDTO chat(
             @RequestHeader("Authorization") String authorization,
-            @RequestBody GeminiRequestDTO request
+            @RequestBody GeminiTextRequestDTO request
     );
 }
