@@ -1,4 +1,4 @@
-package com.deare.backend.global.auth.filter;
+package com.deare.backend.global.auth.jwt.filter;
 
 import com.deare.backend.domain.user.entity.User;
 import com.deare.backend.domain.user.repository.UserRepository;
