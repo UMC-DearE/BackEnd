@@ -1,4 +1,4 @@
-package com.deare.backend.domain.letter.dto;
+package com.deare.backend.api.letter.dto;
 
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;

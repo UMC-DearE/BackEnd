@@ -1,4 +1,4 @@
-package com.deare.backend.domain.folder.dto;
+package com.deare.backend.api.folder.dto;
 
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
