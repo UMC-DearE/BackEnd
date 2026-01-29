@@ -43,4 +43,17 @@ public class User extends BaseEntity {
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "image_id")
     private Image image;
+
+    /**
+     * API (/auth/signup) 회원 가입
+     * Terms 추가할 것
+     * @param provider 소셜 프로바이더(<- signup-token)
+     * @param providerId 소셜 프로바이더 아이디(<- signup-token)
+     * @param email 소셜 가입 아이디(<- signup-token)
+     * @param nickname (<-api/auth/signup)
+     * @return DB 저장할 User
+     */
+    public User signUpUser(Provider provider, String providerId, String email, String nickname) {
+
+    }
 }
