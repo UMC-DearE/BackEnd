@@ -19,6 +19,9 @@ public class GeminiTestClientAdapter implements GeminiTestClient {
     @Value("${external.ai.api-key}")
     private String apiKey;
 
+    @Value("${external.ai.model}")
+    private String model;
+
     @Override
     public String geminiTest(String text) {
         String prompt = """
@@ -28,7 +31,7 @@ public class GeminiTestClientAdapter implements GeminiTestClient {
                 글: %s
                 """.formatted(text);
 
-        GeminiTextRequestDTO request = GeminiTextRequestDTO.fromLetterText(prompt);
+        GeminiTextRequestDTO request = GeminiTextRequestDTO.fromLetterText(model,prompt);
 
         GeminiTextResponseDTO response = geminiFeignClient.chatText(
                 "Bearer " + apiKey,
@@ -39,7 +42,7 @@ public class GeminiTestClientAdapter implements GeminiTestClient {
 
     @Override
     public String geminiOcrTest(String instruction, List<String> base64Images) {
-        GeminiOcrRequestDTO request = GeminiOcrRequestDTO.fromImages(instruction, base64Images);
+        GeminiOcrRequestDTO request = GeminiOcrRequestDTO.fromImages(model, instruction, base64Images);
 
         GeminiTextResponseDTO response = geminiFeignClient.chatOcr(
                 "Bearer " + apiKey,
