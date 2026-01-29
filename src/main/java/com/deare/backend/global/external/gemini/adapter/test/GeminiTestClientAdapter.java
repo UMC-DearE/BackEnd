@@ -6,10 +6,12 @@ import com.deare.backend.global.external.gemini.dto.request.ocr.GeminiOcrRequest
 import com.deare.backend.global.external.gemini.dto.response.GeminiTextResponseDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 
+@Profile("dev")
 @Component
 @RequiredArgsConstructor
 public class GeminiTestClientAdapter implements GeminiTestClient {
