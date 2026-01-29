@@ -37,7 +37,8 @@ aws:
     access-key: ${AWS_ACCESS_KEY_ID}
     secret-key: ${AWS_SECRET_ACCESS_KEY}
 
-# FeignClient - 더미 데이터임
 external:
   ai:
-    base-url: "https://example.com"
+    base-url: https://generativelanguage.googleapis.com/v1beta/openai
+    api-key: ${GEMINI_API_KEY}
+    model: gemini-3-flash-preview
