@@ -36,3 +36,4 @@ external:
   ai:
     base-url: https://generativelanguage.googleapis.com/v1beta/openai
     api-key: ${GEMINI_API_KEY}
+    model: gemini-3-flash-preview

@@ -13,9 +13,9 @@ public class GeminiTextRequestDTO {
     private String model;
     private List<Message> messages;
 
-    public static GeminiTextRequestDTO fromLetterText(String text) {
+    public static GeminiTextRequestDTO fromLetterText(String model, String text) {
         return new GeminiTextRequestDTO(
-                "gemini-3-flash-preview",
+                model,
                 List.of(new Message("user", text))
         );
     }

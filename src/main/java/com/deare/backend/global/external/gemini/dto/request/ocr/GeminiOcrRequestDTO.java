@@ -19,7 +19,7 @@ public class GeminiOcrRequestDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class Message {
-        private String role; // "user"
+        private String role;
         private List<Content> content;
     }
 
@@ -27,9 +27,9 @@ public class GeminiOcrRequestDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class Content {
-        private String type; // "text" or "image_url"
-        private String text; // type="text"일 때
-        private ImageUrl image_url; // type="image_url"일 때
+        private String type;
+        private String text;
+        private ImageUrl image_url;
     }
 
     @Getter
@@ -39,19 +39,23 @@ public class GeminiOcrRequestDTO {
         private String url;
     }
 
-    /** 편지 이미지 + instruction으로 DTO 생성 */
-    public static GeminiOcrRequestDTO fromImages(String instruction, List<String> base64Images) {
+
+    public static GeminiOcrRequestDTO fromImages(
+            String model,
+            String instruction,
+            List<String> base64Images
+    ) {
         List<Content> contents = new ArrayList<>();
-        // 지시문 추가
+
         contents.add(new Content("text", instruction, null));
-        // 이미지 추가
+
         for (String base64 : base64Images) {
             String dataUri = "data:image/jpeg;base64," + base64;
             contents.add(new Content("image_url", null, new ImageUrl(dataUri)));
         }
 
         Message message = new Message("user", contents);
-        return new GeminiOcrRequestDTO("gemini-3-flash-preview", List.of(message));
+        return new GeminiOcrRequestDTO(model, List.of(message));
     }
 }
 
