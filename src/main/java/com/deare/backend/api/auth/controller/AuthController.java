@@ -1,6 +1,7 @@
 package com.deare.backend.api.auth.controller;
 
 import com.deare.backend.api.auth.dto.request.RefreshRequestDTO;
+import com.deare.backend.api.auth.dto.request.SignupRequestDTO;
 import com.deare.backend.api.auth.dto.response.LoginResponseDTO;
 import com.deare.backend.api.auth.dto.response.RefreshResponseDTO;
 import com.deare.backend.api.auth.service.AuthService;
@@ -67,5 +68,21 @@ public class AuthController {
     ) {
         authService.logout(user.getId());
         return ResponseEntity.ok().build();
+    }
+    
+    /**
+     * 회원가입
+     * 
+     * @param signupToken Header에서 받은 Signup Token
+     * @param request 닉네임, 약관 동의 정보
+     * @return LoginResponseDTO (JWT 토큰)
+     */
+    @PostMapping("/signup")
+    public ResponseEntity<LoginResponseDTO> signup(
+            @RequestHeader("Signup-Token") String signupToken,
+            @RequestBody SignupRequestDTO request
+    ) {
+        LoginResponseDTO response = authService.signup(signupToken, request);
+        return ResponseEntity.ok(response);
     }
 }
