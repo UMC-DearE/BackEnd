@@ -1,4 +1,4 @@
-package com.deare.backend.domain.folder.dto;
+package com.deare.backend.api.folder.dto;
 
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;

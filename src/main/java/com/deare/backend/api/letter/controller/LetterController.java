@@ -1,9 +1,9 @@
 package com.deare.backend.api.letter.controller;
 
-import com.deare.backend.domain.letter.dto.LetterDetailResponseDTO;
-import com.deare.backend.domain.letter.dto.LetterListResponseDTO;
-import com.deare.backend.domain.letter.dto.LetterReplyUpsertRequestDTO;
-import com.deare.backend.domain.letter.dto.LetterUpdateRequestDTO;
+import com.deare.backend.api.letter.dto.LetterDetailResponseDTO;
+import com.deare.backend.api.letter.dto.LetterListResponseDTO;
+import com.deare.backend.api.letter.dto.LetterReplyUpsertRequestDTO;
+import com.deare.backend.api.letter.dto.LetterUpdateRequestDTO;
 import com.deare.backend.global.common.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
