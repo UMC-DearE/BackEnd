@@ -1,11 +1,11 @@
 package com.deare.backend.global.config;
 
+import com.deare.backend.global.auth.jwt.filter.JwtAuthenticationFilter;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.Customizer;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -22,8 +22,7 @@ import java.util.List;
 public class SecurityConfig {
 
     // JWT
-    // private final JwtProvider jwtProvider;
-    // private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
     // OAuth2
     // private final CustomOAuth2UserService customOAuth2UserService;
@@ -33,7 +32,10 @@ public class SecurityConfig {
     // logout 시 refresh Redis 삭제
     // private final LogoutHandler refreshTokenLogoutHandler;
 
-    /// 생성자로 명시적으로 주입할 것
+    /// 생성자로 명시적으로 주입
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
+        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+    }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -65,33 +67,33 @@ public class SecurityConfig {
                 );
 
 
-        // TODO :JWT - Redis 구현 이후 각주 처리할 것
-        // 기본 인증 - 사용
-        // 기본 폼 로그인 - 사용
-        // 세션 사용
-        http
-                .httpBasic(Customizer.withDefaults())
-                .formLogin(Customizer.withDefaults())
-                .sessionManagement(session ->
-                                 session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
-                );
-
-        // TODO: JWT - Redis 구현 이후 각주 해제할 것
-//        // 기본 인증 - 해제
-//        // 기본 폼 로그인 - 해제
-//        // 세션 미사용
+        // ✅ JWT - Redis 구현 완료 후 기존 세션 방식 각주 처리
+//        // 기본 인증 - 사용
+//        // 기본 폼 로그인 - 사용
+//        // 세션 사용
 //        http
-//                .formLogin(form -> form.disable())
-//                .httpBasic(basic -> basic.disable())
+//                .httpBasic(Customizer.withDefaults())
+//                .formLogin(Customizer.withDefaults())
 //                .sessionManagement(session ->
-//                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+//                                 session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
 //                );
-//        // JWT 필터 등록 (UsernamePasswordAuthenticationFilter)
-//        http
-//                .addFilterBefore(
-//                        new JwtAuthenticationFilter(jwtProvider),
-//                        UsernamePasswordAuthenticationFilter.class
-//                );
+
+        // ✅ JWT - Redis 구현 완료 후 각주 해제
+        // 기본 인증 - 해제
+        // 기본 폼 로그인 - 해제
+        // 세션 미사용
+        http
+                .formLogin(form -> form.disable())
+                .httpBasic(basic -> basic.disable())
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                );
+        // JWT 필터 등록 (UsernamePasswordAuthenticationFilter 앞에 추가)
+        http
+                .addFilterBefore(
+                        jwtAuthenticationFilter,
+                        UsernamePasswordAuthenticationFilter.class
+                );
 
         // OAuth2 소셜 로그인
 //        http
