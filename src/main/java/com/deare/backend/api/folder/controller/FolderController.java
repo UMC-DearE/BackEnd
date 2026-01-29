@@ -1,10 +1,10 @@
-package com.deare.backend.api.folder;
+package com.deare.backend.api.folder.controller;
 
-import com.deare.backend.domain.folder.dto.FolderCreateRequestDTO;
-import com.deare.backend.domain.folder.dto.FolderCreateResponseDTO;
-import com.deare.backend.domain.folder.dto.FolderListResponseDTO;
-import com.deare.backend.domain.folder.dto.FolderOrderRequestDTO;
-import com.deare.backend.domain.folder.dto.FolderUpdateRequestDTO;
+import com.deare.backend.api.folder.dto.FolderCreateRequestDTO;
+import com.deare.backend.api.folder.dto.FolderCreateResponseDTO;
+import com.deare.backend.api.folder.dto.FolderListResponseDTO;
+import com.deare.backend.api.folder.dto.FolderOrderRequestDTO;
+import com.deare.backend.api.folder.dto.FolderUpdateRequestDTO;
 import com.deare.backend.global.common.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
