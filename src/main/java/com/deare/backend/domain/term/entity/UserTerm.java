@@ -31,4 +31,16 @@ public class UserTerm extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
+    
+    /**
+     * 약관 동의 생성 (정적 팩토리 메서드)
+     */
+    public static UserTerm createAgreement(User user, Term term) {
+        UserTerm userTerm = new UserTerm();
+        userTerm.user = user;
+        userTerm.term = term;
+        userTerm.isAgreed = true;
+        userTerm.agreedAt = LocalDateTime.now();
+        return userTerm;
+    }
 }
