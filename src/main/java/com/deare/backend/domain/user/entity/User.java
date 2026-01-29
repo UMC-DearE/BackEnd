@@ -46,14 +46,24 @@ public class User extends BaseEntity {
 
     /**
      * API (/auth/signup) 회원 가입
-     * Terms 추가할 것
+     * TO-DO : service 로직에서 User-Terms 매핑하기
      * @param provider 소셜 프로바이더(<- signup-token)
      * @param providerId 소셜 프로바이더 아이디(<- signup-token)
      * @param email 소셜 가입 아이디(<- signup-token)
      * @param nickname (<-api/auth/signup)
      * @return DB 저장할 User
      */
-    public User signUpUser(Provider provider, String providerId, String email, String nickname) {
+    public static User signUpUser(
+            Provider provider, String providerId, String email, String nickname
+    ) {
+        User user = new User();
 
+        user.provider = provider;
+        user.providerId = providerId;
+        user.email = email;
+        user.nickname = nickname;
+
+        // role, status -> Default Value
+        return user;
     }
 }
