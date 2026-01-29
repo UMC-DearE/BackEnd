@@ -1,4 +1,4 @@
-package com.deare.backend.domain.home.dto;
+package com.deare.backend.api.home.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -10,5 +10,5 @@ import java.util.List;
 public class HomeDashboardResponse {
     private HomeUserDto user;
     private HomeSettingDto setting;
-    List<HomeStickerDto> stickers;
+    private List<HomeStickerDto> stickers;
 }

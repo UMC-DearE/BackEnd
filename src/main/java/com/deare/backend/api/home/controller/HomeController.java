@@ -1,16 +1,16 @@
-package com.deare.backend.domain.home.controller;
+package com.deare.backend.api.home.controller;
 
-import com.deare.backend.domain.home.service.HomeService;
-import com.deare.backend.domain.home.dto.HomeDashboardResponse;
+import com.deare.backend.api.home.service.HomeService;
+import com.deare.backend.api.home.dto.HomeDashboardResponse;
 import com.deare.backend.global.common.response.ApiResponse;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@AllArgsConstructor
-@RequestMapping("/api/home")
+@RequiredArgsConstructor
+@RequestMapping("/home")
 public class HomeController {
     private final HomeService homeService;
 

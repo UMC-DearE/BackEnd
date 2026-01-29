@@ -1,4 +1,4 @@
-package com.deare.backend.domain.home.dto;
+package com.deare.backend.api.home.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

@@ -1,7 +1,9 @@
-package com.deare.backend.domain.home.dto;
+package com.deare.backend.api.home.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+
+import java.math.BigDecimal;
 
 @Getter
 @AllArgsConstructor
@@ -10,10 +12,10 @@ public class HomeStickerDto {
     private Long imageId;
     private String imageUrl;
 
-    private double posX;
-    private double posY;
+    private BigDecimal posX;
+    private BigDecimal posY;
     private int posZ;
-    private double rotation;
-    private double scale;
+    private BigDecimal rotation;
+    private BigDecimal scale;
 
 }

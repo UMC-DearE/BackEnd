@@ -1,4 +1,4 @@
-package com.deare.backend.domain.home.exception;
+package com.deare.backend.api.home.exception;
 
 import com.deare.backend.global.common.exception.BaseErrorCode;
 import org.springframework.http.HttpStatus;
