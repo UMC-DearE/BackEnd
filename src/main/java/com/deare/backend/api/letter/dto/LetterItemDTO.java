@@ -5,11 +5,10 @@ import java.time.LocalDateTime;
 
 public record LetterItemDTO(
         long id,
-        String content,
+        String excerpt,
         boolean isLiked,
         LocalDate receivedAt,
         LocalDateTime createdAt,
-        long fromId,
         LetterFromDTO from,
         Long folderId
 ) {
