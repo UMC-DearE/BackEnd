@@ -10,9 +10,7 @@ public record LetterItemDTO(
         LocalDate receivedAt,
         LocalDateTime createdAt,
         long fromId,
-        String fromName,
-        String fromBgColor,
-        String fromFontColor,
+        LetterFromDTO from,
         Long folderId
 ) {
 }
