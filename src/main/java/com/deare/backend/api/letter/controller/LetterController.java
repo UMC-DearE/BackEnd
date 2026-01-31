@@ -72,10 +72,21 @@ public class LetterController {
         return ApiResponse.success(null);
     }
 
-    @PatchMapping("/{letterId}/like")
-    @Operation(summary = "편지 좋아요 추가/삭제",
-            description = "사용자가 소유한 편지에 좋아요를 추가/삭제하는 API입니다.")
-    public ApiResponse<Void> changeLetterLike(@PathVariable Long letterId){
+    @PutMapping("/{letterId}/like")
+    @Operation(
+            summary = "편지 좋아요 추가",
+            description = "사용자가 소유한 편지에 좋아요를 추가합니다."
+    )
+    public ApiResponse<Void> likeLetter(@PathVariable Long letterId) {
+        return ApiResponse.success(null);
+    }
+
+    @DeleteMapping("/{letterId}/like")
+    @Operation(
+            summary = "편지 좋아요 삭제",
+            description = "사용자가 소유한 편지의 좋아요를 삭제합니다."
+    )
+    public ApiResponse<Void> unlikeLetter(@PathVariable Long letterId) {
         return ApiResponse.success(null);
     }
 }
