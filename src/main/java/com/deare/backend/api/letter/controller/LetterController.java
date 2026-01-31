@@ -23,49 +23,59 @@ public class LetterController {
     }
 
 
-    @GetMapping("/{id}")
+    @GetMapping("/{letterId}")
     @Operation(
             summary = "편지 상세 조회",
             description = "사용자가 소유한 편지를 ID로 상세 조회하는 API입니다."
     )
     public ApiResponse<LetterDetailResponseDTO> getLetter(
-            @PathVariable Long id
+            @PathVariable Long letterId
     ) {
         return ApiResponse.success(null);
     }
 
 
-    @PatchMapping("/{id}")
+    @PatchMapping("/{letterId}")
     @Operation(summary = "편지 내용 수정",
             description = "사용자가 소유한 편지를 수정하는 API입니다.")
     public ApiResponse<Void> updateLetter(
-            @PathVariable Long id,
+            @PathVariable Long letterId,
             @Valid @RequestBody LetterUpdateRequestDTO reqDTO
             ){
         return ApiResponse.success(null);
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{letterId}")
     @Operation(summary = "편지 삭제",
             description = "사용자가 소유한 편지를 삭제하는 API입니다.")
-    public ApiResponse<Void> deleteLetter(@PathVariable Long id){
+    public ApiResponse<Void> deleteLetter(@PathVariable Long letterId){
         return ApiResponse.success(null);
     }
 
-    @PatchMapping("/{id}/reply")
+    @PatchMapping("/{letterId}/reply")
     @Operation(summary = "편지 답장 등록/수정/삭제",
-            description = "사용자가 소유한 편지의 답장을 등록/수정/삭제하는 API입니다.")
+            description = "사용자가 소유한 편지의 답장을 등록/수정하는 API입니다.")
     public ApiResponse<Void> updateReply(
-            @PathVariable Long id,
+            @PathVariable Long letterId,
             @Valid @RequestBody LetterReplyUpsertRequestDTO request
     ){
         return ApiResponse.success(null);
     }
 
-    @PatchMapping("/{id}/like")
+    @DeleteMapping("/{letterId}/reply")
+    @Operation(summary = "편지 답장 삭제",
+            description = "사용자가 소유한 편지의 답장을 삭제하는 API입니다.")
+    public ApiResponse<Void> deleteReply(
+            @PathVariable Long letterId,
+            @Valid @RequestBody LetterReplyUpsertRequestDTO request
+    ){
+        return ApiResponse.success(null);
+    }
+
+    @PatchMapping("/{letterId}/like")
     @Operation(summary = "편지 좋아요 추가/삭제",
             description = "사용자가 소유한 편지에 좋아요를 추가/삭제하는 API입니다.")
-    public ApiResponse<Void> changeLetterLike(@PathVariable Long id){
+    public ApiResponse<Void> changeLetterLike(@PathVariable Long letterId){
         return ApiResponse.success(null);
     }
 }
