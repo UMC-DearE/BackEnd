@@ -1,9 +1,11 @@
 package com.deare.backend.domain.letter.repository;
 
+import com.deare.backend.domain.image.entity.QImage;
 import com.deare.backend.domain.letter.entity.Letter;
 import com.deare.backend.domain.letter.entity.QLetter;
 import com.deare.backend.domain.folder.entity.QFolder;
 import com.deare.backend.domain.from.entity.QFrom;
+import com.deare.backend.domain.letter.entity.QLetterImage;
 import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.BooleanExpression;
@@ -19,6 +21,7 @@ import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @SuppressWarnings("unused")
 public class LetterRepositoryImpl implements LetterRepositoryCustom {
@@ -78,6 +81,31 @@ public class LetterRepositoryImpl implements LetterRepositoryCustom {
             return cnt == null ? 0L : cnt;
         });
     }
+
+    @Override
+    public Optional<Letter> findLetterDetailById(Long userId, Long letterId) {
+        QLetter letter = QLetter.letter;
+        QFrom from = QFrom.from;
+        QFolder folder = QFolder.folder;
+        QLetterImage letterImage = QLetterImage.letterImage;
+        QImage image = QImage.image;
+
+        Letter result = queryFactory
+                .selectFrom(letter)
+                .distinct()
+                .join(letter.from, from).fetchJoin()
+                .leftJoin(letter.folder, folder).fetchJoin()
+                .leftJoin(letter.letterImages, letterImage).fetchJoin()
+                .leftJoin(letterImage.image, image).fetchJoin()
+                .where(
+                        letter.id.eq(letterId),
+                        letter.user.id.eq(userId)
+                )
+                .fetchOne();
+
+        return Optional.ofNullable(result);
+    }
+
 
     private BooleanExpression ownedBy(QLetter letter, Long userId) {
         if (userId == null) return null;

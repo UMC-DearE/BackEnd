@@ -1,14 +1,16 @@
 package com.deare.backend.api.letter.service;
 
-import com.deare.backend.api.letter.dto.LetterFromDTO;
-import com.deare.backend.api.letter.dto.LetterItemDTO;
-import com.deare.backend.api.letter.dto.LetterListResponseDTO;
+import com.deare.backend.api.letter.dto.*;
 import com.deare.backend.api.letter.util.ExcerptUtil;
 import com.deare.backend.domain.letter.entity.Letter;
+import com.deare.backend.domain.letter.exception.LetterErrorCode;
 import com.deare.backend.domain.letter.repository.LetterRepository;
+import com.deare.backend.domain.letter.repository.query.LetterEmotionQueryRepository;
+import com.deare.backend.global.common.exception.GeneralException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -18,12 +20,18 @@ public class LetterServiceImpl implements LetterService {
     private static final int EXCERPT_MAX_CHARS = 100;
 
     private final LetterRepository letterRepository;
+    private final LetterEmotionQueryRepository letterEmotionQueryRepository;
 
-    public LetterServiceImpl(LetterRepository letterRepository) {
+    public LetterServiceImpl(
+            LetterRepository letterRepository,
+            LetterEmotionQueryRepository letterEmotionQueryRepository
+    ) {
         this.letterRepository = letterRepository;
+        this.letterEmotionQueryRepository = letterEmotionQueryRepository;
     }
 
     @Override
+    @Transactional(readOnly = true)
     public LetterListResponseDTO getLetterList(
             Long userId,
             Pageable pageable,
@@ -50,6 +58,47 @@ public class LetterServiceImpl implements LetterService {
                 page.getSize(),
                 page.getNumber(),
                 items
+        );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public LetterDetailResponseDTO getLetterDetail(Long userId, Long letterId) {
+
+        Letter letter = letterRepository
+                .findLetterDetailById(userId, letterId)
+                .orElseThrow(() ->
+                        new GeneralException(LetterErrorCode.LETTER_NOT_FOUND)
+                );
+
+        List<EmotionTagDTO> emotionTags =
+                letterEmotionQueryRepository.findEmotionTagsByLetterId(letterId);
+
+        List<String> imageUrls = letter.getLetterImages().stream()
+                .map(li -> li.getImage().getImageUrl())
+                .toList();
+
+        return new LetterDetailResponseDTO(
+                letter.getContent(),
+                letter.getReceivedAt(),
+                letter.getAiSummary(),
+                letter.isLiked(),
+                letter.getReply(),
+                new LetterFromDTO(
+                        letter.getFrom().getId(),
+                        letter.getFrom().getName(),
+                        letter.getFrom().getBackgroundColor(),
+                        letter.getFrom().getFontColor()
+                ),
+                letter.getCreatedAt(),
+                letter.getFolder() != null
+                        ? new LetterFolderDTO(
+                        letter.getFolder().getId(),
+                        letter.getFolder().getName()
+                )
+                        : null,
+                emotionTags,
+                imageUrls
         );
     }
 

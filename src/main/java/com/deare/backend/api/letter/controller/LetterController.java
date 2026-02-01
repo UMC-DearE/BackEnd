@@ -30,7 +30,7 @@ public class LetterController {
             @RequestParam(required = false) Long fromId,
             @RequestParam(required = false) String keyword
     ) {
-        Long userId = 1L;
+        Long userId = 1L; // TODO: 인증 연결 후 SecurityContext/JWT에서 추출
 
         return ApiResponse.success(
                 letterService.getLetterList(userId, pageable, folderId, fromId, keyword)
@@ -46,7 +46,9 @@ public class LetterController {
     public ApiResponse<LetterDetailResponseDTO> getLetter(
             @PathVariable Long letterId
     ) {
-        return ApiResponse.success(null);
+        Long userId = 1L; // TODO: 인증 연결 후 SecurityContext/JWT에서 추출
+
+        return ApiResponse.success(letterService.getLetterDetail(userId, letterId));
     }
 
 
