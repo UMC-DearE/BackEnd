@@ -125,7 +125,7 @@ public class LetterRepositoryImpl implements LetterRepositoryCustom {
 
     private BooleanExpression keywordLike(QLetter letter, String keyword) {
         if (!StringUtils.hasText(keyword)) return null;
-        return letter.content.containsIgnoreCase(keyword.trim());
+        return letter.content.contains(keyword.trim());
     }
 
     private List<OrderSpecifier<?>> toOrderSpecifiers(Sort sort, QLetter letter) {
