@@ -1,5 +1,7 @@
 package com.deare.backend.global.external.gemini.adapter.analyze;
 
+import com.deare.backend.global.external.feign.exception.ExternalApiErrorCode;
+import com.deare.backend.global.external.feign.exception.ExternalApiException;
 import com.deare.backend.global.external.gemini.client.GeminiFeignClient;
 import com.deare.backend.global.external.gemini.dto.request.analyze.AnalyzePromptFactory;
 import com.deare.backend.global.external.gemini.dto.request.analyze.GeminiTextRequestDTO;
@@ -25,28 +27,54 @@ public class AnalyzeAdapterImpl implements AnalyzeAdapter {
 
     @Override
     public AnalyzeResponseDTO analyze(String content) {
-        GeminiTextRequestDTO request = AnalyzePromptFactory.fromLetter(model, content);
+        try {
+            GeminiTextRequestDTO request = AnalyzePromptFactory.fromLetter(model, content);
 
-        GeminiTextResponseDTO response=feignClient.chatText(
-                "Bearer "+apiKey,
-                request
-        );
+            GeminiTextResponseDTO response = feignClient.chatText(
+                    "Bearer " + apiKey,
+                    request
+            );
 
-        String rawJson=response.getChoices()
-                .get(0)
-                .getMessage()
-                .getContent();
+            String rawJson = response.getChoices()
+                    .get(0)
+                    .getMessage()
+                    .getContent();
 
-        return parse(rawJson);
+            AnalyzeResponseDTO result = parse(rawJson);
+
+            validateResult(result);
+
+            return result;
+        }catch(feign.RetryableException e){
+            throw new ExternalApiException(
+                    ExternalApiErrorCode.AI_CONNECTION_FAILED
+            );
+        }
     }
 
     private AnalyzeResponseDTO parse(String json) {
         try{
             return om.readValue(json, AnalyzeResponseDTO.class);
         } catch (Exception e) {
-            throw new IllegalStateException(
-                    "Gemini analyze parsing failed. "+ json, e
+            throw new ExternalApiException(
+                    ExternalApiErrorCode.AI_RESPONSE_PARSE_ERROR
             );
         }
     }
+
+    private void validateResult(AnalyzeResponseDTO result) {
+
+        if (result.getSummary() == null || result.getSummary().isBlank()) {
+            throw new ExternalApiException(
+                    ExternalApiErrorCode.AI_SUMMARY_FAILED
+            );
+        }
+
+        if (result.getEmotions() == null || result.getEmotions().isEmpty()) {
+            throw new ExternalApiException(
+                    ExternalApiErrorCode.AI_SUMMARY_FAILED
+            );
+        }
+    }
+
 }
