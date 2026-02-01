@@ -36,7 +36,6 @@ public class ImageUploadService {
 
         S3Service.UploadedFile uploaded;
         try {
-            // contentType에 dirName 같은 게 없다면 contentType.name().toLowerCase()로 바꾸면 됨
             uploaded = s3Service.upload(file, contentType.getDirName());
         } catch (Exception e) {
             throw new GeneralException(ImageErrorCode.IMAGE_50001);
