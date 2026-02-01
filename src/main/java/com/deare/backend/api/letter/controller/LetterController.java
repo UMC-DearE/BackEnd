@@ -4,22 +4,37 @@ import com.deare.backend.api.letter.dto.LetterDetailResponseDTO;
 import com.deare.backend.api.letter.dto.LetterListResponseDTO;
 import com.deare.backend.api.letter.dto.LetterReplyUpsertRequestDTO;
 import com.deare.backend.api.letter.dto.LetterUpdateRequestDTO;
+import com.deare.backend.api.letter.service.LetterService;
 import com.deare.backend.global.common.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/letters")
+@RequiredArgsConstructor
 public class LetterController {
+
+    private final LetterService letterService;
 
     @GetMapping
     @Operation(
             summary = "편지 목록 조회",
             description = "사용자가 소유한 편지 목록을 조회하는 API입니다. 검색, 필터, 정렬, 보기 모드 데이터를 한 번에 제공합니다."
     )
-    public ApiResponse<LetterListResponseDTO> getLetterLists() {
-        return ApiResponse.success(null);
+    public ApiResponse<LetterListResponseDTO> getLetterLists(
+            Pageable pageable,
+            @RequestParam(required = false) Long folderId,
+            @RequestParam(required = false) Long fromId,
+            @RequestParam(required = false) String keyword
+    ) {
+        Long userId = 1L;
+
+        return ApiResponse.success(
+                letterService.getLetterList(userId, pageable, folderId, fromId, keyword)
+        );
     }
 
 
