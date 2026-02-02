@@ -21,16 +21,7 @@ import java.util.List;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    // JWT
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
-
-    // OAuth2
-    // private final CustomOAuth2UserService customOAuth2UserService;
-    // private final AuthenticationSuccessHandler oAuth2SuccessHandler;
-    // private final AuthenticationFailureHandler oAuth2FailureHandler;
-
-    // logout 시 refresh Redis 삭제
-    // private final LogoutHandler refreshTokenLogoutHandler;
 
     /// 생성자로 명시적으로 주입
     public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
@@ -67,22 +58,6 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 );
 
-
-        // ✅ JWT - Redis 구현 완료 후 기존 세션 방식 각주 처리
-//        // 기본 인증 - 사용
-//        // 기본 폼 로그인 - 사용
-//        // 세션 사용
-//        http
-//                .httpBasic(Customizer.withDefaults())
-//                .formLogin(Customizer.withDefaults())
-//                .sessionManagement(session ->
-//                                 session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
-//                );
-
-        // ✅ JWT - Redis 구현 완료 후 각주 해제
-        // 기본 인증 - 해제
-        // 기본 폼 로그인 - 해제
-        // 세션 미사용
         http
                 .formLogin(form -> form.disable())
                 .httpBasic(basic -> basic.disable())
@@ -95,24 +70,6 @@ public class SecurityConfig {
                         jwtAuthenticationFilter,
                         UsernamePasswordAuthenticationFilter.class
                 );
-
-        // OAuth2 소셜 로그인
-//        http
-//                .oauth2Login(oauth2 -> oauth2
-//                 .userInfoEndpoint(userInfo -> userInfo
-//                         .userService(customOAuth2UserService))
-//                 .successHandler(oAuth2SuccessHandler)
-//                 .failureHandler(oAuth2FailureHandler)
-//         );
-
-        // 로그아웃 - JWT + Redis 토큰 시
-//        http.logout(logout -> logout
-//                .logoutUrl("/auth/logout")
-//                // .addLogoutHandler(refreshTokenLogoutHandler) // Redis Refresh 삭제
-//                .logoutSuccessHandler((request, response, authentication) ->
-//                        response.setStatus(HttpServletResponse.SC_OK)
-//                )
-//        );
 
         // 인증 관련 예외 리턴
         http.exceptionHandling(e -> e
