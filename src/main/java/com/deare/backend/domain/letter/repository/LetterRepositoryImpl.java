@@ -108,7 +108,7 @@ public class LetterRepositoryImpl implements LetterRepositoryCustom {
 
 
     private BooleanExpression ownedBy(QLetter letter, Long userId) {
-        if (userId == null) return null;
+        if (userId == null) return Expressions.FALSE.isTrue();
 
         return letter.user.id.eq(userId);
     }
@@ -128,23 +128,26 @@ public class LetterRepositoryImpl implements LetterRepositoryCustom {
         return letter.content.contains(keyword.trim());
     }
 
+    private OrderSpecifier<?> toOrderSpecifier(Sort.Order o, QLetter letter) {
+        Order direction = o.isAscending() ? Order.ASC : Order.DESC;
+        return switch (o.getProperty()) {
+            case "id" -> new OrderSpecifier<>(direction, letter.id);
+            case "createdAt" -> new OrderSpecifier<>(direction, letter.createdAt);
+            case "receivedAt" -> new OrderSpecifier<>(direction, letter.receivedAt);
+            case "isLiked" -> new OrderSpecifier<>(direction, letter.isLiked);
+            case "isPinned" -> new OrderSpecifier<>(direction, letter.isPinned);
+            default -> null;
+        };
+    }
+
     private List<OrderSpecifier<?>> toOrderSpecifiers(Sort sort, QLetter letter) {
         List<OrderSpecifier<?>> orders = new ArrayList<>();
         if (sort == null || sort.isUnsorted()) return orders;
 
         for (Sort.Order o : sort) {
-            String property = o.getProperty();
-
-            if (!isAllowedSort(property)) continue;
-
-            Order direction = o.isAscending() ? Order.ASC : Order.DESC;
-
-            ComparableExpressionBase<?> path =
-                    Expressions.comparablePath(Comparable.class, letter, property);
-
-            orders.add(new OrderSpecifier<>(direction, path));
+            OrderSpecifier<?> spec = toOrderSpecifier(o, letter);
+            if (spec != null) orders.add(spec);
         }
-
         return orders;
     }
 
