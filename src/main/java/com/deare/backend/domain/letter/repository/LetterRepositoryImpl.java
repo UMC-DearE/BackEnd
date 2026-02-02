@@ -37,6 +37,7 @@ public class LetterRepositoryImpl implements LetterRepositoryCustom {
             Long userId,
             Long folderId,
             Long fromId,
+            Boolean isLiked,
             String keyword,
             Pageable pageable
     ) {
@@ -52,6 +53,7 @@ public class LetterRepositoryImpl implements LetterRepositoryCustom {
                         ownedBy(letter, userId),
                         folderIdEq(letter, folderId),
                         fromIdEq(letter, fromId),
+                        isLikedEq(letter, isLiked),
                         keywordLike(letter, keyword)
                 )
                 .offset(pageable.getOffset())
@@ -73,6 +75,7 @@ public class LetterRepositoryImpl implements LetterRepositoryCustom {
                         ownedBy(letter, userId),
                         folderIdEq(letter, folderId),
                         fromIdEq(letter, fromId),
+                        isLikedEq(letter, isLiked),
                         keywordLike(letter, keyword)
                 );
 
@@ -121,6 +124,11 @@ public class LetterRepositoryImpl implements LetterRepositoryCustom {
     private BooleanExpression fromIdEq(QLetter letter, Long fromId) {
         if (fromId == null) return null;
         return letter.from.id.eq(fromId);
+    }
+
+    private BooleanExpression isLikedEq(QLetter letter, Boolean isLiked) {
+        if (isLiked == null) return null;
+        return letter.isLiked.eq(isLiked);
     }
 
     private BooleanExpression keywordLike(QLetter letter, String keyword) {

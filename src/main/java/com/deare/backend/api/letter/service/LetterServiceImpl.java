@@ -32,10 +32,11 @@ public class LetterServiceImpl implements LetterService {
     @Override
     @Transactional(readOnly = true)
     public LetterListResponseDTO getLetterList(
-            Long userId,
             Pageable pageable,
+            Long userId,
             Long folderId,
             Long fromId,
+            Boolean isLiked,
             String keyword
     ) {
 

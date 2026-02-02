@@ -8,13 +8,16 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
 
 public interface LetterService {
+    @Transactional(readOnly = true)
     LetterListResponseDTO getLetterList(
-            Long userId,
             Pageable pageable,
+            Long userId,
             Long folderId,
             Long fromId,
+            Boolean isLiked,
             String keyword
     );
+
     LetterDetailResponseDTO getLetterDetail(Long userId, Long letterId);
 
     void updateLetter(Long userId, Long letterId, LetterUpdateRequestDTO req);
