@@ -44,6 +44,7 @@ public class LetterServiceImpl implements LetterService {
                 userId,
                 folderId,
                 fromId,
+                isLiked,
                 keyword,
                 pageable
         );
