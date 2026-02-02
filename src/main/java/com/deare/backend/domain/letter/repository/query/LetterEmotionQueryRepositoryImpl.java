@@ -1,7 +1,7 @@
 package com.deare.backend.domain.letter.repository.query;
 
-import com.deare.backend.api.letter.dto.EmotionCategoryDTO;
-import com.deare.backend.api.letter.dto.EmotionTagDTO;
+import com.deare.backend.domain.letter.repository.query.dto.EmotionCategoryProjection;
+import com.deare.backend.domain.letter.repository.query.dto.EmotionTagProjection;
 import com.deare.backend.domain.emotion.entity.QEmotion;
 import com.deare.backend.domain.emotion.entity.QEmotionCategory;
 import com.deare.backend.domain.emotion.entity.QLetterEmotion;
@@ -20,18 +20,20 @@ public class LetterEmotionQueryRepositoryImpl
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public List<EmotionTagDTO> findEmotionTagsByLetterId(Long letterId) {
+    public List<EmotionTagProjection> findEmotionTagsByLetterId(Long letterId) {
+        if (letterId == null) return List.of();
+
         QLetterEmotion le = QLetterEmotion.letterEmotion;
         QEmotion e = QEmotion.emotion;
         QEmotionCategory c = QEmotionCategory.emotionCategory;
 
         return queryFactory
                 .select(Projections.constructor(
-                        EmotionTagDTO.class,
+                        EmotionTagProjection.class,
                         e.id,
-                        e.name,   // Emotion 이름 (전역 기준)
+                        e.name,
                         Projections.constructor(
-                                EmotionCategoryDTO.class,
+                                EmotionCategoryProjection.class,
                                 c.id,
                                 c.type,
                                 c.bgColor,
