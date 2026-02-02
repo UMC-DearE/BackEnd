@@ -21,7 +21,7 @@ public class LetterAnalyzeService {
     private final EmotionRepository emotionRepository;
 
     public AnalyzeLetterResponseDTO analyze(AnalyzeLetterRequestDTO request){
-        AnalyzeResponseDTO analyzeResult = analyzeAdapter.analyze(request.getContext());
+        AnalyzeResponseDTO analyzeResult = analyzeAdapter.analyze(request.getContent());
 
         String summary=analyzeResult.getSummary();
         List<String> emotionList=analyzeResult.getEmotions();
