@@ -1,5 +1,6 @@
 package com.deare.backend.global.config;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,6 +13,7 @@ import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 @Configuration
 @Profile("test")
 @EnableConfigurationProperties(S3Properties.class)
+@ConditionalOnProperty(prefix = "aws.s3", name = "enabled", havingValue = "true")
 public class TestS3Config {
 
     @Bean
