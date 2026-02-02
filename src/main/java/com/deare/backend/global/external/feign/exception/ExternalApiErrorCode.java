@@ -9,6 +9,12 @@ import org.springframework.http.HttpStatus;
 @RequiredArgsConstructor
 public enum ExternalApiErrorCode implements BaseErrorCode {
 
+    AI_CLIENT_ERROR(
+            HttpStatus.BAD_REQUEST,
+            "AI_40001",
+            "AI 요청이 올바르지 않습니다."
+    ),
+
     AI_RESPONSE_PARSE_ERROR(
             HttpStatus.INTERNAL_SERVER_ERROR,
             "AI_50001",

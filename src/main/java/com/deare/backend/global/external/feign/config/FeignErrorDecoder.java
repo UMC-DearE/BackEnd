@@ -56,7 +56,7 @@ public class FeignErrorDecoder implements ErrorDecoder {
             return new ExternalApiException(ExternalApiErrorCode.AI_REQUEST_FAILED);
         }
         if(status>=400){
-            return new ExternalApiException(ExternalApiErrorCode.AI_REQUEST_FAILED);
+            return new ExternalApiException(ExternalApiErrorCode.AI_CLIENT_ERROR);
         }
         return new ExternalApiException(ExternalApiErrorCode.AI_REQUEST_FAILED);
     }
