@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import software.amazon.awssdk.core.ResponseBytes;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.*;
@@ -145,4 +146,33 @@ public class S3Service {
     }
 
     public record UploadedFile(String key, String url) {}
+
+    public byte[] downloadBytes(String key) {
+        if (key == null || key.isBlank()) {
+            throw new GeneralException(S3ErrorCode.EMPTY_KEY);
+        }
+
+        try {
+            GetObjectRequest getReq = GetObjectRequest.builder()
+                    .bucket(props.bucket())
+                    .key(key)
+                    .build();
+
+            ResponseBytes<GetObjectResponse> bytes = s3Client.getObjectAsBytes(getReq);
+            return bytes.asByteArray();
+
+        } catch (NoSuchKeyException e) {
+            log.warn("[S3] Object not found. key={}", key, e);
+            throw new GeneralException(S3ErrorCode.NOT_FOUND);
+        } catch (S3Exception e) {
+            log.error("[S3] Download failed. key={} status={} awsErrorCode={} message={}",
+                    key,
+                    e.statusCode(),
+                    e.awsErrorDetails() != null ? e.awsErrorDetails().errorCode() : "null",
+                    e.getMessage(),
+                    e
+            );
+            throw new GeneralException(S3ErrorCode.DOWNLOAD_FAILED);
+        }
+    }
 }
