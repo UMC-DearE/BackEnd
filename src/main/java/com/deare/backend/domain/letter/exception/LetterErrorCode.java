@@ -15,6 +15,12 @@ public enum LetterErrorCode implements BaseErrorCode {
             HttpStatus.FORBIDDEN,
             "LETTER_40301",
             "해당 편지에 접근할 권한이 없습니다."
+    ),
+
+    LETTER_INVALID_EXCERPT_PARAM(
+            HttpStatus.INTERNAL_SERVER_ERROR,
+            "LETTER_50002",
+            "편지 요약 처리 중 내부 오류가 발생했습니다."
     );
 
     private final HttpStatus status;

@@ -1,10 +1,16 @@
 package com.deare.backend.api.letter.util;
 
+import com.deare.backend.domain.letter.exception.LetterErrorCode;
+import com.deare.backend.global.common.exception.GeneralException;
+
 public final class ExcerptUtil {
     private ExcerptUtil() {}
 
     public static String excerptByChars(String content, int maxChars) {
         if (content == null) return null;
+        if (maxChars < 1) {
+            throw new GeneralException(LetterErrorCode.LETTER_INVALID_EXCERPT_PARAM);
+        }
 
         String normalized = content
                 .replace("\r\n", " ")
