@@ -38,3 +38,4 @@ aws:
   s3:
     bucket: ${AWS_S3_BUCKET}
     region: ${AWS_REGION}
+    enabled: false

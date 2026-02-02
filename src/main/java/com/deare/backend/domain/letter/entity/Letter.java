@@ -9,6 +9,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,7 +29,7 @@ public class Letter extends BaseEntity {
     private String content;
 
     @Column(name="received_at")
-    private LocalDateTime receivedAt;
+    private LocalDate receivedAt;
 
     @Column(name="ai_summary", nullable = false, length = 255)
     private String aiSummary;
@@ -74,7 +75,7 @@ public class Letter extends BaseEntity {
 
     public Letter(
             String content,
-            LocalDateTime receivedAt,
+            LocalDate receivedAt,
             String aiSummary,
             int contentVersion,
             String contentHash,

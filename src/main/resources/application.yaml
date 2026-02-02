@@ -18,6 +18,11 @@ spring:
       ddl-auto: update
     show-sql: true
 
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
 decorator:
   datasource:
     p6spy:
@@ -31,8 +36,11 @@ aws:
     region: ${AWS_REGION}
     access-key: ${AWS_ACCESS_KEY_ID}
     secret-key: ${AWS_SECRET_ACCESS_KEY}
+    enabled: true
 
-# FeignClient - 더미 데이터임
+
 external:
   ai:
-    base-url: "https://example.com"
+    base-url: https://generativelanguage.googleapis.com/v1beta/openai
+    api-key: ${GEMINI_API_KEY}
+    model: gemini-3-flash-preview
