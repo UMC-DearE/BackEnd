@@ -1,88 +1,207 @@
 package com.deare.backend.api.auth.controller;
 
-import com.deare.backend.api.auth.dto.request.RefreshRequestDTO;
 import com.deare.backend.api.auth.dto.request.SignupRequestDTO;
-import com.deare.backend.api.auth.dto.response.LoginResponseDTO;
-import com.deare.backend.api.auth.dto.response.RefreshResponseDTO;
+import com.deare.backend.api.auth.dto.response.OAuthCallbackResponseDTO;
+import com.deare.backend.api.auth.dto.response.SignupResponseDTO;
+import com.deare.backend.api.auth.dto.response.TermResponseDTO;
+import com.deare.backend.api.auth.dto.result.OAuthCallbackResult;
+import com.deare.backend.api.auth.dto.result.SignupResult;
+import com.deare.backend.api.auth.dto.result.TokenPair;
+import com.deare.backend.api.auth.exception.AuthErrorCode;
 import com.deare.backend.api.auth.service.AuthService;
-import com.deare.backend.domain.user.entity.User;
-import com.deare.backend.global.auth.oauth.dto.oauth.OAuthCallbackUserInfoResponseDTO;
+import com.deare.backend.global.auth.jwt.JwtProperties;
+import com.deare.backend.global.auth.oauth.dto.oauth.OAuthAuthorizeResponseDTO;
 import com.deare.backend.global.auth.oauth.service.OAuthService;
+import com.deare.backend.global.auth.signupToken.SignupTokenProperties;
+import com.deare.backend.global.common.exception.GeneralException;
+import com.deare.backend.global.common.response.ApiResponse;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+@Tag(name = "Auth", description = "인증/인가 API")
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
 public class AuthController {
-    
+
     private final OAuthService oauthService;
     private final AuthService authService;
-    
-    /**
-     * OAuth 로그인
-     * 
-     * - 기존 회원: LoginResponseDTO (JWT 토큰 반환)
-     * - 신규 회원: SignupResponseDTO (Signup Token 반환)
-     * 
-     * @param provider "kakao" 또는 "google"
-     * @param code OAuth Provider가 발급한 인가 코드
-     * @return LoginResponseDTO 또는 SignupResponseDTO
-     */
-    @PostMapping("/login/oauth2/{provider}")
-    public ResponseEntity<?> loginWithOAuth(
+    private final JwtProperties jwtProperties;
+    private final SignupTokenProperties signupTokenProperties;
+
+    @Operation(
+            summary = "OAuth 인증 URL 생성",
+            description = "소셜 로그인을 위한 OAuth 인증 URL을 생성합니다. 클라이언트는 반환된 URL로 리다이렉트하여 소셜 로그인을 진행합니다."
+    )
+    @GetMapping("/oauth2/{provider}")
+    public ResponseEntity<ApiResponse<OAuthAuthorizeResponseDTO>> authorize(
+            @Parameter(description = "OAuth 제공자 (kakao, google)", example = "kakao")
+            @PathVariable String provider
+    ) {
+        OAuthAuthorizeResponseDTO data = oauthService.buildAuthorizeUrl(provider);
+        return ResponseEntity.ok(ApiResponse.success("OAuth인증 코드 발급에 성공하였습니다.", data));
+    }
+
+    @Operation(
+            summary = "OAuth 콜백 처리",
+            description = "소셜 로그인 후 콜백을 처리합니다. 기존 회원은 JWT를 발급하고, 신규 회원은 회원가입용 Signup Token을 발급합니다."
+    )
+    @GetMapping("/oauth2/{provider}/callback")
+    public ResponseEntity<ApiResponse<OAuthCallbackResponseDTO>> callback(
+            @Parameter(description = "OAuth 제공자 (kakao, google)", example = "kakao")
             @PathVariable String provider,
-            @RequestParam("code") String code
+            @Parameter(description = "OAuth 인가 코드")
+            @RequestParam("code") String code,
+            @Parameter(description = "CSRF 방지용 state 값")
+            @RequestParam("state") String state,
+            HttpServletResponse response
     ) {
-        // 1. OAuth 처리 (code → access_token → userInfo)
-        OAuthCallbackUserInfoResponseDTO oauthInfo = oauthService.handleCallback(provider, code);
-        
-        // 2. 기존 회원 → JWT 발급 / 신규 회원 → Signup Token 발급
-        Object response = authService.loginWithOAuth(oauthInfo);
-        
-        // 3. 응답 (LoginResponseDTO 또는 SignupResponseDTO)
-        return ResponseEntity.ok(response);
+        // State 검증 (CSRF 방지)
+        oauthService.validateState(state);
+
+        OAuthCallbackResult result = authService.handleOAuthCallback(provider, code);
+
+        if (result.isRegistered()) {
+            // 기존 회원: JWT 발급
+            response.setHeader(HttpHeaders.AUTHORIZATION, "Bearer " + result.accessToken());
+            addRefreshTokenCookie(response, result.refreshToken());
+        } else {
+            // 신규 회원: Signup Token을 HttpOnly Cookie로 발급
+            addSignupTokenCookie(response, result.signupToken());
+        }
+
+        return ResponseEntity.ok(ApiResponse.success("소셜 로그인 인증에 성공하였습니다.", result.response()));
     }
-    
-    /**
-     * Access Token 재발급
-     */
-    @PostMapping("/refresh")
-    public ResponseEntity<RefreshResponseDTO> refresh(
-            @RequestBody RefreshRequestDTO request
+
+    @Operation(
+            summary = "JWT 토큰 재발급",
+            description = "Refresh Token을 사용하여 새로운 Access Token과 Refresh Token을 발급합니다. Refresh Token은 HttpOnly Cookie로 전달됩니다."
+    )
+    @PostMapping("/jwt/refresh")
+    public ResponseEntity<ApiResponse<Void>> refresh(
+            @Parameter(hidden = true)
+            @CookieValue(name = "refresh_token", required = false) String refreshToken,
+            HttpServletResponse response
     ) {
-        RefreshResponseDTO response = authService.refresh(request.refreshToken());
-        return ResponseEntity.ok(response);
+        TokenPair tokenPair = authService.refresh(refreshToken);
+
+        response.setHeader(HttpHeaders.AUTHORIZATION, "Bearer " + tokenPair.accessToken());
+        addRefreshTokenCookie(response, tokenPair.refreshToken());
+
+        return ResponseEntity.ok(ApiResponse.success("토큰 발행에 성공하였습니다.", null));
     }
-    
-    /**
-     * 로그아웃
-     * 
-     * Authorization: Bearer {accessToken} 필수
-     */
-    @PostMapping("/logout")
-    public ResponseEntity<Void> logout(
-            @AuthenticationPrincipal User user
+
+    @Operation(
+            summary = "회원가입용 약관 조회",
+            description = "회원가입에 필요한 약관 목록을 조회합니다. Signup Token이 Cookie에 포함되어 있어야 합니다."
+    )
+    @GetMapping("/terms")
+    public ResponseEntity<ApiResponse<TermResponseDTO>> getTerms(
+            @Parameter(hidden = true)
+            @CookieValue(name = "signup_token", required = false) String signupToken
     ) {
-        authService.logout(user.getId());
-        return ResponseEntity.ok().build();
+        // Signup Token 검증 (JWT 서명 + Redis)
+        if (signupToken == null || signupToken.isBlank()) {
+            throw new GeneralException(AuthErrorCode.MISSING_SIGNUP_TOKEN);
+        }
+        authService.validateSignupToken(signupToken);
+
+        TermResponseDTO data = authService.getSignupTerms();
+
+        return ResponseEntity.ok(ApiResponse.success("회원 가입용 약관 조회에 성공하였습니다.", data));
     }
-    
-    /**
-     * 회원가입
-     * 
-     * @param signupToken Header에서 받은 Signup Token
-     * @param request 닉네임, 약관 동의 정보
-     * @return LoginResponseDTO (JWT 토큰)
-     */
+
+    @Operation(
+            summary = "회원가입",
+            description = "신규 회원가입을 처리합니다. Signup Token(Cookie)과 약관 동의 정보가 필요합니다. 가입 완료 후 JWT를 발급합니다."
+    )
     @PostMapping("/signup")
-    public ResponseEntity<LoginResponseDTO> signup(
-            @RequestHeader("Signup-Token") String signupToken,
-            @RequestBody SignupRequestDTO request
+    public ResponseEntity<ApiResponse<SignupResponseDTO>> signup(
+            @Parameter(hidden = true)
+            @CookieValue(name = "signup_token", required = false) String signupToken,
+            @RequestBody SignupRequestDTO request,
+            HttpServletResponse response
     ) {
-        LoginResponseDTO response = authService.signup(signupToken, request);
-        return ResponseEntity.ok(response);
+        if (signupToken == null || signupToken.isBlank()) {
+            throw new GeneralException(AuthErrorCode.MISSING_SIGNUP_TOKEN);
+        }
+
+        // 회원가입 처리 (내부에서 Redis 검증 + 삭제)
+        SignupResult result = authService.signup(signupToken, request);
+
+        // Access Token -> Response Header
+        response.setHeader(HttpHeaders.AUTHORIZATION, "Bearer " + result.accessToken());
+
+        // Refresh Token -> HttpOnly Cookie
+        addRefreshTokenCookie(response, result.refreshToken());
+
+        // Signup Token Cookie 만료 처리
+        expireSignupTokenCookie(response);
+
+        return ResponseEntity.ok(ApiResponse.success("회원가입에 성공하였습니다.", result.response()));
+    }
+
+    @Operation(
+            summary = "로그아웃",
+            description = "로그아웃을 처리합니다. Redis에서 Refresh Token을 삭제하고 Cookie를 만료시킵니다."
+    )
+    @PostMapping("/logout")
+    public ResponseEntity<ApiResponse<Void>> logout(
+            @Parameter(hidden = true)
+            @AuthenticationPrincipal(expression = "id") Long userId,
+            HttpServletResponse response
+    ) {
+        authService.logout(userId);
+
+        expireRefreshTokenCookie(response);
+
+        return ResponseEntity.ok(ApiResponse.success("로그아웃이 완료되었습니다.", null));
+    }
+
+
+    private void addRefreshTokenCookie(HttpServletResponse response, String refreshToken) {
+        Cookie cookie = new Cookie("refresh_token", refreshToken);
+        cookie.setHttpOnly(true);
+        cookie.setSecure(true);
+        cookie.setPath("/");
+        // .env의 JWT_REFRESH_TOKEN_EXPIRATION (ms) → 초 단위로 변환
+        cookie.setMaxAge((int) (jwtProperties.getRefreshTokenExpiration() / 1000));
+        response.addCookie(cookie);
+    }
+
+    private void expireRefreshTokenCookie(HttpServletResponse response) {
+        Cookie cookie = new Cookie("refresh_token", "");
+        cookie.setHttpOnly(true);
+        cookie.setSecure(true);
+        cookie.setPath("/");
+        cookie.setMaxAge(0);
+        response.addCookie(cookie);
+    }
+
+    private void addSignupTokenCookie(HttpServletResponse response, String signupToken) {
+        Cookie cookie = new Cookie("signup_token", signupToken);
+        cookie.setHttpOnly(true);
+        cookie.setSecure(true);
+        cookie.setPath("/auth");
+        // .env의 SIGNUP_TOKEN_EXPIRATION (ms) → 초 단위로 변환
+        cookie.setMaxAge((int) (signupTokenProperties.getExpiration() / 1000));
+        response.addCookie(cookie);
+    }
+
+    private void expireSignupTokenCookie(HttpServletResponse response) {
+        Cookie cookie = new Cookie("signup_token", "");
+        cookie.setHttpOnly(true);
+        cookie.setSecure(true);
+        cookie.setPath("/auth");
+        cookie.setMaxAge(0);
+        response.addCookie(cookie);
     }
 }
