@@ -26,7 +26,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class FolderServiceImpl implements FolderService {
 
-    private static final int MAX_FOLDERS = 5;
+    private static final int MAX_FOLDERS = 3;
 
     private final FolderRepository folderRepository;
     private final ImageRepository imageRepository;
