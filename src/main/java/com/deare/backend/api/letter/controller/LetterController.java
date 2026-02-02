@@ -59,6 +59,9 @@ public class LetterController {
             @PathVariable Long letterId,
             @Valid @RequestBody LetterUpdateRequestDTO reqDTO
             ){
+        Long userId = 1L; // TODO: 인증 연결 후 SecurityContext/JWT에서 추출
+
+        letterService.updateLetter(userId, letterId, reqDTO);
         return ApiResponse.success(null);
     }
 
@@ -66,6 +69,8 @@ public class LetterController {
     @Operation(summary = "편지 삭제",
             description = "사용자가 소유한 편지를 삭제하는 API입니다.")
     public ApiResponse<Void> deleteLetter(@PathVariable Long letterId){
+        Long userId = 1L; // TODO: 인증 연결
+        letterService.deleteLetter(userId, letterId);
         return ApiResponse.success(null);
     }
 
@@ -94,7 +99,9 @@ public class LetterController {
             description = "사용자가 소유한 편지에 좋아요를 추가합니다."
     )
     public ApiResponse<Void> likeLetter(@PathVariable Long letterId) {
-        return ApiResponse.success(null);
+        Long userId = 1L; // TODO: 인증 연결
+        boolean liked = letterService.likeLetter(userId, letterId);
+        return ApiResponse.success(java.util.Map.of("liked", liked));
     }
 
     @DeleteMapping("/{letterId}/like")

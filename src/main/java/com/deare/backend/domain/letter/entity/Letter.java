@@ -13,6 +13,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Getter
 @Entity
@@ -98,11 +99,42 @@ public class Letter extends BaseEntity {
         letterImage.setLetter(this);
     }
 
-    public void updateReply(String reply){
+    public boolean isOwnedBy(Long userId) {
+        return user != null && Objects.equals(user.getId(), userId);
+    }
+
+    public void updateContent(
+            String content,
+            String newAiSummary,
+            String newContentHash
+    ) {
+        this.content = content;
+        this.aiSummary = newAiSummary;
+        this.contentHash = newContentHash;
+        this.contentVersion++;
+    }
+
+    public void updateReceivedAt(LocalDate receivedAt) {
+        this.receivedAt = receivedAt;
+    }
+
+    public void changeFrom(From from) {
+        this.from = from;
+    }
+
+    public void like() {
+        this.isLiked = true;
+    }
+
+    public void unlike() {
+        this.isLiked = false;
+    }
+
+    public void updateReply(String reply) {
         this.reply = reply;
     }
 
-    public void changeFolder(Folder folder){
+    public void changeFolder(Folder folder) {
         this.folder = folder;
     }
 }

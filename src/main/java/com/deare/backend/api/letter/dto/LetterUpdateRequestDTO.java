@@ -8,14 +8,18 @@ import java.time.LocalDate;
 @Getter
 public class LetterUpdateRequestDTO {
 
-    @Size(max = 5000) // 사이즈 제한 생기면 그때 다시 수정
+    @Size(max = 5000)
     private String content;
 
     private LocalDate receivedAt;
 
+    private boolean receivedAtSpecified;
+
     private Long fromId;
 
     public boolean hasAnyField() {
-        return content != null || receivedAt != null || fromId != null;
+        return content != null
+                || receivedAtSpecified
+                || fromId != null;
     }
 }

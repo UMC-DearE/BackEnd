@@ -43,6 +43,10 @@ public class From extends BaseEntity {
     }
 
 
+    public boolean isOwnedBy(Long userId) {
+        return this.user != null && java.util.Objects.equals(this.user.getId(), userId);
+    }
+
     public void changeFromName(String name){
         this.name = name;
     }
