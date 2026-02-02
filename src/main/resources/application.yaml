@@ -18,6 +18,11 @@ spring:
       ddl-auto: update
     show-sql: true
 
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
 decorator:
   datasource:
     p6spy:
@@ -31,6 +36,8 @@ aws:
     region: ${AWS_REGION}
     access-key: ${AWS_ACCESS_KEY_ID}
     secret-key: ${AWS_SECRET_ACCESS_KEY}
+    enabled: true
+
 
 external:
   ai:

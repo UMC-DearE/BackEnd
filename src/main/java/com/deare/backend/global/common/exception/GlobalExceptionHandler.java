@@ -1,6 +1,7 @@
 package com.deare.backend.global.common.exception;
 
 import com.deare.backend.global.common.response.ApiResponse;
+import com.deare.backend.global.external.feign.exception.ExternalApiException;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
@@ -105,4 +106,19 @@ public class GlobalExceptionHandler {
         return String.format("[%s] %s", fe.getField(),
                 (fe.getDefaultMessage() != null ? fe.getDefaultMessage() : "입력값이 올바르지 않습니다."));
     }
+
+    @ExceptionHandler(ExternalApiException.class)
+    public ResponseEntity<ApiResponse<Void>> handleExternalApiException(
+            ExternalApiException e
+    ) {
+        BaseErrorCode ec = e.getErrorCode();
+
+        log.error("[External API Error] Code: {}, Message: {}",
+                ec.getCode(), ec.getMessage());
+
+        return ResponseEntity
+                .status(ec.getStatus())
+                .body(ApiResponse.fail(ec.getCode(), ec.getMessage()));
+    }
+
 }
