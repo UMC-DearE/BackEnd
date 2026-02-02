@@ -9,17 +9,14 @@ import com.deare.backend.api.auth.dto.result.SignupResult;
 import com.deare.backend.api.auth.dto.result.TokenPair;
 import com.deare.backend.api.auth.exception.AuthErrorCode;
 import com.deare.backend.api.auth.service.AuthService;
-import com.deare.backend.global.auth.jwt.JwtProperties;
+import com.deare.backend.global.auth.cookie.CookieProvider;
 import com.deare.backend.global.auth.oauth.dto.oauth.OAuthAuthorizeResponseDTO;
 import com.deare.backend.global.auth.oauth.service.OAuthService;
-import com.deare.backend.global.auth.signupToken.SignupTokenProperties;
 import com.deare.backend.global.common.exception.GeneralException;
 import com.deare.backend.global.common.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -34,8 +31,7 @@ public class AuthController {
 
     private final OAuthService oauthService;
     private final AuthService authService;
-    private final JwtProperties jwtProperties;
-    private final SignupTokenProperties signupTokenProperties;
+    private final CookieProvider cookieProvider;
 
     @Operation(
             summary = "OAuth 인증 URL 생성",
@@ -61,8 +57,7 @@ public class AuthController {
             @Parameter(description = "OAuth 인가 코드")
             @RequestParam("code") String code,
             @Parameter(description = "CSRF 방지용 state 값")
-            @RequestParam("state") String state,
-            HttpServletResponse response
+            @RequestParam("state") String state
     ) {
         // State 검증 (CSRF 방지)
         oauthService.validateState(state);
@@ -71,14 +66,16 @@ public class AuthController {
 
         if (result.isRegistered()) {
             // 기존 회원 -> JWT 발급 (at/rt)
-            response.setHeader(HttpHeaders.AUTHORIZATION, "Bearer " + result.accessToken());
-            addRefreshTokenCookie(response, result.refreshToken());
-        } else {
-            // 신규 회원 -> Signup Token : HttpOnly Cookie
-            addSignupTokenCookie(response, result.signupToken());
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + result.accessToken())
+                    .header(HttpHeaders.SET_COOKIE, cookieProvider.createRefreshTokenCookie(result.refreshToken()).toString())
+                    .body(ApiResponse.success("소셜 로그인 인증에 성공하였습니다.", result.response()));
         }
 
-        return ResponseEntity.ok(ApiResponse.success("소셜 로그인 인증에 성공하였습니다.", result.response()));
+        // 신규 회원 -> Signup Token : HttpOnly Cookie
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, cookieProvider.createSignupTokenCookie(result.signupToken()).toString())
+                .body(ApiResponse.success("소셜 로그인 인증에 성공하였습니다.", result.response()));
     }
 
     @Operation(
@@ -88,15 +85,14 @@ public class AuthController {
     @PostMapping("/jwt/refresh")
     public ResponseEntity<ApiResponse<Void>> refresh(
             @Parameter(hidden = true)
-            @CookieValue(name = "refresh_token", required = false) String refreshToken,
-            HttpServletResponse response
+            @CookieValue(name = "refresh_token", required = false) String refreshToken
     ) {
         TokenPair tokenPair = authService.refresh(refreshToken);
 
-        response.setHeader(HttpHeaders.AUTHORIZATION, "Bearer " + tokenPair.accessToken());
-        addRefreshTokenCookie(response, tokenPair.refreshToken());
-
-        return ResponseEntity.ok(ApiResponse.success("토큰 발행에 성공하였습니다.", null));
+        return ResponseEntity.ok()
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenPair.accessToken())
+                .header(HttpHeaders.SET_COOKIE, cookieProvider.createRefreshTokenCookie(tokenPair.refreshToken()).toString())
+                .body(ApiResponse.success("토큰 발행에 성공하였습니다.", null));
     }
 
     @Operation(
@@ -127,8 +123,7 @@ public class AuthController {
     public ResponseEntity<ApiResponse<SignupResponseDTO>> signup(
             @Parameter(hidden = true)
             @CookieValue(name = "signup_token", required = false) String signupToken,
-            @RequestBody SignupRequestDTO request,
-            HttpServletResponse response
+            @RequestBody SignupRequestDTO request
     ) {
         if (signupToken == null || signupToken.isBlank()) {
             throw new GeneralException(AuthErrorCode.MISSING_SIGNUP_TOKEN);
@@ -137,16 +132,11 @@ public class AuthController {
         // 회원가입 처리 (내부에서 Redis 검증 + 삭제)
         SignupResult result = authService.signup(signupToken, request);
 
-        // Access Token -> Response Header
-        response.setHeader(HttpHeaders.AUTHORIZATION, "Bearer " + result.tokenPair().accessToken());
-
-        // Refresh Token -> HttpOnly Cookie
-        addRefreshTokenCookie(response, result.tokenPair().refreshToken());
-
-        // Signup Token Cookie 만료 처리
-        expireSignupTokenCookie(response);
-
-        return ResponseEntity.ok(ApiResponse.success("회원가입에 성공하였습니다.", result.response()));
+        return ResponseEntity.ok()
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + result.tokenPair().accessToken())
+                .header(HttpHeaders.SET_COOKIE, cookieProvider.createRefreshTokenCookie(result.tokenPair().refreshToken()).toString())
+                .header(HttpHeaders.SET_COOKIE, cookieProvider.expireSignupTokenCookie().toString())
+                .body(ApiResponse.success("회원가입에 성공하였습니다.", result.response()));
     }
 
     @Operation(
@@ -156,52 +146,12 @@ public class AuthController {
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse<Void>> logout(
             @Parameter(hidden = true)
-            @AuthenticationPrincipal(expression = "id") Long userId,
-            HttpServletResponse response
+            @AuthenticationPrincipal(expression = "id") Long userId
     ) {
         authService.logout(userId);
 
-        expireRefreshTokenCookie(response);
-
-        return ResponseEntity.ok(ApiResponse.success("로그아웃이 완료되었습니다.", null));
-    }
-
-
-    private void addRefreshTokenCookie(HttpServletResponse response, String refreshToken) {
-        Cookie cookie = new Cookie("refresh_token", refreshToken);
-        cookie.setHttpOnly(true);
-        cookie.setSecure(true);
-        cookie.setPath("/");
-        // JWT_REFRESH_TOKEN_EXPIRATION (ms) -> 초 단위
-        cookie.setMaxAge((int) (jwtProperties.getRefreshTokenExpiration() / 1000));
-        response.addCookie(cookie);
-    }
-
-    private void expireRefreshTokenCookie(HttpServletResponse response) {
-        Cookie cookie = new Cookie("refresh_token", "");
-        cookie.setHttpOnly(true);
-        cookie.setSecure(true);
-        cookie.setPath("/");
-        cookie.setMaxAge(0);
-        response.addCookie(cookie);
-    }
-
-    private void addSignupTokenCookie(HttpServletResponse response, String signupToken) {
-        Cookie cookie = new Cookie("signup_token", signupToken);
-        cookie.setHttpOnly(true);
-        cookie.setSecure(true);
-        cookie.setPath("/auth");
-        // SIGNUP_TOKEN_EXPIRATION (ms) -> 초 단위
-        cookie.setMaxAge((int) (signupTokenProperties.getExpiration() / 1000));
-        response.addCookie(cookie);
-    }
-
-    private void expireSignupTokenCookie(HttpServletResponse response) {
-        Cookie cookie = new Cookie("signup_token", "");
-        cookie.setHttpOnly(true);
-        cookie.setSecure(true);
-        cookie.setPath("/auth");
-        cookie.setMaxAge(0);
-        response.addCookie(cookie);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, cookieProvider.expireRefreshTokenCookie().toString())
+                .body(ApiResponse.success("로그아웃이 완료되었습니다.", null));
     }
 }
