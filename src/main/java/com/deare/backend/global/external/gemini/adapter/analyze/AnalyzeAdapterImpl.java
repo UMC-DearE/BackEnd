@@ -66,13 +66,13 @@ public class AnalyzeAdapterImpl implements AnalyzeAdapter {
 
         if (result.getSummary() == null || result.getSummary().isBlank()) {
             throw new ExternalApiException(
-                    ExternalApiErrorCode.AI_SUMMARY_FAILED
+                    ExternalApiErrorCode.AI_SUMMARY_CREATE_FAILED
             );
         }
 
         if (result.getEmotions() == null || result.getEmotions().isEmpty()) {
             throw new ExternalApiException(
-                    ExternalApiErrorCode.AI_SUMMARY_FAILED
+                    ExternalApiErrorCode.AI_EMOTION_CREATE_FAILED
             );
         }
     }

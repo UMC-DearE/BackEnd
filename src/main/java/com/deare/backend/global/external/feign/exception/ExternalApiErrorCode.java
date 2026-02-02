@@ -15,10 +15,16 @@ public enum ExternalApiErrorCode implements BaseErrorCode {
             "AI 응답 처리 중 오류가 발생했습니다."
     ),
 
-    AI_SUMMARY_FAILED(
+    AI_SUMMARY_CREATE_FAILED(
             HttpStatus.INTERNAL_SERVER_ERROR,
             "AI_50002",
             "편지 요약 생성에 실패했습니다."
+    ),
+
+    AI_EMOTION_CREATE_FAILED(
+      HttpStatus.INTERNAL_SERVER_ERROR,
+      "AI_50003",
+      "감정 분석에 실패했습니다."
     ),
 
     AI_REQUEST_FAILED(
