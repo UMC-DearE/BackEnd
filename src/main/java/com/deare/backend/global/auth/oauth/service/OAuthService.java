@@ -86,33 +86,63 @@ public class OAuthService {
      */
     public OAuthCallbackUserInfoResponseDTO handleCallback(String provider, String code) {
         if ("kakao".equals(provider)) {
-            KakaoTokenResponseDTO token = kakaoTokenClient.exchangeCodeForToken(code);
-            KakaoUserInfoResponseDTO userInfo = kakaoUserInfoClient.fetchUserInfo(token.accessToken());
-
-            String email = userInfo.kakaoAccount() != null
-                    ? userInfo.kakaoAccount().email()
-                    : null;
-
-            return new OAuthCallbackUserInfoResponseDTO(
-                    "kakao",
-                    String.valueOf(userInfo.id()),
-                    email,
-                    LocalDateTime.now()
-            );
+            return handleKakaoCallback(code);
         }
 
         if ("google".equals(provider)) {
-            GoogleTokenResponseDTO token = googleTokenClient.exchangeCodeForToken(code);
-            GoogleUserInfoResponseDTO userInfo = googleUserInfoClient.fetchUserInfo(token.accessToken());
-
-            return new OAuthCallbackUserInfoResponseDTO(
-                    "google",
-                    userInfo.sub(),
-                    userInfo.email(),
-                    LocalDateTime.now()
-            );
+            return handleGoogleCallback(code);
         }
 
         throw new GeneralException(AuthErrorCode.INVALID_PROVIDER);
+    }
+
+    private OAuthCallbackUserInfoResponseDTO handleKakaoCallback(String code) {
+        KakaoTokenResponseDTO token;
+        try {
+            token = kakaoTokenClient.exchangeCodeForToken(code);
+        } catch (Exception e) {
+            throw new GeneralException(AuthErrorCode.OAUTH_TOKEN_REQUEST_FAILED);
+        }
+
+        KakaoUserInfoResponseDTO userInfo;
+        try {
+            userInfo = kakaoUserInfoClient.fetchUserInfo(token.accessToken());
+        } catch (Exception e) {
+            throw new GeneralException(AuthErrorCode.OAUTH_USERINFO_REQUEST_FAILED);
+        }
+
+        String email = userInfo.kakaoAccount() != null
+                ? userInfo.kakaoAccount().email()
+                : null;
+
+        return new OAuthCallbackUserInfoResponseDTO(
+                "kakao",
+                String.valueOf(userInfo.id()),
+                email,
+                LocalDateTime.now()
+        );
+    }
+
+    private OAuthCallbackUserInfoResponseDTO handleGoogleCallback(String code) {
+        GoogleTokenResponseDTO token;
+        try {
+            token = googleTokenClient.exchangeCodeForToken(code);
+        } catch (Exception e) {
+            throw new GeneralException(AuthErrorCode.OAUTH_TOKEN_REQUEST_FAILED);
+        }
+
+        GoogleUserInfoResponseDTO userInfo;
+        try {
+            userInfo = googleUserInfoClient.fetchUserInfo(token.accessToken());
+        } catch (Exception e) {
+            throw new GeneralException(AuthErrorCode.OAUTH_USERINFO_REQUEST_FAILED);
+        }
+
+        return new OAuthCallbackUserInfoResponseDTO(
+                "google",
+                userInfo.sub(),
+                userInfo.email(),
+                LocalDateTime.now()
+        );
     }
 }
