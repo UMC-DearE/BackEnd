@@ -62,6 +62,15 @@ public class FolderController {
             summary = "폴더 삭제"
     )
     public ApiResponse<Void> deleteFolder(@PathVariable("folderId") Long folderId) {
+        Long userId = 1L;
+        // TODO: 인증 부분 구현 후 수정
+//        Long userId = SecurityUtil.currentUserId();
+
+        if (userId == null) {
+            throw new GeneralException(FolderErrorCode.FOLDER_40101);
+        }
+
+        folderService.deleteFolder(userId, folderId);
         return ApiResponse.success(null);
     }
 
@@ -88,7 +97,18 @@ public class FolderController {
     @Operation(
             summary = "폴더에 편지 추가"
     )
-    public ApiResponse<Void> addLetterToFolder(@PathVariable("folderId") Long folderId, @PathVariable("letterId") Long letterId) {
+    public ApiResponse<Void> addLetterToFolder(
+            @PathVariable("folderId") Long folderId,
+            @PathVariable("letterId") Long letterId) {
+        Long userId = 1L;
+        // TODO: 인증 부분 구현 후 수정
+//        Long userId = SecurityUtil.currentUserId();
+
+        if (userId == null) {
+            throw new GeneralException(FolderErrorCode.FOLDER_40101);
+        }
+
+        folderService.addLetterToFolder(userId, folderId, letterId);
         return ApiResponse.success(null);
     }
 
@@ -96,7 +116,18 @@ public class FolderController {
     @Operation(
             summary = "폴더에서 편지 삭제"
     )
-    public ApiResponse<Void> deleteLetterFromFolder(@PathVariable("folderId") Long folderId, @PathVariable("letterId") Long letterId) {
+    public ApiResponse<Void> deleteLetterFromFolder(
+            @PathVariable("folderId") Long folderId,
+            @PathVariable("letterId") Long letterId) {
+        Long userId = 1L;
+        // TODO: 인증 부분 구현 후 수정
+//        Long userId = SecurityUtil.currentUserId();
+
+        if (userId == null) {
+            throw new GeneralException(FolderErrorCode.FOLDER_40101);
+        }
+
+        folderService.removeLetterFromFolder(userId, folderId, letterId);
         return ApiResponse.success(null);
     }
 }

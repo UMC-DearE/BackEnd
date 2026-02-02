@@ -9,6 +9,9 @@ import com.deare.backend.domain.folder.exception.FolderErrorCode;
 import com.deare.backend.domain.folder.repository.FolderRepository;
 import com.deare.backend.domain.image.entity.Image;
 import com.deare.backend.domain.image.repository.ImageRepository;
+import com.deare.backend.domain.letter.entity.Letter;
+import com.deare.backend.domain.letter.exception.LetterErrorCode;
+import com.deare.backend.domain.letter.repository.LetterRepository;
 import com.deare.backend.domain.user.entity.User;
 import com.deare.backend.domain.user.repository.UserRepository;
 import com.deare.backend.global.common.exception.GeneralException;
@@ -28,6 +31,7 @@ public class FolderServiceImpl implements FolderService {
     private final FolderRepository folderRepository;
     private final ImageRepository imageRepository;
     private final UserRepository userRepository;
+    private final LetterRepository letterRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -83,5 +87,47 @@ public class FolderServiceImpl implements FolderService {
                 .format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
 
         return new FolderCreateResponseDTO(saved.getId(), createdAt);
+    }
+
+    @Override
+    @Transactional
+    public void deleteFolder(Long userId, Long folderId) {
+        Folder folder = folderRepository.findByIdAndUser_IdAndIsDeletedFalse(folderId, userId)
+                .orElseThrow(() -> new GeneralException(FolderErrorCode.FOLDER_40401));
+
+        letterRepository.clearFolder(userId, folderId);
+        folder.softDelete();
+    }
+
+    @Override
+    @Transactional
+    public void addLetterToFolder(Long userId, Long folderId, Long letterId) {
+        Folder folder = folderRepository.findByIdAndUser_IdAndIsDeletedFalse(folderId, userId)
+                .orElseThrow(() -> new GeneralException(FolderErrorCode.FOLDER_40401));
+
+        Letter letter = letterRepository.findByIdAndUser_IdAndIsDeletedFalse(letterId, userId)
+                .orElseThrow(() -> new GeneralException(LetterErrorCode.LETTER_40301));
+
+        if (letter.getFolder() != null && letter.getFolder().getId().equals(folderId)) {
+            return;
+        }
+
+        letter.changeFolder(folder);
+    }
+
+    @Override
+    @Transactional
+    public void removeLetterFromFolder(Long userId, Long folderId, Long letterId) {
+        folderRepository.findByIdAndUser_IdAndIsDeletedFalse(folderId, userId)
+                .orElseThrow(() -> new GeneralException(FolderErrorCode.FOLDER_40401));
+
+        Letter letter = letterRepository.findByIdAndUser_IdAndIsDeletedFalse(letterId, userId)
+                .orElseThrow(() -> new GeneralException(FolderErrorCode.FOLDER_40003)); // TODO: LetterErrorCode로 교체
+
+        if (letter.getFolder() == null || !letter.getFolder().getId().equals(folderId)) {
+            throw new GeneralException(FolderErrorCode.FOLDER_40003);
+        }
+
+        letter.changeFolder(null);
     }
 }

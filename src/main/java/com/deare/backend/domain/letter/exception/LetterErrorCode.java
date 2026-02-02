@@ -9,19 +9,19 @@ import org.springframework.http.HttpStatus;
 @RequiredArgsConstructor
 public enum LetterErrorCode implements BaseErrorCode {
 
-    LETTER_NOT_FOUND(
+    LETTER_40401(
             HttpStatus.NOT_FOUND,
             "LETTER_40401",
             "편지를 찾을 수 없습니다."
     ),
 
-    LETTER_FORBIDDEN(
+    LETTER_40301(
             HttpStatus.FORBIDDEN,
             "LETTER_40301",
             "해당 편지에 접근할 권한이 없습니다."
     ),
 
-    LETTER_INVALID_EXCERPT_PARAM(
+    LETTER_50002(
             HttpStatus.INTERNAL_SERVER_ERROR,
             "LETTER_50002",
             "편지 요약 처리 중 내부 오류가 발생했습니다."

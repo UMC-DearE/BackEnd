@@ -68,7 +68,7 @@ public class LetterServiceImpl implements LetterService {
         Letter letter = letterRepository
                 .findLetterDetailById(userId, letterId)
                 .orElseThrow(() ->
-                        new GeneralException(LetterErrorCode.LETTER_NOT_FOUND)
+                        new GeneralException(LetterErrorCode.LETTER_40401)
                 );
 
         List<EmotionTagDTO> emotionTags =
