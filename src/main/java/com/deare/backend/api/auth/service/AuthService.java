@@ -228,7 +228,7 @@ public class AuthService {
         // 9. Refresh Token을 Redis에 저장
         jwtService.saveRefreshToken(newUser.getId(), refreshToken);
 
-        return new SignupResult(accessToken, refreshToken, SignupResponseDTO.of());
+        return new SignupResult(new TokenPair(accessToken, refreshToken), SignupResponseDTO.of());
     }
 
     /**

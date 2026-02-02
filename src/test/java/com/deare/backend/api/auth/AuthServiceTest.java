@@ -93,8 +93,8 @@ class AuthServiceTest {
 
         SignupResult result = authService.signup(token, new SignupRequestDTO("유저", List.of(term.getId())));
 
-        assertThat(result.accessToken()).isNotBlank();
-        assertThat(result.refreshToken()).isNotBlank();
+        assertThat(result.tokenPair().accessToken()).isNotBlank();
+        assertThat(result.tokenPair().refreshToken()).isNotBlank();
         assertThat(userRepository.findByProviderAndProviderId(Provider.KAKAO, "newuser1")).isPresent();
     }
 

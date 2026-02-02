@@ -70,11 +70,11 @@ public class AuthController {
         OAuthCallbackResult result = authService.handleOAuthCallback(provider, code);
 
         if (result.isRegistered()) {
-            // 기존 회원: JWT 발급
+            // 기존 회원 -> JWT 발급 (at/rt)
             response.setHeader(HttpHeaders.AUTHORIZATION, "Bearer " + result.accessToken());
             addRefreshTokenCookie(response, result.refreshToken());
         } else {
-            // 신규 회원: Signup Token을 HttpOnly Cookie로 발급
+            // 신규 회원 -> Signup Token : HttpOnly Cookie
             addSignupTokenCookie(response, result.signupToken());
         }
 
@@ -108,7 +108,7 @@ public class AuthController {
             @Parameter(hidden = true)
             @CookieValue(name = "signup_token", required = false) String signupToken
     ) {
-        // Signup Token 검증 (JWT 서명 + Redis)
+        // Signup Token 검증 Redis <-> 브라우저
         if (signupToken == null || signupToken.isBlank()) {
             throw new GeneralException(AuthErrorCode.MISSING_SIGNUP_TOKEN);
         }
@@ -138,10 +138,10 @@ public class AuthController {
         SignupResult result = authService.signup(signupToken, request);
 
         // Access Token -> Response Header
-        response.setHeader(HttpHeaders.AUTHORIZATION, "Bearer " + result.accessToken());
+        response.setHeader(HttpHeaders.AUTHORIZATION, "Bearer " + result.tokenPair().accessToken());
 
         // Refresh Token -> HttpOnly Cookie
-        addRefreshTokenCookie(response, result.refreshToken());
+        addRefreshTokenCookie(response, result.tokenPair().refreshToken());
 
         // Signup Token Cookie 만료 처리
         expireSignupTokenCookie(response);
