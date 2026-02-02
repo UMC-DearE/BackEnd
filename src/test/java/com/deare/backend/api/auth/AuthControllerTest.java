@@ -80,7 +80,7 @@ class AuthControllerTest {
     void authorize_invalidProvider() throws Exception {
         mockMvc.perform(get("/auth/oauth2/naver"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value("AUTH_400_1"));
+                .andExpect(jsonPath("$.code").value("AUTH_40001"));
     }
 
     @Test
@@ -88,7 +88,7 @@ class AuthControllerTest {
     void getTerms_noToken() throws Exception {
         mockMvc.perform(get("/auth/terms"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value("AUTH_400_3"));
+                .andExpect(jsonPath("$.code").value("AUTH_40003"));
     }
 
     @Test
@@ -128,7 +128,7 @@ class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(new SignupRequestDTO("유저", List.of(1L)))))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value("AUTH_400_3"));
+                .andExpect(jsonPath("$.code").value("AUTH_40003"));
     }
 
     @Test
@@ -136,7 +136,7 @@ class AuthControllerTest {
     void refresh_noToken() throws Exception {
         mockMvc.perform(post("/auth/jwt/refresh"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value("AUTH_400_4"));
+                .andExpect(jsonPath("$.code").value("AUTH_40004"));
     }
 
     @Test
@@ -146,6 +146,6 @@ class AuthControllerTest {
                         .param("code", "code")
                         .param("state", "invalid"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value("AUTH_400_2"));
+                .andExpect(jsonPath("$.code").value("AUTH_40002"));
     }
 }
