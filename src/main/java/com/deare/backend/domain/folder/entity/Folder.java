@@ -38,7 +38,7 @@ public class Folder extends BaseEntity {
     @JoinColumn(name="user_id", nullable = false)
     private User user;
 
-    public Folder(
+    private Folder(
             String name,
             int order,
             Image image,
@@ -48,6 +48,19 @@ public class Folder extends BaseEntity {
         this.folderOrder = order;
         this.image = image;
         this.user = user;
+    }
+
+    public static Folder create(
+            String name,
+            int order,
+            Image image,
+            User user
+    ){
+        if (order < 1) {
+            throw new IllegalArgumentException("folderOrder는 1 이상의 정수여야 합니다.");
+        }
+
+        return new Folder(name, order, image, user);
     }
 
     public void rename(String name){

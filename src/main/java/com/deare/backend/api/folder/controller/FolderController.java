@@ -45,7 +45,16 @@ public class FolderController {
             description = "1자 이상, 6자 이하로 폴더명을 설정해야 합니다."
     )
     public ApiResponse<FolderCreateResponseDTO> createFolder(@Valid @RequestBody FolderCreateRequestDTO reqDTO) {
-        return ApiResponse.success(null);
+        Long userId = 1L;
+        // TODO: 인증 부분 구현 후 수정
+//        Long userId = SecurityUtil.currentUserId();
+
+        if (userId == null) {
+            throw new GeneralException(FolderErrorCode.FOLDER_40101);
+        }
+
+        FolderCreateResponseDTO data = folderService.createFolder(userId, reqDTO);
+        return ApiResponse.success(data);
     }
 
     @DeleteMapping("/{folderId}")
