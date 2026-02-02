@@ -10,10 +10,9 @@ public record LetterDetailResponseDTO(
         String aiSummary,
         boolean isLiked,
         String reply,
-        String fromName,
-        String fromBgColor,
-        String fromFontColor,
+        LetterFromDTO from,
         LocalDateTime createdAt,
+        LetterFolderDTO folder,
+        List<EmotionTagDTO> emotionTags,
         List<String> imageUrls
-) {
-}
+) {}
