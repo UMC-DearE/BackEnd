@@ -40,4 +40,16 @@ public class User extends BaseEntity {
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "image_id")
     private Image image;
+
+    public void updateNickname(String nickname) {
+        this.nickname = nickname;
+    }
+
+    public void updateIntro(String intro) {
+        this.intro = intro;
+    }
+
+    public void setImage(Image image) {
+        this.image = image;
+    }
 }
