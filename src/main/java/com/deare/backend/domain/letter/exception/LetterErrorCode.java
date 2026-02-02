@@ -1,8 +1,12 @@
 package com.deare.backend.domain.letter.exception;
 
 import com.deare.backend.global.common.exception.BaseErrorCode;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 
+@Getter
+@RequiredArgsConstructor
 public enum LetterErrorCode implements BaseErrorCode {
 
     LETTER_NOT_FOUND(
@@ -26,25 +30,4 @@ public enum LetterErrorCode implements BaseErrorCode {
     private final HttpStatus status;
     private final String code;
     private final String message;
-
-    LetterErrorCode(HttpStatus status, String code, String message) {
-        this.status = status;
-        this.code = code;
-        this.message = message;
-    }
-
-    @Override
-    public HttpStatus getStatus() {
-        return status;
-    }
-
-    @Override
-    public String getCode() {
-        return code;
-    }
-
-    @Override
-    public String getMessage() {
-        return message;
-    }
 }
