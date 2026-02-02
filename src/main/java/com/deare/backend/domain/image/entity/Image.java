@@ -38,4 +38,41 @@ public class Image extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "content_type", nullable = false)
     private ContentType contentType;
+
+    private Image(
+            String imageKey,
+            String imageUrl,
+            String originalFileName,
+            FileType fileType,
+            Long fileSize,
+            UploadStatus uploadStatus,
+            ContentType contentType
+    ) {
+        this.imageKey = imageKey;
+        this.imageUrl = imageUrl;
+        this.originalFileName = originalFileName;
+        this.fileType = fileType;
+        this.fileSize = fileSize;
+        this.uploadStatus = uploadStatus;
+        this.contentType = contentType;
+    }
+    public static Image create(
+            String imageKey,
+            String imageUrl,
+            String originalFileName,
+            FileType fileType,
+            Long fileSize,
+            ContentType contentType
+    ) {
+        return new Image(
+                imageKey,
+                imageUrl,
+                originalFileName,
+                fileType,
+                fileSize,
+                UploadStatus.COMPLETE,
+                contentType
+        );
+    }
 }
+
