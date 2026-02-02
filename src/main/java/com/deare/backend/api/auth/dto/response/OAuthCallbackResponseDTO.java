@@ -4,18 +4,16 @@ import java.time.LocalDateTime;
 
 /**
  * OAuth 콜백 응답 DTO
- * - REGISTERED: 기존 가입자
- * - SIGNUP_REQUIRED: 미가입자 (회원가입 필요)
  */
 public record OAuthCallbackResponseDTO(
-        String resultType,
+        OAuthResultType resultType,
         LocalDateTime createdAt
 ) {
     public static OAuthCallbackResponseDTO registered() {
-        return new OAuthCallbackResponseDTO("REGISTERED", LocalDateTime.now());
+        return new OAuthCallbackResponseDTO(OAuthResultType.REGISTERED, LocalDateTime.now());
     }
 
     public static OAuthCallbackResponseDTO signupRequired() {
-        return new OAuthCallbackResponseDTO("SIGNUP_REQUIRED", LocalDateTime.now());
+        return new OAuthCallbackResponseDTO(OAuthResultType.SIGNUP_REQUIRED, LocalDateTime.now());
     }
 }
