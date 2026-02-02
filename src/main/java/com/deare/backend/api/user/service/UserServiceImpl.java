@@ -39,14 +39,9 @@ public class UserServiceImpl implements UserService {
 
         // 1) 기본 이미지로 초기화
         if (Boolean.TRUE.equals(request.resetProfileImage())) {
-            Image current = user.getImage();
-            user.setImage(null); // 기본 이미지로 변경
-
-            // 기존 프로필 이미지가 있으면 soft delete 처리
-            if (current != null) {
-                current.softDelete();
-            }
+            user.setImage(null); // 기본 이미지로 변경 (연관 해제만)
         }
+
         // 2) 새 프로필 이미지 설정
         else if (request.imageId() != null) {
             Image image = imageRepository.findByIdAndIsDeletedFalse(request.imageId())
