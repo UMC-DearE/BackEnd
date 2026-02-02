@@ -28,24 +28,25 @@ public class UserTermService {
      */
     @Transactional
     public void createUserTerms(User user, List<Long> agreedTermIds) {
-        // 1. 약관 ID가 없으면 종료
+
+        // 약관 ID가 없으면 종료
         if (agreedTermIds == null || agreedTermIds.isEmpty()) {
             log.warn("약관 동의 내역이 없습니다 - User ID: {}", user.getId());
             return;
         }
         
-        // 2. 약관 조회
+        // 약관 조회
         List<Term> terms = termRepository.findByIdIn(agreedTermIds);
         
-        // 3. 요청한 약관 개수와 조회된 약관 개수가 다르면 예외
+        // 요청한 약관 개수와 조회된 약관 개수가 다르면 예외 -> 약관 에러 코드 추가 시 수정
         if (terms.size() != agreedTermIds.size()) {
             throw new RuntimeException("존재하지 않는 약관 ID가 포함되어 있습니다.");
         }
         
-        // 4. 필수 약관 체크
+        // 필수 약관 체크
         validateRequiredTerms(terms);
         
-        // 5. UserTerm 생성 및 저장
+        // userTerm 생성 및 저장
         List<UserTerm> userTerms = terms.stream()
                 .map(term -> UserTerm.createAgreement(user, term))
                 .toList();
@@ -59,6 +60,7 @@ public class UserTermService {
      * 필수 약관이 모두 포함되어 있는지 검증
      */
     private void validateRequiredTerms(List<Term> terms) {
+
         // 모든 필수 약관 조회
         List<Term> allTerms = termRepository.findAll();
         List<Term> requiredTerms = allTerms.stream()

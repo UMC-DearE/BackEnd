@@ -172,7 +172,7 @@ public class AuthController {
         cookie.setHttpOnly(true);
         cookie.setSecure(true);
         cookie.setPath("/");
-        // .env의 JWT_REFRESH_TOKEN_EXPIRATION (ms) → 초 단위로 변환
+        // JWT_REFRESH_TOKEN_EXPIRATION (ms) -> 초 단위
         cookie.setMaxAge((int) (jwtProperties.getRefreshTokenExpiration() / 1000));
         response.addCookie(cookie);
     }
@@ -191,7 +191,7 @@ public class AuthController {
         cookie.setHttpOnly(true);
         cookie.setSecure(true);
         cookie.setPath("/auth");
-        // .env의 SIGNUP_TOKEN_EXPIRATION (ms) → 초 단위로 변환
+        // SIGNUP_TOKEN_EXPIRATION (ms) -> 초 단위
         cookie.setMaxAge((int) (signupTokenProperties.getExpiration() / 1000));
         response.addCookie(cookie);
     }

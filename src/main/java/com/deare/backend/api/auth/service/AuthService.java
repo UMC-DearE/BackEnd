@@ -53,10 +53,11 @@ public class AuthService {
      */
     @Transactional
     public OAuthCallbackResult handleOAuthCallback(String provider, String code) {
-        // 1. OAuth 처리 (code → token → userInfo)
+
+        // Oauth 처리 (code -> token -> userInfo)
         OAuthCallbackUserInfoResponseDTO oauthInfo = oAuthService.handleCallback(provider, code);
 
-        // 2. Provider와 ProviderId로 기존 사용자 조회
+        // provider와 providerId로 기존 사용자 조회
         Provider providerEnum = Provider.valueOf(oauthInfo.provider().toUpperCase());
 
         Optional<User> userOptional = userRepository.findByProviderAndProviderId(
@@ -64,7 +65,9 @@ public class AuthService {
                 oauthInfo.providerUserId()
         );
 
-        // 3-1. 기존 회원 -> JWT 발급
+        // 분기
+
+        // 3-1 기존 회원 -> JWT 발급
         if (userOptional.isPresent()) {
             User user = userOptional.get();
 
@@ -84,7 +87,7 @@ public class AuthService {
             );
         }
 
-        // 3-2. 신규 회원 -> Signup Token 발급 + Redis 저장
+        // 3-2 신규 회원 -> signup-token 발급 + Redis 저장
         String signupToken = signupTokenProvider.generateSignupToken(
                 oauthInfo.provider(),
                 oauthInfo.providerUserId(),
@@ -117,33 +120,33 @@ public class AuthService {
     @Transactional
     public TokenPair refresh(String refreshToken) {
 
-        // 1. Refresh Token 존재 여부 확인
+        // refresh-token 존재 여부 확인
         if (refreshToken == null || refreshToken.isBlank()) {
             throw new GeneralException(AuthErrorCode.MISSING_REFRESH_TOKEN);
         }
 
-        // 2. Refresh Token 검증
+        // refresh-token 검증
         if (!jwtProvider.validateToken(refreshToken)) {
             throw new GeneralException(AuthErrorCode.INVALID_REFRESH_TOKEN);
         }
 
-        // 3. Refresh Token에서 사용자 ID 추출
+        // refresh-token에서 userId 추출
         Long userId = jwtProvider.getUserIdFromToken(refreshToken);
 
-        // 4. Redis에 저장된 Refresh Token과 비교
+        // Redis에 저장된 refresh-token 과 비교
         if (!jwtService.validateRefreshToken(userId, refreshToken)) {
             throw new GeneralException(AuthErrorCode.REFRESH_TOKEN_MISMATCH);
         }
 
-        // 5. 사용자 조회
+        // 사용자 조회
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new GeneralException(AuthErrorCode.USER_NOT_FOUND));
 
-        // 6. 새로운 토큰 발급
+        // 새로운 토큰 발급
         String newAccessToken = jwtProvider.generateAccessToken(user);
         String newRefreshToken = jwtProvider.generateRefreshToken(user);
 
-        // 7. 새로운 Refresh Token을 Redis에 저장
+        // 새로운 refresh-token -> Redis 저장
         jwtService.saveRefreshToken(userId, newRefreshToken);
 
         log.info("토큰 재발급 - User ID: {}", userId);
@@ -155,24 +158,25 @@ public class AuthService {
      * Signup Token 검증 (JWT 서명 + Redis 존재 여부)
      */
     public void validateSignupToken(String signupToken) {
-        // 1. JWT 서명 검증
+
+        // JWT 검증
         if (!signupTokenProvider.validateToken(signupToken)) {
             throw new GeneralException(AuthErrorCode.INVALID_SIGNUP_TOKEN);
         }
 
-        // 2. 토큰에서 정보 추출
+        // 토큰에서 정보 추출
         Map<String, String> tokenInfo = signupTokenProvider.parseToken(signupToken);
         String provider = tokenInfo.get("provider");
         String providerId = tokenInfo.get("providerId");
 
-        // 3. Redis에 저장된 토큰과 비교
+        // Redis 에 저장된 토큰과 비교
         if (!signupTokenService.validateSignupToken(provider, providerId, signupToken)) {
             throw new GeneralException(AuthErrorCode.EXPIRED_SIGNUP_TOKEN);
         }
     }
 
     /**
-     * 회원가입용 약관 조회 (활성화된 약관만)
+     * 회원가입용 약관 조회 (is_active 약관)
      */
     @Transactional(readOnly = true)
     public TermResponseDTO getSignupTerms() {
@@ -185,47 +189,48 @@ public class AuthService {
      */
     @Transactional
     public SignupResult signup(String signupToken, SignupRequestDTO request) {
-        // 1. Signup Token JWT 서명 검증
+
+        // signup-token JWT 검증
         if (!signupTokenProvider.validateToken(signupToken)) {
             throw new GeneralException(AuthErrorCode.INVALID_SIGNUP_TOKEN);
         }
 
-        // 2. Signup Token 파싱
+        // signup-token 파싱
         Map<String, String> tokenInfo = signupTokenProvider.parseToken(signupToken);
         String provider = tokenInfo.get("provider");
         String providerId = tokenInfo.get("providerId");
         String email = tokenInfo.get("email");
 
-        // 3. Redis에서 Signup Token 검증 (1회성 보장)
+        // Redis에서 signup-token 검증 (1회성)
         if (!signupTokenService.validateSignupToken(provider, providerId, signupToken)) {
             throw new GeneralException(AuthErrorCode.EXPIRED_SIGNUP_TOKEN);
         }
 
-        // 4. 중복 체크
+        // 중복 체크
         Provider providerEnum = Provider.valueOf(provider.toUpperCase());
         Optional<User> existingUser = userRepository.findByProviderAndProviderId(providerEnum, providerId);
         if (existingUser.isPresent()) {
             throw new GeneralException(AuthErrorCode.USER_ALREADY_EXISTS);
         }
 
-        // 5. User 생성
+        // user 생성
         User newUser = User.signUpUser(providerEnum, providerId, email, request.nickname());
         userRepository.save(newUser);
 
         log.info("회원가입 완료 - User ID: {}, Provider: {}, Email: {}",
                 newUser.getId(), provider, email);
 
-        // 6. 약관 동의 처리
+        // 약관 동의 처리
         userTermService.createUserTerms(newUser, request.termIds());
 
-        // 7. Redis에서 Signup Token 삭제 (1회성 보장)
+        // Redis 에서 signup-token 삭제 (1회성)
         signupTokenService.deleteSignupToken(provider, providerId, email);
 
-        // 8. JWT 발급
+        // JWT 발급
         String accessToken = jwtProvider.generateAccessToken(newUser);
         String refreshToken = jwtProvider.generateRefreshToken(newUser);
 
-        // 9. Refresh Token을 Redis에 저장
+        // refresh-token 을 Redis에 저장
         jwtService.saveRefreshToken(newUser.getId(), refreshToken);
 
         return new SignupResult(new TokenPair(accessToken, refreshToken), SignupResponseDTO.of());
