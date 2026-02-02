@@ -75,7 +75,8 @@ public class LetterServiceImpl implements LetterService {
                 letterEmotionQueryRepository.findEmotionTagsByLetterId(letterId);
 
         List<String> imageUrls = letter.getLetterImages().stream()
-                .map(li -> li.getImage().getImageUrl())
+                .map(li -> li.getImage() != null ? li.getImage().getImageUrl() : null)
+                .filter(java.util.Objects::nonNull)
                 .toList();
 
         return new LetterDetailResponseDTO(
