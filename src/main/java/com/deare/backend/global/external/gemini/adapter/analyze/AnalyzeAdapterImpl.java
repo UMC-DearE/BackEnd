@@ -52,14 +52,38 @@ public class AnalyzeAdapterImpl implements AnalyzeAdapter {
         }
     }
 
-    private AnalyzeResponseDTO parse(String json) {
+    private AnalyzeResponseDTO parse(String raw) {
         try{
+            String json=extractJson(raw);
             return om.readValue(json, AnalyzeResponseDTO.class);
-        } catch (Exception e) {
+        } catch(ExternalApiException e){
+            throw e;
+        }
+        catch (Exception e) {
             throw new ExternalApiException(
                     ExternalApiErrorCode.AI_RESPONSE_PARSE_ERROR
             );
         }
+    }
+
+    private String extractJson(String raw) {
+
+        if(raw==null||raw.isBlank()){
+            throw new ExternalApiException(
+                    ExternalApiErrorCode.AI_RESPONSE_FORMAT_INVALID
+            );
+        }
+
+        int start=raw.indexOf("{");
+        int end=raw.lastIndexOf("}");
+
+        if(start==-1 || end==-1||start>end){
+            throw new ExternalApiException(
+                    ExternalApiErrorCode.AI_RESPONSE_FORMAT_INVALID
+            );
+        }
+
+        return raw.substring(start, end+1);
     }
 
     private void validateResult(AnalyzeResponseDTO result) {

@@ -39,6 +39,12 @@ public enum ExternalApiErrorCode implements BaseErrorCode {
             "AI 서버에 연결할 수 없습니다."
     ),
 
+    AI_RESPONSE_FORMAT_INVALID(
+      HttpStatus.BAD_GATEWAY,
+      "AI_50203",
+      "AI 응답 형식이 올바르지 않습니다."
+    ),
+
     AI_TIMEOUT(
             HttpStatus.GATEWAY_TIMEOUT,
             "AI_50401",
