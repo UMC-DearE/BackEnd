@@ -8,5 +8,4 @@ public record LetterListResponseDTO(
         int size,
         int number,
         List<LetterItemDTO> content
-) {
-}
+) {}
