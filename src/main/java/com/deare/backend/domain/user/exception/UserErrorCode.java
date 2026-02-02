@@ -12,12 +12,7 @@ public enum UserErrorCode implements BaseErrorCode {
     USER_40001(
             HttpStatus.BAD_REQUEST,
             "USER_40001",
-            "닉네임은 2자 이상 10자 이하입니다."
-    ),
-    USER_40002(
-            HttpStatus.BAD_REQUEST,
-            "USER_40002",
-            "소개글은 최대 20자입니다."
+            "잘못된 요청입니다."
     ),
 
     USER_40101(
@@ -35,6 +30,17 @@ public enum UserErrorCode implements BaseErrorCode {
             HttpStatus.NOT_FOUND,
             "USER_40402",
             "이미지를 찾을 수 없습니다."
+    ),
+
+    USER_42201(
+            HttpStatus.UNPROCESSABLE_ENTITY,
+            "USER_42201",
+            "닉네임은 2자 이상 10자 이하입니다."
+    ),
+    USER_42202(
+            HttpStatus.UNPROCESSABLE_ENTITY,
+            "USER_42202",
+            "소개글은 최대 20자입니다."
     ),
 
     USER_50001(

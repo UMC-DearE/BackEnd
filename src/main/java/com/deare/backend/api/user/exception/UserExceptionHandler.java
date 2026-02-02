@@ -34,8 +34,8 @@ public class UserExceptionHandler {
             return ResponseEntity
                     .status(HttpStatus.UNPROCESSABLE_ENTITY)
                     .body(ApiResponse.fail(
-                            UserErrorCode.USER_40001.getCode(),
-                            UserErrorCode.USER_40001.getMessage()
+                            UserErrorCode.USER_42201.getCode(),
+                            UserErrorCode.USER_42201.getMessage()
                     ));
         }
 
@@ -50,8 +50,8 @@ public class UserExceptionHandler {
             return ResponseEntity
                     .status(HttpStatus.UNPROCESSABLE_ENTITY)
                     .body(ApiResponse.fail(
-                            UserErrorCode.USER_40002.getCode(),
-                            UserErrorCode.USER_40002.getMessage()
+                            UserErrorCode.USER_42202.getCode(),
+                            UserErrorCode.USER_42202.getMessage()
                     ));
         }
 
