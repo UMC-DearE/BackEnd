@@ -5,14 +5,21 @@ import com.deare.backend.api.folder.dto.FolderCreateResponseDTO;
 import com.deare.backend.api.folder.dto.FolderListResponseDTO;
 import com.deare.backend.api.folder.dto.FolderOrderRequestDTO;
 import com.deare.backend.api.folder.dto.FolderUpdateRequestDTO;
+import com.deare.backend.api.folder.service.FolderService;
+import com.deare.backend.domain.folder.exception.FolderErrorCode;
+import com.deare.backend.global.common.exception.GeneralException;
 import com.deare.backend.global.common.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/folders")
+@RequiredArgsConstructor
 public class FolderController {
+
+    private final FolderService folderService;
 
     @GetMapping
     @Operation(
@@ -20,7 +27,16 @@ public class FolderController {
             description = "폴더 목록을 리스트 형태로 조회합니다. 폴더 아이템은 사용자가 설정한 순서대로 반환됩니다."
     )
     public ApiResponse<FolderListResponseDTO> getFolderList() {
-        return ApiResponse.success(null);
+        Long userId = 1L;
+        // TODO: 인증 부분 구현 후 수정
+//        Long userId = SecurityUtil.currentUserId();
+
+        if (userId == null) {
+            throw new GeneralException(FolderErrorCode.FOLDER_40101);
+        }
+
+        FolderListResponseDTO data = folderService.getFolderList(userId);
+        return ApiResponse.success(data);
     }
 
     @PostMapping
