@@ -35,6 +35,6 @@ public class TestS3Config {
         return S3Presigner.builder()
                 .region(Region.of(props.region()))
                 .credentialsProvider(cp)
-                .build();
+                 .build();
     }
 }
