@@ -55,6 +55,7 @@ public class SecurityConfig {
                                 "/test/**",
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
+                                "/images/**",
 
                                 // 인증 관련 엔드포인트 오픈
                                 "/auth/**",

@@ -1,5 +1,7 @@
 package com.deare.backend.global.external.feign.config;
 
+import com.deare.backend.global.external.feign.exception.ExternalApiErrorCode;
+import com.deare.backend.global.external.feign.exception.ExternalApiException;
 import feign.Response;
 import feign.codec.ErrorDecoder;
 import lombok.extern.slf4j.Slf4j;
@@ -42,10 +44,21 @@ public class FeignErrorDecoder implements ErrorDecoder {
             );
         }
 
-        //추후에 ExternalApiException으로 감쌀 예정
-        Response newResponse=rebuildResponse(response, responseBody);
-        return defaultErrorDecoder.decode(methodKey, newResponse);
+        return mapToAiException(status);
 
+    }
+
+    private Exception mapToAiException(int status){
+        if(status==504){
+            return new ExternalApiException(ExternalApiErrorCode.AI_TIMEOUT);
+        }
+        if(status>=500){
+            return new ExternalApiException(ExternalApiErrorCode.AI_REQUEST_FAILED);
+        }
+        if(status>=400){
+            return new ExternalApiException(ExternalApiErrorCode.AI_CLIENT_ERROR);
+        }
+        return new ExternalApiException(ExternalApiErrorCode.AI_REQUEST_FAILED);
     }
 
     private byte[] extractResponseBody(Response response) {

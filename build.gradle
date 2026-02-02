@@ -71,6 +71,10 @@ dependencies {
 
     // Redis
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
+	// S3 -test
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'org.mockito:mockito-core:5.12.0'
 }
 
 def generated = "build/generated/sources/annotationProcessor/java/main"
