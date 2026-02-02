@@ -1,5 +1,6 @@
 package com.deare.backend.global.auth.oauth.service;
 
+import com.deare.backend.api.auth.exception.AuthErrorCode;
 import com.deare.backend.global.auth.oauth.client.GoogleOAuthTokenClient;
 import com.deare.backend.global.auth.oauth.client.GoogleOAuthUserInfoClient;
 import com.deare.backend.global.auth.oauth.client.KakaoOAuthTokenClient;
@@ -12,12 +13,15 @@ import com.deare.backend.global.auth.oauth.dto.kakao.KakaoTokenResponseDTO;
 import com.deare.backend.global.auth.oauth.dto.kakao.KakaoUserInfoResponseDTO;
 import com.deare.backend.global.auth.oauth.dto.oauth.OAuthAuthorizeResponseDTO;
 import com.deare.backend.global.auth.oauth.dto.oauth.OAuthCallbackUserInfoResponseDTO;
+import com.deare.backend.global.common.exception.GeneralException;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.time.LocalDateTime;
 
 @Service
+@RequiredArgsConstructor
 public class OAuthService {
 
     private final KakaoOAuthProperties kakaoProps;
@@ -29,29 +33,23 @@ public class OAuthService {
     private final GoogleOAuthTokenClient googleTokenClient;
     private final GoogleOAuthUserInfoClient googleUserInfoClient;
 
-    public OAuthService(
-            KakaoOAuthProperties kakaoProps,
-            GoogleOAuthProperties googleProps,
-            KakaoOAuthTokenClient kakaoTokenClient,
-            KakaoOAuthUserInfoClient kakaoUserInfoClient,
-            GoogleOAuthTokenClient googleTokenClient,
-            GoogleOAuthUserInfoClient googleUserInfoClient
-    ) {
-        this.kakaoProps = kakaoProps;
-        this.googleProps = googleProps;
-        this.kakaoTokenClient = kakaoTokenClient;
-        this.kakaoUserInfoClient = kakaoUserInfoClient;
-        this.googleTokenClient = googleTokenClient;
-        this.googleUserInfoClient = googleUserInfoClient;
-    }
+    private final OAuthStateService oAuthStateService;
 
+    /**
+     * OAuth 인증 URL 생성
+     * - state 파라미터 포함 (CSRF 방지)
+     */
     public OAuthAuthorizeResponseDTO buildAuthorizeUrl(String provider) {
+        // State 생성 및 Redis 저장
+        String state = oAuthStateService.generateState();
+
         String url = switch (provider) {
             case "kakao" -> UriComponentsBuilder
                     .fromUriString(kakaoProps.authorizeUri())
                     .queryParam("client_id", kakaoProps.clientId())
                     .queryParam("redirect_uri", kakaoProps.redirectUri())
                     .queryParam("response_type", "code")
+                    .queryParam("state", state)
                     .build()
                     .toUriString();
 
@@ -63,18 +61,27 @@ public class OAuthService {
                     .queryParam("scope", googleProps.scope())
                     .queryParam("access_type", "offline")
                     .queryParam("prompt", "consent")
+                    .queryParam("state", state)
                     .build()
                     .toUriString();
 
-            default -> throw new IllegalArgumentException("Unsupported provider");
+            default -> throw new GeneralException(AuthErrorCode.INVALID_PROVIDER);
         };
 
         return new OAuthAuthorizeResponseDTO(url, LocalDateTime.now());
     }
 
     /**
-     * 핵심 정책:
-     * - provider refresh token ❌
+     * State 검증
+     */
+    public void validateState(String state) {
+        if (!oAuthStateService.validateAndDeleteState(state)) {
+            throw new GeneralException(AuthErrorCode.INVALID_STATE);
+        }
+    }
+
+    /**
+     * OAuth 콜백 처리
      * - provider access token은 userinfo 1회 호출 후 폐기
      */
     public OAuthCallbackUserInfoResponseDTO handleCallback(String provider, String code) {
@@ -106,6 +113,6 @@ public class OAuthService {
             );
         }
 
-        throw new IllegalArgumentException("Unsupported provider");
+        throw new GeneralException(AuthErrorCode.INVALID_PROVIDER);
     }
 }
