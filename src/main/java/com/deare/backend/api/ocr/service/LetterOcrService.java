@@ -13,7 +13,6 @@ import com.deare.backend.global.external.gemini.adapter.ocr.OcrAdapter;
 import com.deare.backend.global.external.gemini.dto.request.ocr.OcrPromptFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -21,7 +20,6 @@ import java.util.Base64;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class LetterOcrService {
 
     private static final Long TEST_USER_ID = 1L; // TODO: 인증 연동

@@ -47,6 +47,8 @@ public class OcrAdapterImpl implements OcrAdapter {
 
         } catch (feign.RetryableException e) {
             throw new ExternalApiException(ExternalApiErrorCode.AI_CONNECTION_FAILED);
+        } catch (feign.FeignException e) {
+            throw new ExternalApiException(ExternalApiErrorCode.AI_CONNECTION_FAILED);
         }
     }
 }
