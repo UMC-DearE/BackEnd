@@ -66,4 +66,17 @@ public class User extends BaseEntity {
         // role, status -> Default Value
         return user;
     }
+
+    public void updateNickname(String nickname) {
+        this.nickname = nickname;
+    }
+
+    public void updateIntro(String intro) {
+        this.intro = intro;
+    }
+
+    public void setImage(Image image) {
+        this.image = image;
+    }
+
 }
