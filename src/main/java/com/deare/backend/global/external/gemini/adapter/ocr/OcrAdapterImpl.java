@@ -46,9 +46,26 @@ public class OcrAdapterImpl implements OcrAdapter {
             return response.getChoices().get(0).getMessage().getContent();
 
         } catch (feign.RetryableException e) {
+            // 네트워크 / 타임아웃 / DNS
             throw new ExternalApiException(ExternalApiErrorCode.AI_CONNECTION_FAILED);
         } catch (feign.FeignException e) {
-            throw new ExternalApiException(ExternalApiErrorCode.AI_CONNECTION_FAILED);
+            int status = e.status();
+
+            if (status == 401 || status == 403) {
+                // API 키 / 인증 문제 → 배포/설정 이슈
+                throw new ExternalApiException(ExternalApiErrorCode.AI_UNAUTHORIZED);
+            }
+            if (status == 429) {
+                // rate limit → 비용/쿼터 이슈
+                throw new ExternalApiException(ExternalApiErrorCode.AI_RATE_LIMITED);
+            }
+            if (status >= 500) {
+                // Gemini 서버 장애
+                throw new ExternalApiException(ExternalApiErrorCode.AI_UPSTREAM_ERROR);
+            }
+            // 그 외 4xx 반환 → 요청 포맷/모델 문제
+            throw new ExternalApiException(ExternalApiErrorCode.AI_BAD_REQUEST);
         }
+
     }
 }
