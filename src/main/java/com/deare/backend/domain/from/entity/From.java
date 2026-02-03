@@ -7,6 +7,8 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.Objects;
+
 @Getter
 @Entity
 @Table(name="user_from")
@@ -44,7 +46,7 @@ public class From extends BaseEntity {
 
 
     public boolean isOwnedBy(Long userId) {
-        return this.user != null && java.util.Objects.equals(this.user.getId(), userId);
+        return this.user != null && Objects.equals(this.user.getId(), userId);
     }
 
     public void changeFromName(String name){
