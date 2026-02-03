@@ -22,7 +22,9 @@ public class RandomLetterService {
 
     private static final ZoneId ZONE = ZoneId.of("Asia/Seoul");
 
-    private static final int MIN_SENTENCE_LEN = 6;
+    private static final int MIN_SENTENCE_LEN = 10;
+
+    // 랜덤 문구 최대 길이 (프론트: 최대 2줄)
     private static final int MAX_PHRASE_CHARS = 60;
 
     private final RedisTemplate<String, String> redisTemplate;
@@ -31,30 +33,35 @@ public class RandomLetterService {
 
     public RandomLetterResponseDTO getTodayRandomLetter(long userId) {
         LocalDate today = LocalDate.now(ZONE);
+
+        // userId + 날짜 키
         String key = cacheKey(userId, today);
 
-        // 1) Redis hit
+        // 1) Redis HIT: 이미 오늘의 랜덤 결과가 있으면 그대로 반환
         String cached = redisTemplate.opsForValue().get(key);
         if (cached != null) {
             RandomLetterCacheValue v = fromJson(cached);
 
-            // 404: 캐시에 저장된 letterId가 삭제되어 불일치
-            // 추후 다른 편지가 조회되도록 리팩토링
+            // 캐시에 저장된 letterId가 DB에서 삭제된 경우
             if (v.hasLetter() && v.letterId() != null && !letterRepository.existsById(v.letterId())) {
                 throw new GeneralException(LetterErrorCode.NOT_FOUND);
             }
+
             return toResponseDTO(v, today);
         }
 
-        // 2) Redis miss -> 생성
+        // 2) Redis MISS: 오늘의 랜덤 편지 새로 생성
         RandomLetterCacheValue created = createValue(userId, today);
 
-        // 3) TTL = 다음 자정까지
+        // TTL은 다음 자정까지로 설정 → 자정 지나면 자동 만료
         Duration ttl = ttlUntilNextMidnight();
         String json = toJson(created);
 
-        // 동시성
+        // 동시성 처리
+        // 같은 유저가 동시에 여러 요청을 보내도 최초 1개만 캐시에 저장
         Boolean ok = redisTemplate.opsForValue().setIfAbsent(key, json, ttl);
+
+        // 이미 누가 먼저 넣었으면 그 값을 읽어 반환
         if (Boolean.FALSE.equals(ok)) {
             String latest = redisTemplate.opsForValue().get(key);
             if (latest != null) {
@@ -62,18 +69,22 @@ public class RandomLetterService {
             }
         }
 
-        // setIfAbsent 성공 or fallback 실패 -> created 반환
-        if (Boolean.TRUE.equals(ok)) return toResponseDTO(created, today);
+        if (Boolean.TRUE.equals(ok)) {
+            return toResponseDTO(created, today);
+        }
 
         redisTemplate.opsForValue().set(key, json, ttl);
         return toResponseDTO(created, today);
     }
 
     private RandomLetterCacheValue createValue(long userId, LocalDate today) {
-        long count = letterRepository.count();
 
+        long count = letterRepository.countByUser_Id(userId);
+
+        // 편지가 없으면 hasLetter=false
         if (count == 0) {
             return new RandomLetterCacheValue(
+                    userId,
                     false,
                     today.toString(),
                     null,
@@ -82,14 +93,19 @@ public class RandomLetterService {
             );
         }
 
+        // 0 ~ count-1 사이 랜덤 offset
         long offset = ThreadLocalRandom.current().nextLong(count);
+
+        // offset 기반으로 1개 조회
         Letter letter = letterRepository
                 .findRandomLetterByUser(userId, offset)
                 .orElseThrow(() -> new GeneralException(LetterErrorCode.NOT_FOUND));
 
+        // 편지 본문에서 랜덤 문구 추출
         String phrase = extractRandomPhrase(letter.getContent());
 
         return new RandomLetterCacheValue(
+                userId,
                 true,
                 today.toString(),
                 letter.getId(),
@@ -104,17 +120,22 @@ public class RandomLetterService {
         String normalized = content.trim();
         if (normalized.isEmpty()) return null;
 
-        // 기본 문장 분리: 줄바꿈 or 문장부호(.!?)
+        // 기본 문장 분리:
+        // 1) 문장부호(.!?)+공백 기준
+        // 2) 줄바꿈 기준
         String[] raw = normalized.split("(?<=[.!?])\\s+|\\n+");
+
+        // 너무 짧은 후보 제거
         List<String> candidates = new ArrayList<>();
         for (String s : raw) {
             String t = s.trim();
             if (t.length() >= MIN_SENTENCE_LEN) candidates.add(t);
         }
 
-        // 후보 없으면 fallback
+        // 후보가 하나도 없으면 전체 본문 일부를 잘라서 반환
         if (candidates.isEmpty()) return ellipsis(normalized, MAX_PHRASE_CHARS);
 
+        // 후보 중 랜덤 선택
         String picked = candidates.get(ThreadLocalRandom.current().nextInt(candidates.size()));
         return ellipsis(picked, MAX_PHRASE_CHARS);
     }
@@ -126,7 +147,10 @@ public class RandomLetterService {
     }
 
     private RandomLetterResponseDTO toResponseDTO(RandomLetterCacheValue v, LocalDate today) {
-        String month = today.getMonth().getDisplayName(TextStyle.SHORT, Locale.ENGLISH); // Jan
+        // 화면 표시용 month(Jan, Feb...) - Locale.ENGLISH로 고정
+        String month = today.getMonth().getDisplayName(TextStyle.SHORT, Locale.ENGLISH);
+
+        // 요일 한글 표시
         String dowKo = switch (today.getDayOfWeek()) {
             case MONDAY -> "월";
             case TUESDAY -> "화";
@@ -154,6 +178,7 @@ public class RandomLetterService {
     private Duration ttlUntilNextMidnight() {
         ZonedDateTime now = ZonedDateTime.now(ZONE);
         ZonedDateTime nextMidnight = now.toLocalDate().plusDays(1).atStartOfDay(ZONE);
+        // +1초는 경계값(정각)에서 TTL 0 되는 케이스 방지용
         return Duration.between(now, nextMidnight).plusSeconds(1);
     }
 
