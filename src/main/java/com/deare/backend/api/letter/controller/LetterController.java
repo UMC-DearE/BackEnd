@@ -3,6 +3,7 @@ package com.deare.backend.api.letter.controller;
 import com.deare.backend.api.letter.dto.*;
 import com.deare.backend.api.letter.service.LetterService;
 import com.deare.backend.api.letter.service.RandomLetterService;
+import com.deare.backend.global.auth.util.SecurityUtil;
 import com.deare.backend.global.common.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
@@ -109,7 +110,7 @@ public class LetterController {
     @GetMapping("/random")
     public ApiResponse<RandomLetterResponseDTO> getRandomLetter() {
 
-        long userId = 1L; // TODO: 인증 연동
+        long userId = SecurityUtil.getCurrentUserId();
 
         RandomLetterResponseDTO data = randomLetterService.getTodayRandomLetter(userId);
 
