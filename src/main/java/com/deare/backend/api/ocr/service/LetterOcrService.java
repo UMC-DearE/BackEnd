@@ -7,6 +7,7 @@ import com.deare.backend.domain.letter.exception.OcrErrorCode;
 import com.deare.backend.domain.image.entity.Image;
 import com.deare.backend.domain.image.repository.ImageRepository;
 import com.deare.backend.domain.letter.repository.LetterImageRepository;
+import com.deare.backend.global.auth.util.SecurityUtil;
 import com.deare.backend.global.common.exception.GeneralException;
 import com.deare.backend.global.external.feign.exception.ExternalApiException;
 import com.deare.backend.global.external.gemini.adapter.ocr.OcrAdapter;
@@ -24,8 +25,6 @@ import java.util.Base64;
 @ConditionalOnProperty(name = "aws.s3.enabled", havingValue = "true")
 public class LetterOcrService {
 
-    private static final Long TEST_USER_ID = 1L; // TODO: 인증 연동
-
     private final OcrAdapter ocrAdapter;
     private final ImageRepository imageRepository;
     private final LetterImageRepository letterImageRepository;
@@ -41,7 +40,9 @@ public class LetterOcrService {
                 .collect(Collectors.toMap(Image::getId, i -> i));
 
         // 2) 소유권은 letter_image -> letter(user_id)로 판별
-        Set<Long> owned = new HashSet<>(letterImageRepository.findOwnedImageIds(TEST_USER_ID, imageIds));
+        Long userId = SecurityUtil.getCurrentUserId();
+
+        Set<Long> owned = new HashSet<>(letterImageRepository.findOwnedImageIds(userId, imageIds));
 
         List<OcrResultDTO> results = new ArrayList<>();
 
