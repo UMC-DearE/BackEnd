@@ -14,6 +14,7 @@ import com.deare.backend.global.auth.oauth.dto.oauth.OAuthAuthorizeResponseDTO;
 import com.deare.backend.global.auth.oauth.service.OAuthService;
 import com.deare.backend.global.common.exception.GeneralException;
 import com.deare.backend.global.common.response.ApiResponse;
+import com.deare.backend.global.auth.util.SecurityUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -21,7 +22,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "Auth", description = "인증/인가 API")
@@ -145,10 +145,8 @@ public class AuthController {
             description = "로그아웃을 처리합니다. Redis에서 Refresh Token을 삭제하고 Cookie를 만료시킵니다."
     )
     @PostMapping("/logout")
-    public ResponseEntity<ApiResponse<Void>> logout(
-            @Parameter(hidden = true)
-            @AuthenticationPrincipal(expression = "id") Long userId
-    ) {
+    public ResponseEntity<ApiResponse<Void>> logout() {
+        Long userId = SecurityUtil.getCurrentUserId();
         authService.logout(userId);
 
         return ResponseEntity.ok()
