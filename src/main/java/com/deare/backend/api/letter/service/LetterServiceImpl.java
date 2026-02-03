@@ -11,6 +11,7 @@ import com.deare.backend.domain.letter.repository.LetterRepository;
 import com.deare.backend.domain.letter.repository.query.LetterEmotionQueryRepository;
 import com.deare.backend.global.common.exception.GeneralException;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -119,7 +120,15 @@ public class LetterServiceImpl implements LetterService {
     @Transactional
     public void updateLetter(Long userId, Long letterId, LetterUpdateRequestDTO req) {
 
-        if (req == null || !req.hasAnyField()) {
+        if (req == null) {
+            throw new GeneralException(LetterErrorCode.INVALID_REQUEST);
+        }
+
+        if (req.getContent() != null && !StringUtils.hasText(req.getContent())) {
+            throw new GeneralException(LetterErrorCode.INVALID_REQUEST);
+        }
+
+        if (!req.hasAnyField()) {
             throw new GeneralException(LetterErrorCode.INVALID_REQUEST);
         }
 
@@ -141,8 +150,13 @@ public class LetterServiceImpl implements LetterService {
 
         if (StringUtils.hasText(req.getContent())) {
             try {
-                String newSummary = "요약 결과"; // TODO: 실제 요약 연동 필요
-                String newHash = "hash";       // TODO: 해시 계산
+                // TODO(ai-summary): content 변경 시 AI 요약 재생성 연동 필요
+                // TODO(emotion): content 변경 시 감정 분석/태그 재생성 연동 필요
+
+                String newSummary = "요약 결과"; // 임시값 (TODO 이후 변경)
+
+                String normalizedContent = req.getContent().trim();
+                String newHash = DigestUtils.sha256Hex(normalizedContent);
 
                 letter.updateContent(req.getContent(), newSummary, newHash);
             } catch (Exception e) {
@@ -154,30 +168,13 @@ public class LetterServiceImpl implements LetterService {
     @Override
     @Transactional
     public void deleteLetter(Long userId, Long letterId) {
-
-        if (userId == null) {
-            throw new GeneralException(LetterErrorCode.UNAUTHORIZED);
-        }
-        if (letterId == null) {
-            throw new GeneralException(LetterErrorCode.INVALID_REQUEST);
-        }
-
-        Letter letter = letterRepository.findById(letterId)
-                .orElseThrow(() -> new GeneralException(LetterErrorCode.NOT_FOUND));
-
-        if (letter.isDeleted()) {
-            throw new GeneralException(LetterErrorCode.DELETED_LETTER);
-        }
-        if (!letter.isOwnedBy(userId)) {
-            throw new GeneralException(LetterErrorCode.FORBIDDEN);
-        }
-
+        Letter letter = getOwnedActiveLetter(userId, letterId);
         letter.softDelete();
     }
 
     @Override
     @Transactional
-    public LetterLikeResponseDTO  likeLetter(Long userId, Long letterId) {
+    public LetterLikeResponseDTO likeLetter(Long userId, Long letterId) {
         Letter letter = getOwnedActiveLetter(userId, letterId);
         letter.like();
         return new LetterLikeResponseDTO(true);
