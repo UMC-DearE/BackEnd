@@ -1,10 +1,8 @@
 package com.deare.backend.api.letter.controller;
 
-import com.deare.backend.api.letter.dto.LetterDetailResponseDTO;
-import com.deare.backend.api.letter.dto.LetterListResponseDTO;
-import com.deare.backend.api.letter.dto.LetterReplyUpsertRequestDTO;
-import com.deare.backend.api.letter.dto.LetterUpdateRequestDTO;
+import com.deare.backend.api.letter.dto.*;
 import com.deare.backend.api.letter.service.LetterService;
+import com.deare.backend.api.letter.service.RandomLetterService;
 import com.deare.backend.global.common.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
@@ -104,5 +102,20 @@ public class LetterController {
     )
     public ApiResponse<Void> unlikeLetter(@PathVariable Long letterId) {
         return ApiResponse.success(null);
+    }
+
+    private final RandomLetterService randomLetterService;
+
+    @GetMapping("/random")
+    public ApiResponse<RandomLetterResponseDTO> getRandomLetter() {
+
+        long userId = 1L; // TODO: 인증 연동
+
+        RandomLetterResponseDTO data = randomLetterService.getTodayRandomLetter(userId);
+
+        if (!data.hasLetter()) {
+            return ApiResponse.success("아직 추가한 편지가 없습니다.", data);
+        }
+        return ApiResponse.success("랜덤 편지 조회에 성공했습니다.", data);
     }
 }
