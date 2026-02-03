@@ -41,5 +41,8 @@ out/
 .env.dev
 .env.prod
 
-# Spring Boot config
-#src/main/resources/application.yaml
+#MacOs Log
+.DS_Store
+
+#claude
+.claude

@@ -53,7 +53,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 // Spring Security 인증 객체 생성
                 UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(
-                                user,
+                                userId,
                                 null,
                                 Collections.singletonList(new SimpleGrantedAuthority(user.getRole().name()))
                         );
