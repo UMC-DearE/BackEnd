@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/test/letters")
+@RequestMapping("/letters")
 public class LetterOcrController {
 
     private final LetterOcrService letterOcrService;
