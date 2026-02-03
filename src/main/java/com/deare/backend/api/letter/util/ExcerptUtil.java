@@ -22,7 +22,6 @@ public final class ExcerptUtil {
 
         if (normalized.length() <= maxChars) return normalized;
 
-        int cut = Math.max(1, maxChars);
-        return normalized.substring(0, cut) + "...";
+        return normalized.substring(0, maxChars) + "...";
     }
 }
