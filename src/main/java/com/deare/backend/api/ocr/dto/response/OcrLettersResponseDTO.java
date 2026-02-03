@@ -1,4 +1,4 @@
-package com.deare.backend.api.ocr.dto;
+package com.deare.backend.api.ocr.dto.response;
 
 import lombok.*;
 

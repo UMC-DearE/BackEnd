@@ -1,7 +1,7 @@
 package com.deare.backend.api.ocr.controller;
 
-import com.deare.backend.api.ocr.dto.OcrLettersRequestDTO;
-import com.deare.backend.api.ocr.dto.OcrLettersResponseDTO;
+import com.deare.backend.api.ocr.dto.request.OcrLettersRequestDTO;
+import com.deare.backend.api.ocr.dto.response.OcrLettersResponseDTO;
 import com.deare.backend.api.ocr.service.LetterOcrService;
 import com.deare.backend.global.common.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;

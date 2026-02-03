@@ -1,8 +1,8 @@
 package com.deare.backend.api.ocr.service;
 
-import com.deare.backend.api.ocr.dto.OcrLettersRequestDTO;
-import com.deare.backend.api.ocr.dto.OcrLettersResponseDTO;
-import com.deare.backend.api.ocr.dto.OcrLettersResponseDTO.OcrResultDTO;
+import com.deare.backend.api.ocr.dto.request.OcrLettersRequestDTO;
+import com.deare.backend.api.ocr.dto.response.OcrLettersResponseDTO;
+import com.deare.backend.api.ocr.dto.response.OcrLettersResponseDTO.OcrResultDTO;
 import com.deare.backend.domain.letter.exception.OcrErrorCode;
 import com.deare.backend.domain.image.entity.Image;
 import com.deare.backend.domain.image.repository.ImageRepository;
