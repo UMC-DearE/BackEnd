@@ -8,3 +8,8 @@ decorator:
   datasource:
     p6spy:
       enable-logging: false
+
+# to-do
+# redis-host/port
+# db-url/app-user
+# oauth redirect-uri

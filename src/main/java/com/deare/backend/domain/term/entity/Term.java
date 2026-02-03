@@ -31,9 +31,21 @@ public class Term extends BaseEntity {
     @Column(name = "is_required", nullable = false)
     private boolean isRequired;
 
+    @Column(name = "is_active", nullable = false)
+    private boolean isActive = true;
+
     @Column(name = "effective_at", nullable = false)
     private LocalDateTime effectiveAt;
 
     @Column(name = "version", nullable = false, length = 100)
     private String version = "1.0";
+
+    // 테스트용 생성자
+    public Term(String title, TermType type, String content, boolean isRequired) {
+        this.title = title;
+        this.type = type;
+        this.content = content;
+        this.isRequired = isRequired;
+        this.effectiveAt = LocalDateTime.now();
+    }
 }
