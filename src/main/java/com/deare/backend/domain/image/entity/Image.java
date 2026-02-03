@@ -74,5 +74,9 @@ public class Image extends BaseEntity {
                 contentType
         );
     }
+
+    public String getUrl() {
+        return imageUrl;
+    }
 }
 
