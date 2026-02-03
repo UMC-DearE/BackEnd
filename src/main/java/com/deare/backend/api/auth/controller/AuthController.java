@@ -17,6 +17,7 @@ import com.deare.backend.global.common.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -123,7 +124,7 @@ public class AuthController {
     public ResponseEntity<ApiResponse<SignupResponseDTO>> signup(
             @Parameter(hidden = true)
             @CookieValue(name = "signup_token", required = false) String signupToken,
-            @RequestBody SignupRequestDTO request
+            @Valid @RequestBody SignupRequestDTO request
     ) {
         if (signupToken == null || signupToken.isBlank()) {
             throw new GeneralException(AuthErrorCode.MISSING_SIGNUP_TOKEN);
