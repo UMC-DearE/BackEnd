@@ -42,9 +42,15 @@ public class RandomLetterService {
         if (cached != null) {
             RandomLetterCacheValue v = fromJson(cached);
 
-            // 캐시에 저장된 letterId가 DB에서 삭제된 경우
+            // 캐시 불일치(삭제된 letterId)면 캐시 삭제 후 재생성
             if (v.hasLetter() && v.letterId() != null && !letterRepository.existsById(v.letterId())) {
-                throw new GeneralException(LetterErrorCode.NOT_FOUND);
+                redisTemplate.delete(key);
+
+                RandomLetterCacheValue recreated = createValue(userId, today);
+                Duration ttl = ttlUntilNextMidnight();
+                redisTemplate.opsForValue().set(key, toJson(recreated), ttl);
+
+                return toResponseDTO(recreated, today);
             }
 
             return toResponseDTO(v, today);
