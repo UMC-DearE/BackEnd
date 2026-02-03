@@ -24,6 +24,11 @@ public enum OcrErrorCode implements BaseErrorCode {
             "OCR_40003",
             "잘못된 요청입니다."
     ),
+    OCR_IMAGE_NOT_LINKED(
+            HttpStatus.BAD_REQUEST,
+            "OCR_40004",
+            "편지에 연결되지 않은 이미지입니다."
+    ),
     OCR_UNAUTHORIZED(
             HttpStatus.UNAUTHORIZED,
             "OCR_40101",

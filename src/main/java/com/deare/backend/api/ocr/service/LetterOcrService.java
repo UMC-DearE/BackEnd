@@ -34,15 +34,15 @@ public class LetterOcrService {
         List<Long> imageIds = request.getImageIds();
         validateImageIds(imageIds);
 
-        // 1) DB에서 이미지들 조회
+        Long userId = SecurityUtil.getCurrentUserId();
+
+        // DB에서 이미지들 조회
         List<Image> images = imageRepository.findAllById(imageIds);
         Map<Long, Image> imageMap = images.stream()
                 .collect(Collectors.toMap(Image::getId, i -> i));
 
-        // 2) 소유권은 letter_image -> letter(user_id)로 판별
-        Long userId = SecurityUtil.getCurrentUserId();
-
-        Set<Long> owned = new HashSet<>(letterImageRepository.findOwnedImageIds(userId, imageIds));
+        Set<Long> linked = new HashSet<>(letterImageRepository.findLinkedImageIds(imageIds));
+        Set<Long> owned  = new HashSet<>(letterImageRepository.findOwnedImageIds(userId, imageIds));
 
         List<OcrResultDTO> results = new ArrayList<>();
 
@@ -54,7 +54,13 @@ public class LetterOcrService {
                 continue;
             }
 
-            // letter에 연결된 이미지가 아니면 소유권 판별 불가 -> 403 처리
+            // 1) 400: letter_image에 아예 연결 안 된 이미지
+            if (!linked.contains(imageId)) {
+                results.add(fail(imageId, OcrErrorCode.OCR_IMAGE_NOT_LINKED));
+                continue;
+            }
+
+            // 2) 403: 연결은 되어 있는데 내 편지(내 userId)가 아닐시
             if (!owned.contains(imageId)) {
                 results.add(fail(imageId, OcrErrorCode.OCR_FORBIDDEN));
                 continue;
