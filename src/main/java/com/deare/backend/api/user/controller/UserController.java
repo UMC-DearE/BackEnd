@@ -1,7 +1,8 @@
 package com.deare.backend.api.user.controller;
 
-import com.deare.backend.api.user.dto.ProfileResponseDTO;
-import com.deare.backend.api.user.dto.ProfileUpdateRequestDTO;
+import com.deare.backend.api.user.dto.response.ProfileResponseDTO;
+import com.deare.backend.api.user.dto.request.ProfileUpdateRequestDTO;
+import com.deare.backend.api.user.dto.response.ProfileUpdateResponseDTO;
 import com.deare.backend.api.user.service.UserService;
 import com.deare.backend.global.auth.util.SecurityUtil;
 import com.deare.backend.global.common.response.ApiResponse;
@@ -26,7 +27,7 @@ public class UserController {
 
     @PatchMapping("/me")
     @Operation(summary = "프로필 수정", description = "프로필(이미지/닉네임/소개글)을 수정합니다.")
-    public ApiResponse<ProfileResponseDTO> updateMyProfile(
+    public ApiResponse<ProfileUpdateResponseDTO> updateMyProfile(
             @Valid @RequestBody ProfileUpdateRequestDTO request
     ) {
         Long userId = SecurityUtil.getCurrentUserId();
