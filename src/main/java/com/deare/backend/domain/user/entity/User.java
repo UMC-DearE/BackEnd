@@ -34,10 +34,49 @@ public class User extends BaseEntity {
     @Column(name = "provider_id", nullable = false, length = 100)
     private String providerId;
 
+    @Column(name = "email", nullable = false, length = 100)
+    private String email;
+
     @Column(name = "intro", nullable = true, length = 50)
     private String intro;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "image_id")
     private Image image;
+
+    /**
+     * API (/auth/signup) 회원 가입
+     * TO-DO : service 로직에서 User-Terms 매핑하기
+     * @param provider 소셜 프로바이더(<- signup-token)
+     * @param providerId 소셜 프로바이더 아이디(<- signup-token)
+     * @param email 소셜 가입 아이디(<- signup-token)
+     * @param nickname (<-api/auth/signup)
+     * @return DB 저장할 User
+     */
+    public static User signUpUser(
+            Provider provider, String providerId, String email, String nickname
+    ) {
+        User user = new User();
+
+        user.provider = provider;
+        user.providerId = providerId;
+        user.email = email;
+        user.nickname = nickname;
+
+        // role, status -> Default Value
+        return user;
+    }
+
+    public void updateNickname(String nickname) {
+        this.nickname = nickname;
+    }
+
+    public void updateIntro(String intro) {
+        this.intro = intro;
+    }
+
+    public void setImage(Image image) {
+        this.image = image;
+    }
+
 }
