@@ -3,6 +3,7 @@ package com.deare.backend.global.auth.util;
 import com.deare.backend.api.auth.exception.AuthErrorCode;
 import com.deare.backend.domain.user.entity.User;
 import com.deare.backend.global.common.exception.GeneralException;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -17,26 +18,21 @@ public class SecurityUtil {
      * 현재 인증된 사용자 ID 조회
      */
     public static Long getCurrentUserId() {
-        User user = getCurrentUser();
-        return user.getId();
-    }
-
-    /**
-     * 현재 인증된 사용자 엔티티 조회
-     */
-    public static User getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        if (authentication == null || !authentication.isAuthenticated()) {
+        if (authentication == null
+                || !authentication.isAuthenticated()
+                || authentication instanceof AnonymousAuthenticationToken) {
             throw new GeneralException(AuthErrorCode.UNAUTHORIZED);
         }
 
         Object principal = authentication.getPrincipal();
 
-        if (principal instanceof User user) {
-            return user;
+        if (principal instanceof Long userId) {
+            return userId;
         }
 
+        // "anonymousUser" 또는 예상치 못한 principal 타입 방어
         throw new GeneralException(AuthErrorCode.UNAUTHORIZED);
     }
 }
