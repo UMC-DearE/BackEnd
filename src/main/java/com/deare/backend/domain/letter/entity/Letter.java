@@ -2,15 +2,16 @@ package com.deare.backend.domain.letter.entity;
 
 import com.deare.backend.domain.folder.entity.Folder;
 import com.deare.backend.domain.from.entity.From;
+import com.deare.backend.domain.letter.exception.LetterErrorCode;
 import com.deare.backend.domain.user.entity.User;
 import com.deare.backend.global.common.entity.BaseEntity;
+import com.deare.backend.global.common.exception.GeneralException;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -119,6 +120,9 @@ public class Letter extends BaseEntity {
     }
 
     public void changeFrom(From from) {
+        if (from == null) {
+            throw new GeneralException(LetterErrorCode.FROM_REQUIRED);
+        }
         this.from = from;
     }
 
