@@ -7,11 +7,13 @@ import com.deare.backend.global.common.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.web.bind.annotation.*;
 
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/letters")
+@ConditionalOnProperty(name = "aws.s3.enabled", havingValue = "true")
 public class LetterOcrController {
 
     private final LetterOcrService letterOcrService;

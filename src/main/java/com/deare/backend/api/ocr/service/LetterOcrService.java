@@ -12,6 +12,7 @@ import com.deare.backend.global.external.feign.exception.ExternalApiException;
 import com.deare.backend.global.external.gemini.adapter.ocr.OcrAdapter;
 import com.deare.backend.global.external.gemini.dto.request.ocr.OcrPromptFactory;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -20,6 +21,7 @@ import java.util.Base64;
 
 @Service
 @RequiredArgsConstructor
+@ConditionalOnProperty(name = "aws.s3.enabled", havingValue = "true")
 public class LetterOcrService {
 
     private static final Long TEST_USER_ID = 1L; // TODO: 인증 연동
