@@ -69,7 +69,7 @@ public class LetterServiceImpl implements LetterService {
         Letter letter = letterRepository
                 .findLetterDetailById(userId, letterId)
                 .orElseThrow(() ->
-                        new GeneralException(LetterErrorCode.LETTER_40401)
+                        new GeneralException(LetterErrorCode.NOT_FOUND)
                 );
 
         List<EmotionTagDTO> emotionTags =
@@ -120,7 +120,7 @@ public class LetterServiceImpl implements LetterService {
     public void updateLetter(Long userId, Long letterId, LetterUpdateRequestDTO req) {
 
         if (req == null || !req.hasAnyField()) {
-            throw new GeneralException(LetterErrorCode.LETTER_40001);
+            throw new GeneralException(LetterErrorCode.INVALID_REQUEST);
         }
 
         Letter letter = getOwnedActiveLetter(userId, letterId);
@@ -146,7 +146,7 @@ public class LetterServiceImpl implements LetterService {
 
                 letter.updateContent(req.getContent(), newSummary, newHash);
             } catch (Exception e) {
-                throw new GeneralException(LetterErrorCode.LETTER_50002);
+                throw new GeneralException(LetterErrorCode.SUMMARY_INTERNAL_ERROR);
             }
         }
     }
@@ -156,20 +156,20 @@ public class LetterServiceImpl implements LetterService {
     public void deleteLetter(Long userId, Long letterId) {
 
         if (userId == null) {
-            throw new GeneralException(LetterErrorCode.LETTER_40101);
+            throw new GeneralException(LetterErrorCode.UNAUTHORIZED);
         }
         if (letterId == null) {
-            throw new GeneralException(LetterErrorCode.LETTER_40001);
+            throw new GeneralException(LetterErrorCode.INVALID_REQUEST);
         }
 
         Letter letter = letterRepository.findById(letterId)
-                .orElseThrow(() -> new GeneralException(LetterErrorCode.LETTER_40401));
+                .orElseThrow(() -> new GeneralException(LetterErrorCode.NOT_FOUND));
 
         if (letter.isDeleted()) {
-            throw new GeneralException(LetterErrorCode.LETTER_41001);
+            throw new GeneralException(LetterErrorCode.DELETED_LETTER);
         }
         if (!letter.isOwnedBy(userId)) {
-            throw new GeneralException(LetterErrorCode.LETTER_40301);
+            throw new GeneralException(LetterErrorCode.FORBIDDEN);
         }
 
         letter.softDelete();
@@ -193,20 +193,20 @@ public class LetterServiceImpl implements LetterService {
 
     private Letter getOwnedActiveLetter(Long userId, Long letterId) {
         if (userId == null) {
-            throw new GeneralException(LetterErrorCode.LETTER_40101);
+            throw new GeneralException(LetterErrorCode.UNAUTHORIZED);
         }
         if (letterId == null) {
-            throw new GeneralException(LetterErrorCode.LETTER_40001);
+            throw new GeneralException(LetterErrorCode.INVALID_REQUEST);
         }
 
         Letter letter = letterRepository.findById(letterId)
-                .orElseThrow(() -> new GeneralException(LetterErrorCode.LETTER_40401));
+                .orElseThrow(() -> new GeneralException(LetterErrorCode.NOT_FOUND));
 
         if (letter.isDeleted()) {
-            throw new GeneralException(LetterErrorCode.LETTER_41001);
+            throw new GeneralException(LetterErrorCode.DELETED_LETTER);
         }
         if (!letter.isOwnedBy(userId)) {
-            throw new GeneralException(LetterErrorCode.LETTER_40301);
+            throw new GeneralException(LetterErrorCode.FORBIDDEN);
         }
 
         return letter;
