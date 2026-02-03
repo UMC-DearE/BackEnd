@@ -19,7 +19,8 @@ public class SwaggerConfig {
                 .in(SecurityScheme.In.HEADER)
                 .name("Authorization");
 
-        SecurityRequirement securityRequirement = new SecurityRequirement();
+        SecurityRequirement securityRequirement = new SecurityRequirement()
+                .addList("BearerAuth");
 
         return new OpenAPI()
                 .info(new Info().title("DearE Swagger API docs")
