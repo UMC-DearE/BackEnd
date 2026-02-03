@@ -10,10 +10,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.web.bind.annotation.*;
 
+@ConditionalOnProperty(name = "ocr.enabled", havingValue = "true")
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/letters")
-@ConditionalOnProperty(name = "aws.s3.enabled", havingValue = "true")
 public class LetterOcrController {
 
     private final LetterOcrService letterOcrService;

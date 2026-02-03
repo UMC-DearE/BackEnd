@@ -43,6 +43,8 @@ aws:
     secret-key: ${AWS_SECRET_ACCESS_KEY}
     enabled: true
 
+ocr:
+  enabled: true
 
 external:
   ai:

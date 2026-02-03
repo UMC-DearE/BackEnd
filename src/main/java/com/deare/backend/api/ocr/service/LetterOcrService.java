@@ -20,9 +20,9 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.Base64;
 
+@ConditionalOnProperty(name = {"ocr.enabled", "aws.s3.enabled"}, havingValue = "true")
 @Service
 @RequiredArgsConstructor
-@ConditionalOnProperty(name = "aws.s3.enabled", havingValue = "true")
 public class LetterOcrService {
 
     private final OcrAdapter ocrAdapter;

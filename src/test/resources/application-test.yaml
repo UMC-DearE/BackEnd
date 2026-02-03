@@ -45,6 +45,9 @@ aws:
     region: ${AWS_REGION}
     enabled: false
 
+ocr:
+  enabled: false
+
 oauth:
   kakao:
     client-id: test-kakao-client-id
