@@ -9,7 +9,6 @@ import com.deare.backend.domain.letter.entity.QLetterImage;
 import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.BooleanExpression;
-import com.querydsl.core.types.dsl.ComparableExpressionBase;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -37,6 +36,7 @@ public class LetterRepositoryImpl implements LetterRepositoryCustom {
             Long userId,
             Long folderId,
             Long fromId,
+            Boolean isLiked,
             String keyword,
             Pageable pageable
     ) {
@@ -52,6 +52,7 @@ public class LetterRepositoryImpl implements LetterRepositoryCustom {
                         ownedBy(letter, userId),
                         folderIdEq(letter, folderId),
                         fromIdEq(letter, fromId),
+                        isLikedEq(letter, isLiked),
                         keywordLike(letter, keyword)
                 )
                 .offset(pageable.getOffset())
@@ -73,6 +74,7 @@ public class LetterRepositoryImpl implements LetterRepositoryCustom {
                         ownedBy(letter, userId),
                         folderIdEq(letter, folderId),
                         fromIdEq(letter, fromId),
+                        isLikedEq(letter, isLiked),
                         keywordLike(letter, keyword)
                 );
 
@@ -121,6 +123,11 @@ public class LetterRepositoryImpl implements LetterRepositoryCustom {
     private BooleanExpression fromIdEq(QLetter letter, Long fromId) {
         if (fromId == null) return null;
         return letter.from.id.eq(fromId);
+    }
+
+    private BooleanExpression isLikedEq(QLetter letter, Boolean isLiked) {
+        if (isLiked == null) return null;
+        return letter.isLiked.eq(isLiked);
     }
 
     private BooleanExpression keywordLike(QLetter letter, String keyword) {

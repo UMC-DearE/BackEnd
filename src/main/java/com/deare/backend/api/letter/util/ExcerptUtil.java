@@ -9,7 +9,7 @@ public final class ExcerptUtil {
     public static String excerptByChars(String content, int maxChars) {
         if (content == null) return null;
         if (maxChars < 1) {
-            throw new GeneralException(LetterErrorCode.LETTER_INVALID_EXCERPT_PARAM);
+            throw new GeneralException(LetterErrorCode.SUMMARY_INTERNAL_ERROR);
         }
 
         String normalized = content
@@ -22,7 +22,6 @@ public final class ExcerptUtil {
 
         if (normalized.length() <= maxChars) return normalized;
 
-        int cut = Math.max(1, maxChars);
-        return normalized.substring(0, cut) + "...";
+        return normalized.substring(0, maxChars) + "...";
     }
 }
