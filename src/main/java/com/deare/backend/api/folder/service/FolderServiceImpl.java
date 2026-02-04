@@ -102,7 +102,7 @@ public class FolderServiceImpl implements FolderService {
                 .orElseThrow(() -> new GeneralException(FolderErrorCode.FOLDER_NOT_FOUND));
 
         Letter letter = letterRepository.findByIdAndUser_IdAndIsDeletedFalse(letterId, userId)
-                .orElseThrow(() -> new GeneralException(LetterErrorCode.LETTER_40301));
+                .orElseThrow(() -> new GeneralException(LetterErrorCode.DELETED_LETTER));
 
         if (letter.getFolder() != null && letter.getFolder().getId().equals(folderId)) {
             return;
