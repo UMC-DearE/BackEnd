@@ -42,9 +42,9 @@ public class SecurityConfig {
         // 인증/인가
         http.
                 authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
 
-                                HttpMethod.OPTIONS, "/**",
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers(
 
                                 // 헬스체크
                                 "/actuator/health",
