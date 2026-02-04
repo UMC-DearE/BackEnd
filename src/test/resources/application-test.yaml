@@ -12,6 +12,11 @@ spring:
     username: sa
     password: ""
 
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
   jpa:
     hibernate:
       ddl-auto: create-drop
@@ -39,3 +44,33 @@ aws:
     bucket: ${AWS_S3_BUCKET}
     region: ${AWS_REGION}
     enabled: false
+
+ocr:
+  enabled: false
+
+oauth:
+  kakao:
+    client-id: test-kakao-client-id
+    client-secret: test-kakao-client-secret
+    redirect-uri: http://localhost:8080/auth/oauth2/kakao/callback
+    authorize-uri: https://kauth.kakao.com/oauth/authorize
+    token-uri: https://kauth.kakao.com/oauth/token
+    user-info-uri: https://kapi.kakao.com/v2/user/me
+
+  google:
+    client-id: test-google-client-id
+    client-secret: test-google-client-secret
+    redirect-uri: http://localhost:8080/auth/oauth2/google/callback
+    authorize-uri: https://accounts.google.com/o/oauth2/v2/auth
+    token-uri: https://oauth2.googleapis.com/token
+    user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
+    scope: "openid email"
+
+jwt:
+  secret-key: testtesttesttesttesttesttesttesttesttest
+  access-token-expiration: 3600000
+  refresh-token-expiration: 2592000000
+
+signup-token:
+  secret-key: testtesttesttesttesttesttesttesttesttest
+  expiration: 1800000

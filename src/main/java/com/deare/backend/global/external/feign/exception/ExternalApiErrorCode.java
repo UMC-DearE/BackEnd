@@ -51,6 +51,30 @@ public enum ExternalApiErrorCode implements BaseErrorCode {
       "AI 응답 형식이 올바르지 않습니다."
     ),
 
+    AI_UNAUTHORIZED(
+            HttpStatus.BAD_GATEWAY,
+            "AI_50204",
+            "AI 인증에 실패했습니다."
+    ),
+
+    AI_RATE_LIMITED(
+            HttpStatus.BAD_GATEWAY,
+            "AI_50205",
+            "AI 요청 한도를 초과했습니다."
+    ),
+
+    AI_UPSTREAM_ERROR(
+            HttpStatus.BAD_GATEWAY,
+            "AI_50206",
+            "AI 서버 오류가 발생했습니다."
+    ),
+
+    AI_BAD_REQUEST(
+            HttpStatus.BAD_GATEWAY,
+            "AI_50207",
+            "AI 요청 형식이 올바르지 않습니다."
+    ),
+
     AI_TIMEOUT(
             HttpStatus.GATEWAY_TIMEOUT,
             "AI_50401",
