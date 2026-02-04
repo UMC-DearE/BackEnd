@@ -3,7 +3,7 @@ package com.deare.backend.api.report.service;
 import com.deare.backend.api.report.dto.response.EmotionDistributionDTO;
 import com.deare.backend.api.report.dto.response.ReportStatsResponseDTO;
 import com.deare.backend.api.report.dto.response.Top3FromDTO;
-import com.deare.backend.api.report.exception.ReportErrorCode;
+import com.deare.backend.domain.report.exception.ReportErrorCode;
 import com.deare.backend.domain.user.entity.Status;
 import com.deare.backend.domain.user.entity.User;
 import com.deare.backend.domain.user.repository.UserRepository;
@@ -41,11 +41,11 @@ public class ReportStatsService {
                 ))
                 .topPhrases(List.of("보고싶어", "힘내","고마워","사랑해"))
                 .emotionDistribution(List.of(
-                        EmotionDistributionDTO.of("고마움",40.0),
-                        EmotionDistributionDTO.of("즐거움",20.0),
-                        EmotionDistributionDTO.of("위로",20.0),
-                        EmotionDistributionDTO.of("그리움",5.0),
-                        EmotionDistributionDTO.of("고민",10.0)
+                        EmotionDistributionDTO.of("고마움",40),
+                        EmotionDistributionDTO.of("즐거움",20),
+                        EmotionDistributionDTO.of("위로",20),
+                        EmotionDistributionDTO.of("그리움",5),
+                        EmotionDistributionDTO.of("고민",10)
                 ))
                 .build();
     }

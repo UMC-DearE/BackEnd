@@ -7,9 +7,9 @@ import lombok.Getter;
 @Builder
 public class EmotionDistributionDTO {
     private String emotion;
-    private double percent;
+    private int percent;
 
-    public static EmotionDistributionDTO of(String emotion, double percent) {
+    public static EmotionDistributionDTO of(String emotion, int percent) {
         return EmotionDistributionDTO.builder()
                 .emotion(emotion)
                 .percent(percent)
