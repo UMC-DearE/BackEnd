@@ -15,6 +15,7 @@ import com.deare.backend.domain.image.repository.ImageRepository;
 import com.deare.backend.domain.letter.entity.Letter;
 import com.deare.backend.domain.letter.entity.LetterImage;
 import com.deare.backend.domain.letter.exception.LetterErrorCode;
+import com.deare.backend.domain.letter.repository.LetterImageRepository;
 import com.deare.backend.domain.letter.repository.LetterRepository;
 import com.deare.backend.domain.letter.repository.query.LetterEmotionQueryRepository;
 import com.deare.backend.domain.user.entity.User;
@@ -29,8 +30,10 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -46,6 +49,7 @@ public class LetterServiceImpl implements LetterService {
     private final EmotionRepository emotionRepository;
     private final LetterEmotionRepository letterEmotionRepository;
     private final ImageRepository imageRepository;
+    private final LetterImageRepository letterImageRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -137,30 +141,12 @@ public class LetterServiceImpl implements LetterService {
     @Override
     @Transactional
     public LetterCreateResponseDTO createLetter(Long userId, LetterCreateRequestDTO req) {
-        if (userId == null) {
-            throw new GeneralException(LetterErrorCode.UNAUTHORIZED);
-        }
-        if (req == null) {
-            throw new GeneralException(LetterErrorCode.INVALID_REQUEST);
-        }
-        if (req.fromId() == null) {
-            throw new GeneralException(LetterErrorCode.FROM_REQUIRED);
-        }
-        if (!StringUtils.hasText(req.content())) {
-            throw new GeneralException(LetterErrorCode.INVALID_REQUEST);
-        }
-        if (!StringUtils.hasText(req.aiSummary())) {
-            throw new GeneralException(LetterErrorCode.INVALID_REQUEST);
-        }
-        if (req.emotionIds() == null || req.emotionIds().isEmpty()) {
-            throw new GeneralException(LetterErrorCode.INVALID_REQUEST);
-        }
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new GeneralException(LetterErrorCode.UNAUTHORIZED));
 
         From from = fromRepository.findById(req.fromId())
-                .orElseThrow(() -> new GeneralException(LetterErrorCode.FROM_REQUIRED));
+                .orElseThrow(() -> new GeneralException(LetterErrorCode.NOT_FOUND));
 
         if (!from.isOwnedBy(userId)) {
             throw new GeneralException(FromErrorCode.FROM_40301);
@@ -196,6 +182,10 @@ public class LetterServiceImpl implements LetterService {
                 throw new GeneralException(ImageErrorCode.IMAGE_40401);
             }
 
+            Set<Long> ownedImageIds = new HashSet<>(letterImageRepository.findOwnedImageIds(userId, imageIds));
+            if (ownedImageIds.size() != imageIds.size()) {
+                throw new GeneralException(ImageErrorCode.IMAGE_40301);
+            }
             Map<Long, Image> imageMap = images.stream()
                     .collect(Collectors.toMap(Image::getId, i -> i));
 
@@ -206,8 +196,6 @@ public class LetterServiceImpl implements LetterService {
             }
         }
 
-        Letter saved = letterRepository.save(letter);
-
         List<Long> emotionIds = req.emotionIds();
         List<Long> distinctIds = emotionIds.stream().distinct().toList();
         List<Emotion> emotions = emotionRepository.findAllById(distinctIds);
@@ -216,7 +204,7 @@ public class LetterServiceImpl implements LetterService {
             throw new GeneralException(LetterErrorCode.INVALID_REQUEST);
             //추후 emotionerrorcode로 변경예정
         }
-
+        Letter saved = letterRepository.save(letter);
         List<LetterEmotion> mappings = emotions.stream()
                 .map(e -> new LetterEmotion(saved, e))
                 .toList();
