@@ -1,0 +1,89 @@
+version: "3.8"
+
+name: deare-dev
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: deare-dev-mysql
+    restart: unless-stopped
+    env_file:
+      - /home/ubuntu/deare/.env.prod
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${APP_DB_USER}
+      MYSQL_PASSWORD: ${APP_DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      TZ: Asia/Seoul
+    command: >
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+      --default-time-zone=+09:00
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - deare-net
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+
+  redis:
+    image: redis:7-alpine
+    container_name: deare-dev-redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
+    networks:
+      - deare-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 30
+      start_period: 10s
+
+  app:
+    image: ${APP_IMAGE}
+    container_name: deare-dev-backend
+    restart: unless-stopped
+    env_file:
+      - /home/ubuntu/deare/.env.prod
+    environment:
+      TZ: Asia/Seoul
+      SPRING_PROFILES_ACTIVE: prod
+
+      DB_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+      DB_USER: ${APP_DB_USER}
+      DB_PASSWORD: ${APP_DB_PASSWORD}
+
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+
+      SERVER_PORT: 8080
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    networks:
+      - deare-net
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/actuator/health | grep -q UP || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 40s
+
+networks:
+  deare-net:
+    driver: bridge
+
+volumes:
+  mysql_data:
+  redis_data:
