@@ -31,7 +31,7 @@ public class FolderController {
         Long userId = SecurityUtil.getCurrentUserId();
 
         if (userId == null) {
-            throw new GeneralException(FolderErrorCode.FOLDER_40101);
+            throw new GeneralException(FolderErrorCode.UNAUTHORIZED);
         }
 
         FolderListResponseDTO data = folderService.getFolderList(userId);
@@ -47,7 +47,7 @@ public class FolderController {
         Long userId = SecurityUtil.getCurrentUserId();
 
         if (userId == null) {
-            throw new GeneralException(FolderErrorCode.FOLDER_40101);
+            throw new GeneralException(FolderErrorCode.UNAUTHORIZED);
         }
 
         FolderCreateResponseDTO data = folderService.createFolder(userId, reqDTO);
@@ -62,7 +62,7 @@ public class FolderController {
         Long userId = SecurityUtil.getCurrentUserId();
 
         if (userId == null) {
-            throw new GeneralException(FolderErrorCode.FOLDER_40101);
+            throw new GeneralException(FolderErrorCode.UNAUTHORIZED);
         }
 
         folderService.deleteFolder(userId, folderId);
@@ -100,7 +100,7 @@ public class FolderController {
         Long userId = SecurityUtil.getCurrentUserId();
 
         if (userId == null) {
-            throw new GeneralException(FolderErrorCode.FOLDER_40101);
+            throw new GeneralException(FolderErrorCode.UNAUTHORIZED);
         }
 
         folderService.addLetterToFolder(userId, folderId, letterId);
@@ -117,7 +117,7 @@ public class FolderController {
         Long userId = SecurityUtil.getCurrentUserId();
 
         if (userId == null) {
-            throw new GeneralException(FolderErrorCode.FOLDER_40101);
+            throw new GeneralException(FolderErrorCode.UNAUTHORIZED);
         }
 
         folderService.removeLetterFromFolder(userId, folderId, letterId);

@@ -59,17 +59,13 @@ public class FolderServiceImpl implements FolderService {
 
         long count = folderRepository.countByUser_IdAndIsDeletedFalse(userId);
         if (count >= MAX_FOLDERS) {
-            throw new GeneralException(FolderErrorCode.FOLDER_40001);
-        }
-
-        if (folderRepository.existsByUser_IdAndNameAndIsDeletedFalse(userId, req.name())) {
-            throw new GeneralException(FolderErrorCode.FOLDER_40901);
+            throw new GeneralException(FolderErrorCode.MAX_FOLDER_LIMIT_EXCEEDED);
         }
 
         Image image = null;
         if (req.imageId() != null) {
             image = imageRepository.findById(req.imageId())
-                    .orElseThrow(() -> new GeneralException(FolderErrorCode.FOLDER_40003));
+                    .orElseThrow(() -> new GeneralException(FolderErrorCode.INVALID_REQUEST));
         }
 
         int nextOrder = folderRepository.findMaxFolderOrder(userId) + 1;
@@ -93,7 +89,7 @@ public class FolderServiceImpl implements FolderService {
     @Transactional
     public void deleteFolder(Long userId, Long folderId) {
         Folder folder = folderRepository.findByIdAndUser_IdAndIsDeletedFalse(folderId, userId)
-                .orElseThrow(() -> new GeneralException(FolderErrorCode.FOLDER_40401));
+                .orElseThrow(() -> new GeneralException(FolderErrorCode.FOLDER_NOT_FOUND));
 
         letterRepository.clearFolder(userId, folderId);
         folder.softDelete();
@@ -103,7 +99,7 @@ public class FolderServiceImpl implements FolderService {
     @Transactional
     public void addLetterToFolder(Long userId, Long folderId, Long letterId) {
         Folder folder = folderRepository.findByIdAndUser_IdAndIsDeletedFalse(folderId, userId)
-                .orElseThrow(() -> new GeneralException(FolderErrorCode.FOLDER_40401));
+                .orElseThrow(() -> new GeneralException(FolderErrorCode.FOLDER_NOT_FOUND));
 
         Letter letter = letterRepository.findByIdAndUser_IdAndIsDeletedFalse(letterId, userId)
                 .orElseThrow(() -> new GeneralException(LetterErrorCode.LETTER_40301));
@@ -119,13 +115,13 @@ public class FolderServiceImpl implements FolderService {
     @Transactional
     public void removeLetterFromFolder(Long userId, Long folderId, Long letterId) {
         folderRepository.findByIdAndUser_IdAndIsDeletedFalse(folderId, userId)
-                .orElseThrow(() -> new GeneralException(FolderErrorCode.FOLDER_40401));
+                .orElseThrow(() -> new GeneralException(FolderErrorCode.FOLDER_NOT_FOUND));
 
         Letter letter = letterRepository.findByIdAndUser_IdAndIsDeletedFalse(letterId, userId)
-                .orElseThrow(() -> new GeneralException(FolderErrorCode.FOLDER_40003)); // TODO: LetterErrorCode로 교체
+                .orElseThrow(() -> new GeneralException(FolderErrorCode.INVALID_REQUEST)); // TODO: LetterErrorCode로 교체
 
         if (letter.getFolder() == null || !letter.getFolder().getId().equals(folderId)) {
-            throw new GeneralException(FolderErrorCode.FOLDER_40003);
+            throw new GeneralException(FolderErrorCode.INVALID_REQUEST);
         }
 
         letter.changeFolder(null);

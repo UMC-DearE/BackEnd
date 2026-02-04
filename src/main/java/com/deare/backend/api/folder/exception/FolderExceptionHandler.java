@@ -29,8 +29,8 @@ public class FolderExceptionHandler {
             return ResponseEntity
                     .status(HttpStatus.UNPROCESSABLE_ENTITY)
                     .body(ApiResponse.fail(
-                            FolderErrorCode.FOLDER_42201.getCode(),
-                            FolderErrorCode.FOLDER_42201.getMessage()
+                            FolderErrorCode.INVALID_FOLDER_NAME_LENGTH.getCode(),
+                            FolderErrorCode.INVALID_FOLDER_NAME_LENGTH.getMessage()
                     ));
         }
 
@@ -43,8 +43,8 @@ public class FolderExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(ApiResponse.fail(
-                        FolderErrorCode.FOLDER_40003.getCode(),
-                        message.isBlank() ? FolderErrorCode.FOLDER_40003.getMessage() : message
+                        FolderErrorCode.INVALID_REQUEST.getCode(),
+                        message.isBlank() ? FolderErrorCode.INVALID_REQUEST.getMessage() : message
                 ));
     }
 
