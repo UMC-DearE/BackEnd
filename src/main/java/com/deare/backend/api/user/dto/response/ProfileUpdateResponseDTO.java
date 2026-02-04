@@ -1,6 +1,6 @@
-package com.deare.backend.api.user.dto;
+package com.deare.backend.api.user.dto.response;
 
-public record ProfileResponseDTO(
+public record ProfileUpdateResponseDTO(
         Long userId,
         String nickname,
         String intro,

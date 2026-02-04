@@ -24,24 +24,20 @@ public class UserExceptionHandler {
         FieldError fe = e.getBindingResult().getFieldErrors().get(0);
         String code = fe.getDefaultMessage(); // ex) USER_42201
 
-        try {
-            UserErrorCode ec = UserErrorCode.valueOf(code);
+        UserErrorCode ec = UserErrorCode.fromCode(code);
 
-            log.warn("[User Validation] {} - {}", fe.getField(), ec.getCode());
-
-            return ResponseEntity
-                    .status(ec.getStatus())
+        if (ec != null) {
+            log.warn("[User Validation] field={}, code={}", fe.getField(), ec.getCode());
+            return ResponseEntity.status(ec.getStatus())
                     .body(ApiResponse.fail(ec.getCode(), ec.getMessage()));
-        } catch (IllegalArgumentException ex) {
-            // message가 ErrorCode가 아닐 경우 fallback
-            log.warn("[User Validation] unknown validation code: {}", code);
-
-            return ResponseEntity
-                    .status(UserErrorCode.USER_40001.getStatus())
-                    .body(ApiResponse.fail(
-                            UserErrorCode.USER_40001.getCode(),
-                            UserErrorCode.USER_40001.getMessage()
-                    ));
         }
+
+        // fallback
+        log.warn("[User Validation] unknown validation code: {}", code);
+        return ResponseEntity.status(UserErrorCode.BAD_REQUEST.getStatus())
+                .body(ApiResponse.fail(
+                        UserErrorCode.BAD_REQUEST.getCode(),
+                        UserErrorCode.BAD_REQUEST.getMessage()
+                ));
     }
 }
