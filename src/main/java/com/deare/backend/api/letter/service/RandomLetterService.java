@@ -85,7 +85,7 @@ public class RandomLetterService {
 
     private RandomLetterCacheValue createValue(long userId, LocalDate today) {
 
-        long count = letterRepository.countByUser_Id(userId);
+        long count = letterRepository.countVisibleLettersByUser(userId);
 
         // 편지가 없으면 hasLetter=false
         if (count == 0) {

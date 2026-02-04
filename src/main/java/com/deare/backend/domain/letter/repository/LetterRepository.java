@@ -6,5 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface LetterRepository extends JpaRepository<Letter, Long>, LetterRepositoryCustom {
-    long countByUser_Id(Long userId);
+
 }
