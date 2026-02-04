@@ -1,0 +1,30 @@
+
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+
+decorator:
+  datasource:
+    p6spy:
+      enable-logging: false
+
+# oauth redirect-uri
+oauth:
+  kakao:
+    redirect-uri: ${KAKAO_REDIRECT_URI}
+  google:
+    redirect-uri: ${GOOGLE_REDIRECT_URI}
+
+# health check
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
+      probes:
+        enabled: true

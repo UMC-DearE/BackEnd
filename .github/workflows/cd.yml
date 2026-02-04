@@ -1,0 +1,90 @@
+name: CD - build/push image & deploy to EC2 on main push
+
+on:
+  push:
+    branches: ["main"]
+
+env:
+  IMAGE_NAME: deare-backend
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17 (Temurin) + Gradle cache
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "17"
+          cache: "gradle"
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      # 1) JAR 빌드
+      - name: Build JAR (skip tests)
+        run: ./gradlew clean bootJar -x test
+
+      - name: Prepare app.jar for Docker build context
+        run: |
+          rm -f app.jar
+          cp build/libs/*.jar app.jar
+
+      # 2) Docker Hub 로그인
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # 3) 이미지 build & push (latest + commit sha)
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+
+      # 4) docker-compose-dev.yml을 EC2로 복사 -> 추후 docker-compose-prod 교체
+      - name: Copy docker-compose-dev.yml to EC2
+        uses: appleboy/scp-action@v1
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: "docker-compose-dev.yml"
+          target: "/home/ubuntu/deare"
+
+      # 5) EC2에서 pull + up (down은 실패 시에만)
+      - name: Deploy on EC2 (pull + up -d, fallback to down)
+        uses: appleboy/ssh-action@v1.2.4
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            set -e
+            cd /home/ubuntu/deare
+
+            # latest 사용 → app 이미지는 항상 pull
+            docker compose -f docker-compose-dev.yml pull app
+
+            if docker compose -f docker-compose-dev.yml up -d; then
+              echo "compose up succeeded without down"
+            else
+              echo "compose up failed. fallback to down -> up"
+              docker compose -f docker-compose-dev.yml down
+              docker compose -f docker-compose-dev.yml up -d
+            fi
+
+            docker compose -f docker-compose-dev.yml ps
+
+            # dangling 이미지만 정리
+            docker image prune -f

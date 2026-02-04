@@ -35,3 +35,14 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### .env ###
+.env
+.env.dev
+.env.prod
+
+#MacOs Log
+.DS_Store
+
+#claude
+.claude

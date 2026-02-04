@@ -1,0 +1,90 @@
+name: CI - test on PR to develop
+
+on:
+  pull_request:
+    branches: [ "develop" ]
+    types: [ "opened", "synchronize", "reopened" ]
+
+env:
+  SPRING_PROFILES_ACTIVE: test
+
+  # AI (Secrets)
+  GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+
+  # JWT (Secrets + static)
+  JWT_SECRET: ${{ secrets.JWT_SECRET }}
+  JWT_ACCESS_TOKEN_EXPIRE_TIME: 3600000
+  JWT_REFRESH_TOKEN_EXPIRE_TIME: 2592000000
+
+  # Redis (CI service)
+  REDIS_HOST: localhost
+  REDIS_PORT: 6379
+
+  # DB (MySQL CI service)
+  DB_URL: jdbc:mysql://localhost:3306/testdb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+  DB_USER: test
+  DB_PASSWORD: test
+
+  # OAuth - Kakao
+  KAKAO_CLIENT_ID: ${{ secrets.KAKAO_CLIENT_ID }}
+  KAKAO_CLIENT_SECRET: ${{ secrets.KAKAO_CLIENT_SECRET }}
+  KAKAO_REDIRECT_URI: ${{ secrets.KAKAO_REDIRECT_URI }}
+
+  # OAuth - Google
+  GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+  GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+  GOOGLE_REDIRECT_URI: ${{ secrets.GOOGLE_REDIRECT_URI }}
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: testdb
+          MYSQL_USER: test
+          MYSQL_PASSWORD: test
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost -u root -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17 (Temurin) + Gradle cache
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "17"
+          cache: "gradle"
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Run tests (test profile only)
+        run: ./gradlew clean test
+
+      - name: Upload test results (only on failure)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: build/reports/tests/test
