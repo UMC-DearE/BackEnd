@@ -4,6 +4,7 @@ import com.deare.backend.global.auth.jwt.filter.JwtAuthenticationFilter;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -41,7 +42,14 @@ public class SecurityConfig {
         // 인증/인가
         http.
                 authorizeHttpRequests(auth -> auth
+
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(
+
+                                // 헬스체크
+                                "/actuator/health",
+                                "/actuator/health/**",
+
                                 // 테스트 API 열기 + 스웨거 세팅
                                 "/test/**",
                                 "/swagger-ui/**",
@@ -101,6 +109,9 @@ public class SecurityConfig {
                 "http://localhost:5173"
                 // "nginx-도메인 주소"
         ));
+
+        // refresh / signup-token -> cookie 전송
+        config.setAllowCredentials(true);
 
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept"));
