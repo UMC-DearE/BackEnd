@@ -11,6 +11,7 @@ public interface LetterRepositoryCustom {
             Long userId,
             Long folderId,
             Long fromId,
+            Boolean isLiked,
             String keyword,
             Pageable pageable
     );

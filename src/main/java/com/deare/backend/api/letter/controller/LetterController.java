@@ -27,12 +27,13 @@ public class LetterController {
             Pageable pageable,
             @RequestParam(required = false) Long folderId,
             @RequestParam(required = false) Long fromId,
+            @RequestParam(required = false) Boolean isLiked,
             @RequestParam(required = false) String keyword
     ) {
-        Long userId = 1L; // TODO: 인증 연결 후 SecurityContext/JWT에서 추출
+        Long userId = SecurityUtil.getCurrentUserId();
 
         return ApiResponse.success(
-                letterService.getLetterList(userId, pageable, folderId, fromId, keyword)
+                letterService.getLetterList(pageable, userId, folderId, fromId, isLiked, keyword)
         );
     }
 
@@ -45,7 +46,7 @@ public class LetterController {
     public ApiResponse<LetterDetailResponseDTO> getLetter(
             @PathVariable Long letterId
     ) {
-        Long userId = 1L; // TODO: 인증 연결 후 SecurityContext/JWT에서 추출
+        Long userId = SecurityUtil.getCurrentUserId();
 
         return ApiResponse.success(letterService.getLetterDetail(userId, letterId));
     }
@@ -58,6 +59,9 @@ public class LetterController {
             @PathVariable Long letterId,
             @Valid @RequestBody LetterUpdateRequestDTO reqDTO
             ){
+        Long userId = SecurityUtil.getCurrentUserId();
+
+        letterService.updateLetter(userId, letterId, reqDTO);
         return ApiResponse.success(null);
     }
 
@@ -65,6 +69,8 @@ public class LetterController {
     @Operation(summary = "편지 삭제",
             description = "사용자가 소유한 편지를 삭제하는 API입니다.")
     public ApiResponse<Void> deleteLetter(@PathVariable Long letterId){
+        Long userId = SecurityUtil.getCurrentUserId();
+        letterService.deleteLetter(userId, letterId);
         return ApiResponse.success(null);
     }
 
@@ -92,8 +98,10 @@ public class LetterController {
             summary = "편지 좋아요 추가",
             description = "사용자가 소유한 편지에 좋아요를 추가합니다."
     )
-    public ApiResponse<Void> likeLetter(@PathVariable Long letterId) {
-        return ApiResponse.success(null);
+    public ApiResponse<LetterLikeResponseDTO> likeLetter(@PathVariable Long letterId) {
+        Long userId = SecurityUtil.getCurrentUserId();
+        LetterLikeResponseDTO res = letterService.likeLetter(userId, letterId);
+        return ApiResponse.success(res);
     }
 
     @DeleteMapping("/{letterId}/like")
@@ -101,8 +109,10 @@ public class LetterController {
             summary = "편지 좋아요 삭제",
             description = "사용자가 소유한 편지의 좋아요를 삭제합니다."
     )
-    public ApiResponse<Void> unlikeLetter(@PathVariable Long letterId) {
-        return ApiResponse.success(null);
+    public ApiResponse<LetterLikeResponseDTO> unlikeLetter(@PathVariable Long letterId) {
+        Long userId = SecurityUtil.getCurrentUserId();
+        LetterLikeResponseDTO res = letterService.unlikeLetter(userId, letterId);
+        return ApiResponse.success(res);
     }
 
     private final RandomLetterService randomLetterService;
