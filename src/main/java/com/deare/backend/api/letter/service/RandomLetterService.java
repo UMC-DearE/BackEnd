@@ -65,10 +65,9 @@ public class RandomLetterService {
         String json = toJson(created);
 
         // 동시성 처리
-        // 같은 유저가 동시에 여러 요청을 보내도 최초 1개만 캐시에 저장
         Boolean ok = redisTemplate.opsForValue().setIfAbsent(key, json, ttl);
 
-        // 이미 누가 먼저 넣었으면 그 값을 읽어 반환
+        // 다른 요청이 먼저 캐시를 생성한 경우, 해당 값 반환
         if (Boolean.FALSE.equals(ok)) {
             String latest = redisTemplate.opsForValue().get(key);
             if (latest != null) {
@@ -76,11 +75,7 @@ public class RandomLetterService {
             }
         }
 
-        if (Boolean.TRUE.equals(ok)) {
-            return toResponseDTO(created, today);
-        }
-
-        redisTemplate.opsForValue().set(key, json, ttl);
+        // setIfAbsent 성공 또는 재시도
         return toResponseDTO(created, today);
     }
 
