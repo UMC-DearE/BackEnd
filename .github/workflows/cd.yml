@@ -62,7 +62,7 @@ jobs:
           source: "docker-compose-dev.yml"
           target: "/home/ubuntu/deare"
 
-      # 5) EC2에서 pull + up (down은 실패 시에만)
+      # 5) EC2에서 pull + up (down은 실패 시에만) / #87 수정
       - name: Deploy on EC2 (pull + up -d, fallback to down)
         uses: appleboy/ssh-action@v1.2.4
         with:
@@ -73,18 +73,18 @@ jobs:
             set -e
             cd /home/ubuntu/deare
 
-            # latest 사용 → app 이미지는 항상 pull
-            docker compose -f docker-compose-dev.yml pull app
+            ENV_FILE=/home/ubuntu/deare/.env.prod
+            COMPOSE_FILE=/home/ubuntu/deare/docker-compose-dev.yml
 
-            if docker compose -f docker-compose-dev.yml up -d; then
+            docker compose --env-file $ENV_FILE -f $COMPOSE_FILE pull app
+
+            if docker compose --env-file $ENV_FILE -f $COMPOSE_FILE up -d; then
               echo "compose up succeeded without down"
             else
               echo "compose up failed. fallback to down -> up"
-              docker compose -f docker-compose-dev.yml down
-              docker compose -f docker-compose-dev.yml up -d
+              docker compose --env-file $ENV_FILE -f $COMPOSE_FILE down
+              docker compose --env-file $ENV_FILE -f $COMPOSE_FILE up -d
             fi
 
-            docker compose -f docker-compose-dev.yml ps
-
-            # dangling 이미지만 정리
+            docker compose --env-file $ENV_FILE -f $COMPOSE_FILE ps
             docker image prune -f

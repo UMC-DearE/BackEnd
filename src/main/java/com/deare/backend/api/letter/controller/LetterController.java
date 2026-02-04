@@ -19,6 +19,19 @@ public class LetterController {
     private final LetterService letterService;
     private final RandomLetterService randomLetterService;
 
+    @PostMapping
+    @Operation(
+            summary = "편지 생성",
+            description = "사용자가 편지를 작성(생성)하는 API입니다."
+    )
+    public ApiResponse<LetterCreateResponseDTO> createLetter(
+            @Valid @RequestBody LetterCreateRequestDTO req
+    ) {
+        Long userId = SecurityUtil.getCurrentUserId();
+        LetterCreateResponseDTO res = letterService.createLetter(userId, req);
+        return ApiResponse.success(res);
+    }
+
     @GetMapping
     @Operation(
             summary = "편지 목록 조회",
@@ -132,4 +145,5 @@ public class LetterController {
         }
         return ApiResponse.success("랜덤 편지 조회에 성공했습니다.", data);
     }
+
 }
