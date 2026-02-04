@@ -17,6 +17,19 @@ public class LetterController {
 
     private final LetterService letterService;
 
+    @PostMapping
+    @Operation(
+            summary = "편지 생성",
+            description = "사용자가 편지를 작성(생성)하는 API입니다."
+    )
+    public ApiResponse<LetterCreateResponseDTO> createLetter(
+            @Valid @RequestBody LetterCreateRequestDTO req
+    ) {
+        Long userId = 1L;
+        LetterCreateResponseDTO res = letterService.createLetter(userId, req);
+        return ApiResponse.success(res);
+    }
+
     @GetMapping
     @Operation(
             summary = "편지 목록 조회",
@@ -113,4 +126,5 @@ public class LetterController {
         LetterLikeResponseDTO res = letterService.unlikeLetter(userId, letterId);
         return ApiResponse.success(res);
     }
+
 }

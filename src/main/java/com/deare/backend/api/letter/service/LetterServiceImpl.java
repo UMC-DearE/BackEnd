@@ -2,13 +2,20 @@ package com.deare.backend.api.letter.service;
 
 import com.deare.backend.api.letter.dto.*;
 import com.deare.backend.api.letter.util.ExcerptUtil;
+import com.deare.backend.domain.emotion.entity.Emotion;
+import com.deare.backend.domain.emotion.entity.LetterEmotion;
+import com.deare.backend.domain.emotion.repository.EmotionRepository;
+import com.deare.backend.domain.emotion.repository.LetterEmotionRepository;
 import com.deare.backend.domain.from.entity.From;
 import com.deare.backend.domain.from.exception.FromErrorCode;
 import com.deare.backend.domain.from.repository.FromRepository;
+import com.deare.backend.domain.image.repository.ImageRepository;
 import com.deare.backend.domain.letter.entity.Letter;
 import com.deare.backend.domain.letter.exception.LetterErrorCode;
 import com.deare.backend.domain.letter.repository.LetterRepository;
 import com.deare.backend.domain.letter.repository.query.LetterEmotionQueryRepository;
+import com.deare.backend.domain.user.entity.User;
+import com.deare.backend.domain.user.repository.UserRepository;
 import com.deare.backend.global.common.exception.GeneralException;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -18,6 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -29,6 +37,9 @@ public class LetterServiceImpl implements LetterService {
     private final LetterRepository letterRepository;
     private final LetterEmotionQueryRepository letterEmotionQueryRepository;
     private final FromRepository fromRepository;
+    private final UserRepository userRepository;
+    private final EmotionRepository emotionRepository;
+    private final LetterEmotionRepository letterEmotionRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -115,6 +126,76 @@ public class LetterServiceImpl implements LetterService {
                 emotionTags,
                 imageUrls
         );
+    }
+
+    @Override
+    @Transactional
+    public LetterCreateResponseDTO createLetter(Long userId, LetterCreateRequestDTO req) {
+        if (userId == null) {
+            throw new GeneralException(LetterErrorCode.UNAUTHORIZED);
+        }
+        if (req == null) {
+            throw new GeneralException(LetterErrorCode.INVALID_REQUEST);
+        }
+        if (req.fromId() == null) {
+            throw new GeneralException(LetterErrorCode.FROM_REQUIRED);
+        }
+        if (!StringUtils.hasText(req.content())) {
+            throw new GeneralException(LetterErrorCode.INVALID_REQUEST);
+        }
+        if (!StringUtils.hasText(req.aiSummary())) {
+            throw new GeneralException(LetterErrorCode.INVALID_REQUEST);
+        }
+        if (req.emotionIds() == null || req.emotionIds().isEmpty()) {
+            throw new GeneralException(LetterErrorCode.INVALID_REQUEST);
+        }
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new GeneralException(LetterErrorCode.UNAUTHORIZED));
+
+        From from = fromRepository.findById(req.fromId())
+                .orElseThrow(() -> new GeneralException(LetterErrorCode.FROM_REQUIRED));
+
+        if (!from.isOwnedBy(userId)) {
+            throw new GeneralException(FromErrorCode.FROM_40301);
+        }
+
+        String content = req.content().trim();
+        String aiSummary = req.aiSummary().trim();
+        String contentHash = DigestUtils.sha256Hex(content);
+        int contentVersion = 1;
+
+        LocalDate receivedAt = req.receivedAt();
+
+        Letter letter = new Letter(
+                content,
+                receivedAt,
+                aiSummary,
+                contentVersion,
+                contentHash,
+                user,
+                from,
+                null
+        );
+
+        Letter saved = letterRepository.save(letter);
+
+        List<Long> emotionIds = req.emotionIds();
+        List<Long> distinctIds = emotionIds.stream().distinct().toList();
+        List<Emotion> emotions = emotionRepository.findAllById(distinctIds);
+
+        if (emotions.size() != distinctIds.size()) {
+            throw new GeneralException(LetterErrorCode.INVALID_REQUEST);
+            //추후 emotionerrorcode로 변경예정
+        }
+
+        List<LetterEmotion> mappings = emotions.stream()
+                .map(e -> new LetterEmotion(saved, e))
+                .toList();
+
+        letterEmotionRepository.saveAll(mappings);
+
+        return new LetterCreateResponseDTO(saved.getId(), saved.getCreatedAt());
     }
 
     @Transactional

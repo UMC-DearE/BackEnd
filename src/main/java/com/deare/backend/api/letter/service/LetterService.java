@@ -1,9 +1,6 @@
 package com.deare.backend.api.letter.service;
 
-import com.deare.backend.api.letter.dto.LetterDetailResponseDTO;
-import com.deare.backend.api.letter.dto.LetterLikeResponseDTO;
-import com.deare.backend.api.letter.dto.LetterListResponseDTO;
-import com.deare.backend.api.letter.dto.LetterUpdateRequestDTO;
+import com.deare.backend.api.letter.dto.*;
 import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,7 +16,7 @@ public interface LetterService {
     );
 
     LetterDetailResponseDTO getLetterDetail(Long userId, Long letterId);
-
+    LetterCreateResponseDTO createLetter(Long userId, LetterCreateRequestDTO req);
     void updateLetter(Long userId, Long letterId, LetterUpdateRequestDTO req);
     void deleteLetter(Long userId, Long letterId);
 
