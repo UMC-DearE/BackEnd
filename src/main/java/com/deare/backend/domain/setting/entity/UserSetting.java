@@ -34,4 +34,22 @@ public class UserSetting extends BaseEntity {
     @OneToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false, unique = true)
     private User user;
+
+    public void updateFont(Font font) {
+        this.font = font;
+    }
+
+    public boolean isPlus() {
+        return this.membershipPlan == MembershipPlan.PLUS;
+    }
+
+    public void upgradeToPlus() {
+        this.membershipPlan = MembershipPlan.PLUS;
+    }
+    public static UserSetting createDefault(User user, String homeColor) {
+        UserSetting us = new UserSetting();
+        us.user = user;
+        us.homeColor = homeColor;
+        return us;
+    }
 }
