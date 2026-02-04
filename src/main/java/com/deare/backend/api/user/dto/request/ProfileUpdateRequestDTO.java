@@ -1,4 +1,4 @@
-package com.deare.backend.api.user.dto;
+package com.deare.backend.api.user.dto.request;
 
 import jakarta.validation.constraints.Size;
 
