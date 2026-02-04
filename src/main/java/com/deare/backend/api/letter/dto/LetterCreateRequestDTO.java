@@ -12,5 +12,6 @@ public record LetterCreateRequestDTO(
         String aiSummary,
         List<Long> emotionIds,
         Long fromId,
-        LocalDate receivedAt
+        LocalDate receivedAt,
+        List<Long> imageIds
 ) {}

@@ -9,8 +9,11 @@ import com.deare.backend.domain.emotion.repository.LetterEmotionRepository;
 import com.deare.backend.domain.from.entity.From;
 import com.deare.backend.domain.from.exception.FromErrorCode;
 import com.deare.backend.domain.from.repository.FromRepository;
+import com.deare.backend.domain.image.entity.Image;
+import com.deare.backend.domain.image.exception.ImageErrorCode;
 import com.deare.backend.domain.image.repository.ImageRepository;
 import com.deare.backend.domain.letter.entity.Letter;
+import com.deare.backend.domain.letter.entity.LetterImage;
 import com.deare.backend.domain.letter.exception.LetterErrorCode;
 import com.deare.backend.domain.letter.repository.LetterRepository;
 import com.deare.backend.domain.letter.repository.query.LetterEmotionQueryRepository;
@@ -27,6 +30,8 @@ import org.springframework.util.StringUtils;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -40,6 +45,7 @@ public class LetterServiceImpl implements LetterService {
     private final UserRepository userRepository;
     private final EmotionRepository emotionRepository;
     private final LetterEmotionRepository letterEmotionRepository;
+    private final ImageRepository imageRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -177,6 +183,28 @@ public class LetterServiceImpl implements LetterService {
                 from,
                 null
         );
+
+        List<Long> imageIds = (req.imageIds() == null) ? List.of() : req.imageIds();
+
+        if (!imageIds.isEmpty()) {
+            if (imageIds.size() > 10) {
+                throw new GeneralException(ImageErrorCode.IMAGE_41301);
+            }
+
+            List<Image> images = imageRepository.findAllById(imageIds);
+            if (images.size() != imageIds.size()) {
+                throw new GeneralException(ImageErrorCode.IMAGE_40401);
+            }
+
+            Map<Long, Image> imageMap = images.stream()
+                    .collect(Collectors.toMap(Image::getId, i -> i));
+
+            for (int i = 0; i < imageIds.size(); i++) {
+                Image image = imageMap.get(imageIds.get(i));
+                LetterImage li = LetterImage.create(image, i + 1);
+                letter.addLetterImage(li);
+            }
+        }
 
         Letter saved = letterRepository.save(letter);
 

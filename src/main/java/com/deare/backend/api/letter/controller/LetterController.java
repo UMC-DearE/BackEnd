@@ -25,7 +25,7 @@ public class LetterController {
     public ApiResponse<LetterCreateResponseDTO> createLetter(
             @Valid @RequestBody LetterCreateRequestDTO req
     ) {
-        Long userId = 1L;
+        Long userId = SecurityUtil.getCurrentUserId();
         LetterCreateResponseDTO res = letterService.createLetter(userId, req);
         return ApiResponse.success(res);
     }
