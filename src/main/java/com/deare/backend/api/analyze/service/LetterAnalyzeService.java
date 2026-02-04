@@ -2,6 +2,7 @@ package com.deare.backend.api.analyze.service;
 
 import com.deare.backend.api.analyze.dto.request.AnalyzeLetterRequestDTO;
 import com.deare.backend.api.analyze.dto.response.AnalyzeLetterResponseDTO;
+import com.deare.backend.api.analyze.dto.response.ReAnalyzeResponseDTO;
 import com.deare.backend.domain.emotion.entity.Emotion;
 import com.deare.backend.domain.emotion.repository.EmotionRepository;
 import com.deare.backend.global.external.gemini.adapter.analyze.AnalyzeAdapter;
@@ -29,5 +30,16 @@ public class LetterAnalyzeService {
         List<Emotion> emotions=emotionRepository.findByNameIn(emotionList);
 
         return AnalyzeLetterResponseDTO.of(summary,emotions);
+    }
+
+    public ReAnalyzeResponseDTO analyzeForUpdate(String content){
+        AnalyzeResponseDTO analyzeResult = analyzeAdapter.analyze(content);
+
+        String summary=analyzeResult.getSummary();
+        List<String> emotionsName = analyzeResult.getEmotions();
+
+        List<Emotion> emotions = emotionRepository.findByNameIn(emotionsName);
+
+        return ReAnalyzeResponseDTO.of(summary,emotions);
     }
 }
