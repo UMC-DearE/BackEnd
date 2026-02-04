@@ -91,9 +91,27 @@ public class LetterOcrService {
                 .filter(Objects::nonNull)
                 .collect(Collectors.joining("\n\n"));
 
+        List<Long> failedImageIds = results.stream()
+                .filter(r -> !r.isSuccess())
+                .map(OcrResultDTO::getImageId)
+                .toList();
+
+        int total = results.size();
+        int successCount = (int) results.stream().filter(OcrResultDTO::isSuccess).count();
+        int failedCount = total - successCount;
+
+        OcrLettersResponseDTO.SummaryDTO summary = OcrLettersResponseDTO.SummaryDTO.builder()
+                .total(total)
+                .success(successCount)
+                .failed(failedCount)
+                .partialFailure(failedCount > 0 && successCount > 0)
+                .failedImageIds(failedImageIds)
+                .build();
+
         return OcrLettersResponseDTO.builder()
                 .combinedText(combinedText)
                 .results(results)
+                .summary(summary)
                 .build();
     }
 
