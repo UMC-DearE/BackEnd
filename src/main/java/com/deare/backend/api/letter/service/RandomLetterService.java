@@ -22,9 +22,10 @@ public class RandomLetterService {
 
     private static final ZoneId ZONE = ZoneId.of("Asia/Seoul");
 
+    // 랜덤 문구 선택 시 최소 문장 길이 (너무 짧은 문장 제외)
     private static final int MIN_SENTENCE_LEN = 10;
 
-    // 랜덤 문구 최대 길이 (프론트: 최대 2줄)
+    // 랜덤 문구 최대 길이 (UI에서 최대 2줄 표시)
     private static final int MAX_PHRASE_CHARS = 60;
 
     private final RedisTemplate<String, String> redisTemplate;

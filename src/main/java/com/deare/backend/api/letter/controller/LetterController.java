@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 public class LetterController {
 
     private final LetterService letterService;
+    private final RandomLetterService randomLetterService;
 
     @GetMapping
     @Operation(
@@ -115,9 +116,11 @@ public class LetterController {
         return ApiResponse.success(res);
     }
 
-    private final RandomLetterService randomLetterService;
-
     @GetMapping("/random")
+    @Operation(
+            summary = "랜덤 편지 조회",
+            description = "홈 화면에 표시될 오늘의 랜덤 편지 카드를 조회합니다."
+    )
     public ApiResponse<RandomLetterResponseDTO> getRandomLetter() {
 
         long userId = SecurityUtil.getCurrentUserId();
