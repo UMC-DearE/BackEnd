@@ -1,9 +1,9 @@
 package com.deare.backend.api.setting.service;
 
 import com.deare.backend.domain.setting.entity.UserSetting;
-import com.deare.backend.domain.setting.exception.ThemeErrorCode;
 import com.deare.backend.domain.setting.repository.UserSettingRepository;
 import com.deare.backend.domain.user.entity.User;
+import com.deare.backend.domain.user.exception.UserErrorCode;
 import com.deare.backend.domain.user.repository.UserRepository;
 import com.deare.backend.global.common.exception.GeneralException;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +28,7 @@ public class SettingWriteService {
         }
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new GeneralException(ThemeErrorCode.THEME_INTERNAL_SERVER_ERROR));
+                .orElseThrow(() -> new GeneralException(UserErrorCode.INTERNAL_ERROR));
 
         try {
             userSettingRepository.save(UserSetting.createDefault(user, DEFAULT_HOME_COLOR));
