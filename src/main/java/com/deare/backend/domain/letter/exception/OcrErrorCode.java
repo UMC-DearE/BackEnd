@@ -14,19 +14,14 @@ public enum OcrErrorCode implements BaseErrorCode {
             "OCR_40001",
             "잘못된 요청입니다."
     ),
-    OCR_TOO_MANY_IMAGES(
-            HttpStatus.BAD_REQUEST,
-            "OCR_40002",
-            "요청 가능한 이미지 개수를 초과했습니다."
-    ),
     OCR_INVALID_IMAGE_IDS(
             HttpStatus.BAD_REQUEST,
-            "OCR_40003",
+            "OCR_40002",
             "잘못된 요청입니다."
     ),
     OCR_IMAGE_NOT_LINKED(
             HttpStatus.BAD_REQUEST,
-            "OCR_40004",
+            "OCR_40003",
             "편지에 연결되지 않은 이미지입니다."
     ),
     OCR_UNAUTHORIZED(
@@ -43,6 +38,11 @@ public enum OcrErrorCode implements BaseErrorCode {
             HttpStatus.NOT_FOUND,
             "OCR_40401",
             "이미지를 찾을 수 없습니다."
+    ),
+    OCR_TOO_MANY_IMAGES(
+            HttpStatus.UNPROCESSABLE_ENTITY,
+            "OCR_42201",
+            "요청 가능한 이미지 개수를 초과했습니다."
     ),
     OCR_INTERNAL_ERROR(
             HttpStatus.INTERNAL_SERVER_ERROR,
