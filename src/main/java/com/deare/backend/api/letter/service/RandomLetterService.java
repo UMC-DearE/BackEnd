@@ -26,7 +26,7 @@ public class RandomLetterService {
     private static final int MIN_SENTENCE_LEN = 10;
 
     // 랜덤 문구 최대 길이 (UI에서 최대 2줄 표시)
-    private static final int MAX_PHRASE_CHARS = 60;
+    private static final int MAX_PHRASE_CHARS = 62;
 
     private final RedisTemplate<String, String> redisTemplate;
     private final ObjectMapper objectMapper;
