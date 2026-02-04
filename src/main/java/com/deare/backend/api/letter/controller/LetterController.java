@@ -2,6 +2,7 @@ package com.deare.backend.api.letter.controller;
 
 import com.deare.backend.api.letter.dto.*;
 import com.deare.backend.api.letter.service.LetterService;
+import com.deare.backend.api.letter.service.RandomLetterService;
 import com.deare.backend.global.auth.util.SecurityUtil;
 import com.deare.backend.global.common.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 public class LetterController {
 
     private final LetterService letterService;
+    private final RandomLetterService randomLetterService;
 
     @PostMapping
     @Operation(
@@ -125,6 +127,23 @@ public class LetterController {
         Long userId = SecurityUtil.getCurrentUserId();
         LetterLikeResponseDTO res = letterService.unlikeLetter(userId, letterId);
         return ApiResponse.success(res);
+    }
+
+    @GetMapping("/random")
+    @Operation(
+            summary = "랜덤 편지 조회",
+            description = "홈 화면에 표시될 오늘의 랜덤 편지 카드를 조회합니다."
+    )
+    public ApiResponse<RandomLetterResponseDTO> getRandomLetter() {
+
+        long userId = SecurityUtil.getCurrentUserId();
+
+        RandomLetterResponseDTO data = randomLetterService.getTodayRandomLetter(userId);
+
+        if (!data.hasLetter()) {
+            return ApiResponse.success("아직 추가한 편지가 없습니다.", data);
+        }
+        return ApiResponse.success("랜덤 편지 조회에 성공했습니다.", data);
     }
 
 }
