@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface FolderRepository extends JpaRepository<Folder, Long> {
 
@@ -13,6 +14,8 @@ public interface FolderRepository extends JpaRepository<Folder, Long> {
     long countByUser_IdAndIsDeletedFalse(Long userId);
 
     boolean existsByUser_IdAndNameAndIsDeletedFalse(Long userId, String name);
+
+    Optional<Folder> findByIdAndUser_IdAndIsDeletedFalse(Long folderId, Long userId);
 
     @Query("""
         select coalesce(max(f.folderOrder), 0)
