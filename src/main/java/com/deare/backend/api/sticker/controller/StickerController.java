@@ -10,7 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/home/stickers")
+@RequestMapping("/stickers")
 @RequiredArgsConstructor
 public class StickerController {
 
@@ -28,7 +28,6 @@ public class StickerController {
         return ApiResponse.success(stickerService.create(userId, request));
     }
 
-    // ✅ 다음 단계에서 구현할 예정 (틀만)
     @PatchMapping("/{stickerId}")
     @Operation(
             summary = "스티커 수정",

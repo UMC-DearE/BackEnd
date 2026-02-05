@@ -36,7 +36,6 @@ public class StickerServiceImpl implements StickerService {
         Image image = imageRepository.findById(request.imageId())
                 .orElseThrow(() -> new GeneralException(ImageErrorCode.IMAGE_40001)); // 너희 코드 그대로
 
-        // 스티커 전용 이미지 소유권 검증 (쿼리 방식)
         List<Long> owned = userStickerImageQueryRepository.findOwnedImageIds(userId, List.of(image.getId()));
         if (owned.isEmpty()) {
             throw new GeneralException(StickerErrorCode.FORBIDDEN);
