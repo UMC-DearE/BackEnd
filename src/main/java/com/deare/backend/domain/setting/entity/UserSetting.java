@@ -52,4 +52,7 @@ public class UserSetting extends BaseEntity {
         us.homeColor = homeColor;
         return us;
     }
+    public void updateHomeColor(String homeColor) {
+        this.homeColor = homeColor;
+    }
 }
