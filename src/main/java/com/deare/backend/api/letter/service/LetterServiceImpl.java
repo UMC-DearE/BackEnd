@@ -1,5 +1,7 @@
 package com.deare.backend.api.letter.service;
 
+import com.deare.backend.api.analyze.dto.response.ReAnalyzeResponseDTO;
+import com.deare.backend.api.analyze.service.LetterAnalyzeService;
 import com.deare.backend.api.letter.dto.*;
 import com.deare.backend.api.letter.util.ExcerptUtil;
 import com.deare.backend.domain.emotion.entity.Emotion;
@@ -50,6 +52,7 @@ public class LetterServiceImpl implements LetterService {
     private final LetterEmotionRepository letterEmotionRepository;
     private final ImageRepository imageRepository;
     private final LetterImageRepository letterImageRepository;
+    private final LetterAnalyzeService letterAnalyzeService;
 
     @Override
     @Transactional(readOnly = true)
@@ -247,15 +250,24 @@ public class LetterServiceImpl implements LetterService {
 
         if (StringUtils.hasText(req.getContent())) {
             try {
-                // TODO(ai-summary): content 변경 시 AI 요약 재생성 연동 필요
-                // TODO(emotion): content 변경 시 감정 분석/태그 재생성 연동 필요
-
-                String newSummary = "요약 결과"; // 임시값 (TODO 이후 변경)
-
                 String normalizedContent = req.getContent().trim();
                 String newHash = DigestUtils.sha256Hex(normalizedContent);
 
-                letter.updateContent(req.getContent(), newSummary, newHash);
+                ReAnalyzeResponseDTO result = letterAnalyzeService.analyzeForUpdate(normalizedContent);
+
+                letterEmotionRepository.deleteByLetter(letter);
+                letterEmotionRepository.flush();
+
+                String AiSummary = result.getSummary();
+
+                List<LetterEmotion> updateEmotions=result.getEmotions().stream()
+                        .map(emotion->new LetterEmotion(letter, emotion))
+                        .toList();
+
+
+                letterEmotionRepository.saveAll(updateEmotions);
+                letter.updateContent(req.getContent(), AiSummary, newHash);
+
             } catch (Exception e) {
                 throw new GeneralException(LetterErrorCode.SUMMARY_INTERNAL_ERROR);
             }
