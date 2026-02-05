@@ -1,4 +1,5 @@
 package com.deare.backend.api.sticker.dto;
 
-public class StickerDeleteDTO {
-}
+public record StickerDeleteDTO(
+        Long stickerId
+) {}

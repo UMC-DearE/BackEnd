@@ -228,19 +228,15 @@ public class LetterServiceImpl implements LetterService {
 
     public LetterPinResponseDTO updatePinned(Long userId, Long letterId, LetterPinRequestDTO request) {
 
-        // 1) 편지 존재 확인
         Letter letter = letterRepository.findById(letterId)
                 .orElseThrow(() -> new GeneralException(LetterErrorCode.NOT_FOUND));
 
-        // 2) 본인 소유 편지인지 권한 확인
         if (!letter.isOwnedBy(userId)) {
             throw new GeneralException(LetterErrorCode.FORBIDDEN);
         }
 
-        // 3) pinned 상태 업데이트 (dirty checking으로 DB 반영)
         letter.updatePinned(request.pinned());
 
-        // 4) 응답
         return new LetterPinResponseDTO(letter.isPinned());
     }
 }

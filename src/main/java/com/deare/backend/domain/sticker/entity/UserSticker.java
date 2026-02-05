@@ -41,4 +41,42 @@ public class UserSticker extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
+
+    public static UserSticker create(
+            User user,
+            Image image,
+            BigDecimal posX,
+            BigDecimal posY,
+            Integer posZ,
+            BigDecimal rotation,
+            BigDecimal scale
+    ) {
+        UserSticker us = new UserSticker();
+        us.user = user;
+        us.image = image;
+        us.posX = posX;
+        us.posY = posY;
+        us.posZ = posZ;
+        us.rotation = rotation;
+        us.scale = scale;
+        return us;
+    }
+    public boolean isOwnedBy(Long userId) {
+        return user != null && user.getId() != null && user.getId().equals(userId);
+    }
+
+    public void updateTransform(
+            BigDecimal posX,
+            BigDecimal posY,
+            Integer posZ,
+            BigDecimal rotation,
+            BigDecimal scale
+    ) {
+        this.posX = posX;
+        this.posY = posY;
+        this.posZ = posZ;
+        this.rotation = rotation;
+        this.scale = scale;
+    }
+
 }
