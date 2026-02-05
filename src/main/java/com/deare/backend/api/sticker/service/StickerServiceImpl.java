@@ -34,12 +34,7 @@ public class StickerServiceImpl implements StickerService {
                 .orElseThrow(() -> new GeneralException(UserErrorCode.USER_NOT_FOUND));
 
         Image image = imageRepository.findById(request.imageId())
-                .orElseThrow(() -> new GeneralException(ImageErrorCode.IMAGE_40001)); // 너희 코드 그대로
-
-        List<Long> owned = userStickerImageQueryRepository.findOwnedImageIds(userId, List.of(image.getId()));
-        if (owned.isEmpty()) {
-            throw new GeneralException(StickerErrorCode.FORBIDDEN);
-        }
+                .orElseThrow(() -> new GeneralException(ImageErrorCode.IMAGE_40001));
 
         UserSticker sticker = UserSticker.create(
                 user,
@@ -58,7 +53,7 @@ public class StickerServiceImpl implements StickerService {
     @Override
     public StickerUpdateResponseDTO update(Long userId, Long stickerId, StickerUpdateRequestDTO request) {
         UserSticker sticker = userStickerRepository.findById(stickerId)
-                .orElseThrow(() -> new GeneralException(StickerErrorCode.NOT_FOUND)); // 아래 ErrorCode에 추가해둘게
+                .orElseThrow(() -> new GeneralException(StickerErrorCode.NOT_FOUND));
 
         if (!sticker.isOwnedBy(userId)) {
             throw new GeneralException(StickerErrorCode.FORBIDDEN);

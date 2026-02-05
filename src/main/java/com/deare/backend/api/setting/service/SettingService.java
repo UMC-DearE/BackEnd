@@ -89,10 +89,10 @@ public class SettingService {
             throw new GeneralException(ThemeErrorCode.THEME_UNPROCESSABLE_ENTITY);
         }
     }
-
+    @Transactional
     public UpdateHomeColorResponseDTO updateHomeColor(Long userId, UpdateHomeColorRequestDTO request) {
         UserSetting setting = userSettingRepository.findByUser_Id(userId)
-                .orElseThrow(() -> new GeneralException(HomeColorErrorCode.SETTING_NOT_FOUND /* 너희 코드에 맞게 */));
+                .orElseThrow(() -> new GeneralException(HomeColorErrorCode.SETTING_NOT_FOUND ));
 
         setting.updateHomeColor(request.homeColor());
         return new UpdateHomeColorResponseDTO(setting.getHomeColor());

@@ -323,14 +323,11 @@ public class LetterServiceImpl implements LetterService {
         );
     }
 
+    @Override
+    @Transactional
     public LetterPinResponseDTO updatePinned(Long userId, Long letterId, LetterPinRequestDTO request) {
 
-        Letter letter = letterRepository.findById(letterId)
-                .orElseThrow(() -> new GeneralException(LetterErrorCode.NOT_FOUND));
-
-        if (!letter.isOwnedBy(userId)) {
-            throw new GeneralException(LetterErrorCode.FORBIDDEN);
-        }
+        Letter letter = getOwnedActiveLetter(userId, letterId);
 
         letter.updatePinned(request.pinned());
 

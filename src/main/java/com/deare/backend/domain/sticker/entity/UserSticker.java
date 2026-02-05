@@ -47,7 +47,7 @@ public class UserSticker extends BaseEntity {
             Image image,
             BigDecimal posX,
             BigDecimal posY,
-            Integer posZ,
+            int posZ,
             BigDecimal rotation,
             BigDecimal scale
     ) {
@@ -68,7 +68,7 @@ public class UserSticker extends BaseEntity {
     public void updateTransform(
             BigDecimal posX,
             BigDecimal posY,
-            Integer posZ,
+            int posZ,
             BigDecimal rotation,
             BigDecimal scale
     ) {
