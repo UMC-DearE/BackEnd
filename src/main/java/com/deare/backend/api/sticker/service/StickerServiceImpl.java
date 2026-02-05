@@ -89,3 +89,4 @@ public class StickerServiceImpl implements StickerService {
         return new StickerDeleteDTO(stickerId);
     }
 }
+

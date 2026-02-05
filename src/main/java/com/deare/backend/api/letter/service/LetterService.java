@@ -16,7 +16,7 @@ public interface LetterService {
     );
 
     LetterDetailResponseDTO getLetterDetail(Long userId, Long letterId);
-
+    LetterCreateResponseDTO createLetter(Long userId, LetterCreateRequestDTO req);
     void updateLetter(Long userId, Long letterId, LetterUpdateRequestDTO req);
     void deleteLetter(Long userId, Long letterId);
 
