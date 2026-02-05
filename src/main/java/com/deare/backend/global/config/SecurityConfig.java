@@ -107,7 +107,8 @@ public class SecurityConfig {
         config.setAllowedOrigins(List.of(
                 "http://localhost:3000",
                 "http://localhost:5173",
-                "https://deare.kr"
+                "https://deare.kr",
+                "https://www.deare.kr"
         ));
 
         // refresh / signup-token -> cookie 전송
