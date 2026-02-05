@@ -12,8 +12,11 @@ import java.time.Duration;
 @RequiredArgsConstructor
 public class CookieProvider {
 
-    /** TODO
+    /** 2/5 도입 완료
      * secure(true) 는 http 미지원 -> 일단 false 변경 후 nginx 도입 이후에 실제 서비스 배포에서는 true 바꾸기
+     */
+    /** TODO
+     *  프론트 주소 나오면 SecurityConfig 세팅과 동시에 쿠키에 Domain(.deare.kr) 세팅
      */
 
     private final JwtProperties jwtProperties;
@@ -24,20 +27,20 @@ public class CookieProvider {
     public ResponseCookie createRefreshTokenCookie(String refreshToken) {
         return ResponseCookie.from("refresh_token", refreshToken)
                 .httpOnly(true)
-                .secure(false)
+                .secure(true)
                 .path("/")
                 .maxAge(Duration.ofMillis(jwtProperties.getRefreshTokenExpiration()))
-                .sameSite("Lax")
+                .sameSite("None")
                 .build();
     }
 
     public ResponseCookie expireRefreshTokenCookie() {
         return ResponseCookie.from("refresh_token", "")
                 .httpOnly(true)
-                .secure(false)
+                .secure(true)
                 .path("/")
                 .maxAge(0)
-                .sameSite("Lax")
+                .sameSite("None")
                 .build();
     }
 
@@ -46,20 +49,20 @@ public class CookieProvider {
     public ResponseCookie createSignupTokenCookie(String signupToken) {
         return ResponseCookie.from("signup_token", signupToken)
                 .httpOnly(true)
-                .secure(false)
+                .secure(true)
                 .path("/auth")
                 .maxAge(Duration.ofMillis(signupTokenProperties.getExpiration()))
-                .sameSite("Lax")
+                .sameSite("None")
                 .build();
     }
 
     public ResponseCookie expireSignupTokenCookie() {
         return ResponseCookie.from("signup_token", "")
                 .httpOnly(true)
-                .secure(false)
+                .secure(true)
                 .path("/auth")
                 .maxAge(0)
-                .sameSite("Lax")
+                .sameSite("None")
                 .build();
     }
 }

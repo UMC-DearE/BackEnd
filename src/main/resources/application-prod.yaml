@@ -1,8 +1,11 @@
+server:
+  forward-headers-strategy: native
 
+# 첫 배포 스키마 임시 세팅
 spring:
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: update
     show-sql: false
 
 decorator:

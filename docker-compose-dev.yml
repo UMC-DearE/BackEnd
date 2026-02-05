@@ -47,7 +47,7 @@ services:
       start_period: 10s
 
   app:
-    image: ${APP_IMAGE}
+    image: ${APP_IMAGE:-catomat0/deare-backend:latest}
     container_name: deare-dev-backend
     restart: unless-stopped
     env_file:
@@ -55,6 +55,7 @@ services:
     environment:
       TZ: Asia/Seoul
       SPRING_PROFILES_ACTIVE: prod
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
 
       DB_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
       DB_USER: ${APP_DB_USER}
@@ -70,7 +71,7 @@ services:
       redis:
         condition: service_healthy
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8080:8080"   # nginx 도입
     networks:
       - deare-net
     healthcheck:
