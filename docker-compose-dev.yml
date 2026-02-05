@@ -71,7 +71,7 @@ services:
       redis:
         condition: service_healthy
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8080:8080"   # nginx 도입
     networks:
       - deare-net
     healthcheck:
