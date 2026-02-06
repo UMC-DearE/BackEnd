@@ -61,7 +61,7 @@ public class AuthService {
         // provider와 providerId로 기존 사용자 조회
         Provider providerEnum = Provider.valueOf(oauthInfo.provider().toUpperCase());
 
-        // 1. 활성 유저 조회
+        // 유저 (isActive=true) 조회
         Optional<User> activeUser = userRepository.findByProviderAndProviderIdAndIsDeletedFalse(
                 providerEnum,
                 oauthInfo.providerUserId()
@@ -72,7 +72,7 @@ public class AuthService {
             return issueJwtAndReturn(user, "기존 회원 로그인 성공");
         }
 
-        // 2. 삭제 중인 유저 조회 → 복구 처리
+        // 삭제 중인 유저 조회(isActive=false (deactive)) -> 복구 처리
         Optional<User> deletedUser = userRepository.findByProviderAndProviderIdAndIsDeletedTrue(
                 providerEnum,
                 oauthInfo.providerUserId()
@@ -84,7 +84,7 @@ public class AuthService {
             return issueJwtAndReturn(user, "삭제 중인 회원 복구 및 로그인 성공");
         }
 
-        // 3. 신규 회원 -> signup-token 발급 + Redis 저장
+        // 신규 회원 -> signup-token 발급 + Redis 저장
         String signupToken = signupTokenProvider.generateSignupToken(
                 oauthInfo.provider(),
                 oauthInfo.providerUserId(),
