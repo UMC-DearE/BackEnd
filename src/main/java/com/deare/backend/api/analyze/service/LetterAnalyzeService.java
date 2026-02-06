@@ -22,24 +22,25 @@ public class LetterAnalyzeService {
     private final EmotionRepository emotionRepository;
 
     public AnalyzeLetterResponseDTO analyze(AnalyzeLetterRequestDTO request){
-        AnalyzeResponseDTO analyzeResult = analyzeAdapter.analyze(request.getContent());
-
-        String summary=analyzeResult.getSummary();
-        List<String> emotionList=analyzeResult.getEmotions();
-
-        List<Emotion> emotions=emotionRepository.findByNameIn(emotionList);
-
-        return AnalyzeLetterResponseDTO.of(summary,emotions);
+        AnalyzeResult result=getResult(request.getContent());
+        return AnalyzeLetterResponseDTO.of(result.summary(), result.emotions());
     }
 
     public ReAnalyzeResponseDTO analyzeForUpdate(String content){
+        AnalyzeResult result = getResult(content);
+        return ReAnalyzeResponseDTO.of(result.summary(), result.emotions());
+    }
+
+    private AnalyzeResult getResult(String content) {
         AnalyzeResponseDTO analyzeResult = analyzeAdapter.analyze(content);
 
         String summary=analyzeResult.getSummary();
         List<String> emotionsName = analyzeResult.getEmotions();
 
         List<Emotion> emotions = emotionRepository.findByNameIn(emotionsName);
+        return new AnalyzeResult(summary, emotions);
+    }
 
-        return ReAnalyzeResponseDTO.of(summary,emotions);
+    private record AnalyzeResult(String summary, List<Emotion> emotions) {
     }
 }
