@@ -24,6 +24,7 @@ import com.deare.backend.domain.letter.repository.query.LetterEmotionQueryReposi
 import com.deare.backend.domain.user.entity.User;
 import com.deare.backend.domain.user.repository.UserRepository;
 import com.deare.backend.global.common.exception.GeneralException;
+import com.deare.backend.global.external.feign.exception.ExternalApiException;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.data.domain.Page;
@@ -274,7 +275,10 @@ public class LetterServiceImpl implements LetterService {
                 letterEmotionRepository.saveAll(updateEmotions);
                 letter.updateContent(req.getContent(), AiSummary, newHash);
 
-            } catch (Exception e) {
+            } catch(ExternalApiException e){
+                throw e;
+            }
+            catch (Exception e) {
                 throw new GeneralException(LetterErrorCode.SUMMARY_INTERNAL_ERROR);
             }
         }
