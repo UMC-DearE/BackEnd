@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -22,4 +23,9 @@ public interface LetterRepository extends JpaRepository<Letter, Long>, LetterRep
            and l.isDeleted = false
     """)
     int clearFolder(Long userId, Long folderId);
+
+    /**
+     * 해당 유저의 모든 편지 조회
+     */
+    List<Letter> findAllByUser_Id(Long userId);
 }
