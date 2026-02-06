@@ -4,7 +4,9 @@ import com.deare.backend.api.analyze.dto.request.AnalyzeLetterRequestDTO;
 import com.deare.backend.api.analyze.dto.response.AnalyzeLetterResponseDTO;
 import com.deare.backend.api.analyze.dto.response.ReAnalyzeResponseDTO;
 import com.deare.backend.domain.emotion.entity.Emotion;
+import com.deare.backend.domain.emotion.exception.EmotionErrorCode;
 import com.deare.backend.domain.emotion.repository.EmotionRepository;
+import com.deare.backend.global.common.exception.GeneralException;
 import com.deare.backend.global.external.gemini.adapter.analyze.AnalyzeAdapter;
 import com.deare.backend.global.external.gemini.dto.response.analyze.AnalyzeResponseDTO;
 import lombok.RequiredArgsConstructor;
@@ -49,13 +51,13 @@ public class LetterAnalyzeService {
 
     private void validateEmotionCount(List<String> emotionNames){
         if(emotionNames==null || emotionNames.size()<2||emotionNames.size()>3){
-            throw new IllegalStateException("AI 응답이 서비스 정책과 불일치합니다.");
+            throw new GeneralException(EmotionErrorCode.INVALID_AI_RESPONSE);
         }
     }
 
     private void validateEmotionExistence(List<String> emotionNames, List<Emotion>emotions){
         if(emotions.size()!=emotionNames.size()){
-            throw new IllegalStateException("AI 반환 감정 태그 중 존재하지 않는 감정태그가 존재합니다.");
+            throw new GeneralException(EmotionErrorCode.EMOTION_NOT_EXIST);
         }
     }
 
