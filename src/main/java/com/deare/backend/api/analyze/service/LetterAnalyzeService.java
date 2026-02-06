@@ -8,6 +8,7 @@ import com.deare.backend.domain.emotion.repository.EmotionRepository;
 import com.deare.backend.global.external.gemini.adapter.analyze.AnalyzeAdapter;
 import com.deare.backend.global.external.gemini.dto.response.analyze.AnalyzeResponseDTO;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,6 +17,7 @@ import java.util.List;
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
+@Slf4j
 public class LetterAnalyzeService {
 
     private final AnalyzeAdapter analyzeAdapter;
@@ -37,8 +39,24 @@ public class LetterAnalyzeService {
         String summary=analyzeResult.getSummary();
         List<String> emotionsName = analyzeResult.getEmotions();
 
+        validateEmotionCount(emotionsName);
+
         List<Emotion> emotions = emotionRepository.findByNameIn(emotionsName);
+
+        validateEmotionExistence(emotionsName, emotions);
         return new AnalyzeResult(summary, emotions);
+    }
+
+    private void validateEmotionCount(List<String> emotionNames){
+        if(emotionNames==null || emotionNames.size()<2||emotionNames.size()>3){
+            throw new IllegalStateException("AI 응답이 서비스 정책과 불일치합니다.");
+        }
+    }
+
+    private void validateEmotionExistence(List<String> emotionNames, List<Emotion>emotions){
+        if(emotions.size()!=emotionNames.size()){
+            throw new IllegalStateException("AI 반환 감정 태그 중 존재하지 않는 감정태그가 존재합니다.");
+        }
     }
 
     private record AnalyzeResult(String summary, List<Emotion> emotions) {
