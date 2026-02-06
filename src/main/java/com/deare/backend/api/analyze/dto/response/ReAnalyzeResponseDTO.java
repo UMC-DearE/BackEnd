@@ -10,9 +10,13 @@ import java.util.List;
 @AllArgsConstructor
 public class ReAnalyzeResponseDTO {
     private final String summary;
-    private final List<Emotion> emotions;
+    private final List<EmotionResponseDTO> emotions;
 
     public static ReAnalyzeResponseDTO of(String  summary, List<Emotion> emotions) {
-        return new ReAnalyzeResponseDTO(summary, emotions);
+        List<EmotionResponseDTO> emotionDTOs=emotions.stream()
+                .map(EmotionResponseDTO::simpleFrom)
+                .toList();
+
+        return new ReAnalyzeResponseDTO(summary, emotionDTOs);
     }
 }
