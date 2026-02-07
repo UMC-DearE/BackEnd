@@ -141,4 +141,9 @@ public class Letter extends BaseEntity {
     public void changeFolder(Folder folder) {
         this.folder = folder;
     }
+
+    public void updatePinned(boolean pinned) {
+        this.isPinned = pinned;
+    }
+
 }

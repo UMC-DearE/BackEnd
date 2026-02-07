@@ -146,4 +146,17 @@ public class LetterController {
         return ApiResponse.success("랜덤 편지 조회에 성공했습니다.", data);
     }
 
+    @PatchMapping("/{letterId}/pin")
+    @Operation(
+            summary = "편지 고정/해제",
+            description = "사용자가 본인 소유의 편지를 홈 화면 상단에 고정하거나, 이미 고정된 편지를 해제하는 API입니다."
+    )
+    public ApiResponse<LetterPinResponseDTO> updatePinned(
+            @PathVariable Long letterId,
+            @Valid @RequestBody LetterPinRequestDTO request
+    ) {
+        Long userId = SecurityUtil.getCurrentUserId();
+        return ApiResponse.success(letterService.updatePinned(userId, letterId, request));
+    }
+
 }

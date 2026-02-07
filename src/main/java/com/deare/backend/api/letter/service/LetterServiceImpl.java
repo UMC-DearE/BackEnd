@@ -322,4 +322,15 @@ public class LetterServiceImpl implements LetterService {
                 letter.getFolder() != null ? letter.getFolder().getId() : null
         );
     }
+
+    @Override
+    @Transactional
+    public LetterPinResponseDTO updatePinned(Long userId, Long letterId, LetterPinRequestDTO request) {
+
+        Letter letter = getOwnedActiveLetter(userId, letterId);
+
+        letter.updatePinned(request.pinned());
+
+        return new LetterPinResponseDTO(letter.isPinned());
+    }
 }
