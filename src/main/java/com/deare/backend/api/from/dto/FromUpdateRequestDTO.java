@@ -20,7 +20,4 @@ public record FromUpdateRequestDTO(
         )
         String fontColor
 ) {
-    public boolean isAllNull() {
-        return name == null && bgColor == null && fontColor == null;
-    }
 }
