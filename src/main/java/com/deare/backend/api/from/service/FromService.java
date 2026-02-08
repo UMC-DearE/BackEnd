@@ -49,10 +49,6 @@ public class FromService {
     @Transactional
     public FromUpdateResponseDTO updateFrom(Long userId, Long fromId, FromUpdateRequestDTO request) {
 
-        if (request.isAllNull()) {
-            throw new GeneralException(FromErrorCode.FROM_40001);
-        }
-
         From from = fromRepository.findById(fromId)
                 .orElseThrow(() -> new GeneralException(FromErrorCode.FROM_40401));
 
