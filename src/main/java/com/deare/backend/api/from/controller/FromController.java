@@ -71,8 +71,8 @@ public class FromController {
         Long userId = SecurityUtil.getCurrentUserId();
 
         return ApiResponse.success(
-                "삭제가 완료되었습니다.",
                 fromService.deleteFrom(userId, fromId)
         );
+
     }
 }

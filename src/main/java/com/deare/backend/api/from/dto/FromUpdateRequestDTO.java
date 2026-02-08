@@ -5,7 +5,7 @@ import jakarta.validation.constraints.Size;
 
 public record FromUpdateRequestDTO(
 
-        @Size(max = 7, message = "From 이름은 최대 7자까지 가능합니다.")
+        @Size(min = 1, max = 7, message = "From 이름은 1자 이상 7자 이하여야 합니다.")
         String name,
 
         @Pattern(
