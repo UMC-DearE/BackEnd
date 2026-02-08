@@ -10,7 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.web.bind.annotation.*;
 
-@ConditionalOnProperty(name = "ocr.enabled", havingValue = "true")
+@ConditionalOnProperty(name = {"ocr.enabled", "aws.s3.enabled"}, havingValue = "true")
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/letters")
