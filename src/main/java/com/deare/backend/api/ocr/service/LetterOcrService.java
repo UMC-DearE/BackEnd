@@ -6,6 +6,7 @@ import com.deare.backend.api.ocr.dto.response.OcrLettersResponseDTO.OcrResultDTO
 import com.deare.backend.domain.letter.exception.OcrErrorCode;
 import com.deare.backend.domain.image.entity.Image;
 import com.deare.backend.domain.image.repository.ImageRepository;
+import com.deare.backend.domain.letter.repository.LetterImageRepository;
 import com.deare.backend.global.auth.util.SecurityUtil;
 import com.deare.backend.global.common.exception.GeneralException;
 import com.deare.backend.global.external.feign.exception.ExternalApiException;
@@ -26,6 +27,7 @@ public class LetterOcrService {
 
     private final OcrAdapter ocrAdapter;
     private final ImageRepository imageRepository;
+    private final LetterImageRepository letterImageRepository;
     private final ImageContentLoader imageContentLoader;
 
     public OcrLettersResponseDTO ocrLetters(OcrLettersRequestDTO request) {
@@ -39,6 +41,9 @@ public class LetterOcrService {
         Map<Long, Image> imageMap = images.stream()
                 .collect(Collectors.toMap(Image::getId, i -> i));
 
+        Set<Long> linked = new HashSet<>(letterImageRepository.findLinkedImageIds(imageIds));
+        Set<Long> owned  = new HashSet<>(letterImageRepository.findOwnedImageIds(userId, imageIds));
+
         List<OcrResultDTO> results = new ArrayList<>();
 
         for (Long imageId : imageIds) {
@@ -46,6 +51,18 @@ public class LetterOcrService {
 
             if (image == null) {
                 results.add(fail(imageId, OcrErrorCode.OCR_NOT_FOUND));
+                continue;
+            }
+
+            // 1) 400: letter_image에 아예 연결 안 된 이미지
+            if (!linked.contains(imageId)) {
+                results.add(fail(imageId, OcrErrorCode.OCR_IMAGE_NOT_LINKED));
+                continue;
+            }
+
+            // 2) 403: 연결은 되어 있는데 내 편지(내 userId)가 아닐시
+            if (!owned.contains(imageId)) {
+                results.add(fail(imageId, OcrErrorCode.OCR_FORBIDDEN));
                 continue;
             }
 
