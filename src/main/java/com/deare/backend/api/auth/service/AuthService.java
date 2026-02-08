@@ -1,7 +1,6 @@
 package com.deare.backend.api.auth.service;
 
 import com.deare.backend.api.auth.dto.request.SignupRequestDTO;
-import com.deare.backend.api.auth.dto.response.OAuthCallbackResponseDTO;
 import com.deare.backend.api.auth.dto.response.SignupResponseDTO;
 import com.deare.backend.api.auth.dto.response.TermResponseDTO;
 import com.deare.backend.api.auth.dto.result.OAuthCallbackResult;
@@ -48,9 +47,9 @@ public class AuthService {
 
     /**
      * OAuth 콜백 처리
-     * - 기존 회원 (활성): JWT 발급 + REGISTERED 반환
-     * - 삭제 중인 회원: 복구 후 JWT 발급 + REGISTERED 반환
-     * - 신규 회원: Signup Token 발급 + Redis 저장 + SIGNUP_REQUIRED 반환
+     * - 기존 회원 (활성): RT 발급 + 리다이렉트 (/)
+     * - 삭제 중인 회원: 복구 후 RT 발급 + 리다이렉트 (/)
+     * - 신규 회원: Signup Token 발급 + Redis 저장 + 리다이렉트 (/setup/terms)
      */
     @Transactional
     public OAuthCallbackResult handleOAuthCallback(String provider, String code) {
@@ -69,7 +68,7 @@ public class AuthService {
 
         if (activeUser.isPresent()) {
             User user = activeUser.get();
-            return issueJwtAndReturn(user, "기존 회원 로그인 성공");
+            return issueRtAndReturn(user, "기존 회원 로그인 성공");
         }
 
         // 삭제 중인 유저 조회(isActive=false (deactive)) -> 복구 처리
@@ -81,7 +80,7 @@ public class AuthService {
         if (deletedUser.isPresent()) {
             User user = deletedUser.get();
             user.reactivate();
-            return issueJwtAndReturn(user, "삭제 중인 회원 복구 및 로그인 성공");
+            return issueRtAndReturn(user, "삭제 중인 회원 복구 및 로그인 성공");
         }
 
         // 신규 회원 -> signup-token 발급 + Redis 저장
@@ -105,17 +104,15 @@ public class AuthService {
         return new OAuthCallbackResult(
                 false,
                 null,
-                null,
-                signupToken,
-                OAuthCallbackResponseDTO.signupRequired()
+                signupToken
         );
     }
 
     /**
-     * JWT 발급 및 OAuthCallbackResult 반환 (공통 로직)
+     * RT 발급 및 OAuthCallbackResult 반환 (공통 로직)
+     * - AT는 프론트에서 /auth/jwt/refresh 호출 시 발급
      */
-    private OAuthCallbackResult issueJwtAndReturn(User user, String logMessage) {
-        String accessToken = jwtProvider.generateAccessToken(user);
+    private OAuthCallbackResult issueRtAndReturn(User user, String logMessage) {
         String refreshToken = jwtProvider.generateRefreshToken(user);
 
         jwtService.saveRefreshToken(user.getId(), refreshToken);
@@ -124,10 +121,8 @@ public class AuthService {
 
         return new OAuthCallbackResult(
                 true,
-                accessToken,
                 refreshToken,
-                null,
-                OAuthCallbackResponseDTO.registered()
+                null
         );
     }
 
