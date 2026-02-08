@@ -101,7 +101,7 @@ public class RandomLetterService {
         // offset 기반으로 1개 조회
         Letter letter = letterRepository
                 .findRandomLetterByUser(userId, offset)
-                .orElseThrow(() -> new GeneralException(LetterErrorCode.NOT_FOUND));
+                .orElseThrow(() -> new GeneralException(LetterErrorCode.LETTER_NOT_FOUND));
 
         // 편지 본문에서 랜덤 문구 추출
         String phrase = extractRandomPhrase(letter.getContent());
