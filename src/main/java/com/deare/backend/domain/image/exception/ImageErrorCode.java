@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 public enum ImageErrorCode implements BaseErrorCode {
 
     IMAGE_40001(HttpStatus.BAD_REQUEST, "IMAGE_40001", "잘못된 요청입니다."),
+    IMAGE_40002(HttpStatus.BAD_REQUEST, "IMAGE_40002", "이미지 dir 값은 필수입니다."),
     IMAGE_40101(HttpStatus.UNAUTHORIZED, "IMAGE_40101", "로그인이 필요한 요청입니다."),
     IMAGE_40301(HttpStatus.FORBIDDEN, "IMAGE_40301", "해당 이미지에 접근할 권한이 없습니다."),
     IMAGE_40401(HttpStatus.NOT_FOUND, "IMAGE_40401", "이미지를 찾을 수 없습니다."),

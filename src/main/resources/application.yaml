@@ -58,6 +58,9 @@ external:
     api-key: ${GEMINI_API_KEY}
     model: gemini-3-flash-preview
 
+app:
+  frontend-base-url: ${FRONTEND_BASE_URL:https://www.deare.kr}
+
 oauth:
   kakao:
     client-id: ${KAKAO_CLIENT_ID}

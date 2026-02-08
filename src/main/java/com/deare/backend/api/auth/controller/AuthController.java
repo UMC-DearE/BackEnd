@@ -1,7 +1,6 @@
 package com.deare.backend.api.auth.controller;
 
 import com.deare.backend.api.auth.dto.request.SignupRequestDTO;
-import com.deare.backend.api.auth.dto.response.OAuthCallbackResponseDTO;
 import com.deare.backend.api.auth.dto.response.SignupResponseDTO;
 import com.deare.backend.api.auth.dto.response.TermResponseDTO;
 import com.deare.backend.api.auth.dto.result.OAuthCallbackResult;
@@ -20,9 +19,13 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.net.URI;
 
 @Tag(name = "Auth", description = "인증/인가 API")
 @RestController
@@ -33,6 +36,9 @@ public class AuthController {
     private final OAuthService oauthService;
     private final AuthService authService;
     private final CookieProvider cookieProvider;
+
+    @Value("${app.frontend-base-url}")
+    private String frontendBaseUrl;
 
     @Operation(
             summary = "OAuth 인증 URL 생성",
@@ -49,10 +55,10 @@ public class AuthController {
 
     @Operation(
             summary = "OAuth 콜백 처리",
-            description = "소셜 로그인 후 콜백을 처리합니다. 기존 회원은 JWT를 발급하고, 신규 회원은 회원가입용 Signup Token을 발급합니다."
+            description = "소셜 로그인 후 콜백을 처리합니다. 기존 회원은 refresh_token 쿠키 세팅 후 프론트 홈(/)으로, 신규 회원은 signup_token 쿠키 세팅 후 프론트 회원가입(/setup/terms)으로 리다이렉트합니다."
     )
     @GetMapping("/oauth2/{provider}/callback")
-    public ResponseEntity<ApiResponse<OAuthCallbackResponseDTO>> callback(
+    public ResponseEntity<Void> callback(
             @Parameter(description = "OAuth 제공자 (kakao, google)", example = "kakao")
             @PathVariable String provider,
             @Parameter(description = "OAuth 인가 코드")
@@ -66,17 +72,18 @@ public class AuthController {
         OAuthCallbackResult result = authService.handleOAuthCallback(provider, code);
 
         if (result.isRegistered()) {
-            // 기존 회원 -> JWT 발급 (at/rt)
-            return ResponseEntity.ok()
-                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + result.accessToken())
+            // 기존 회원 -> refresh_token 쿠키 세팅 + 프론트 홈으로 리다이렉트
+            return ResponseEntity.status(HttpStatus.FOUND)
+                    .location(URI.create(frontendBaseUrl + "/"))
                     .header(HttpHeaders.SET_COOKIE, cookieProvider.createRefreshTokenCookie(result.refreshToken()).toString())
-                    .body(ApiResponse.success("소셜 로그인 인증에 성공하였습니다.", result.response()));
+                    .build();
         }
 
-        // 신규 회원 -> Signup Token : HttpOnly Cookie
-        return ResponseEntity.ok()
+        // 신규 회원 -> signup_token 쿠키 세팅 + 프론트 회원가입으로 리다이렉트
+        return ResponseEntity.status(HttpStatus.FOUND)
+                .location(URI.create(frontendBaseUrl + "/setup/terms"))
                 .header(HttpHeaders.SET_COOKIE, cookieProvider.createSignupTokenCookie(result.signupToken()).toString())
-                .body(ApiResponse.success("소셜 로그인 인증에 성공하였습니다.", result.response()));
+                .build();
     }
 
     @Operation(
