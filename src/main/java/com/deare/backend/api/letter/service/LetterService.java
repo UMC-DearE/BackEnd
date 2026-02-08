@@ -22,4 +22,6 @@ public interface LetterService {
 
     LetterLikeResponseDTO likeLetter(Long userId, Long letterId);
     LetterLikeResponseDTO unlikeLetter(Long userId, Long letterId);
+
+    LetterPinResponseDTO updatePinned(Long userId, Long letterId, LetterPinRequestDTO request);
 }

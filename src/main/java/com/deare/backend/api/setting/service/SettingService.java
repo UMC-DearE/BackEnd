@@ -1,10 +1,12 @@
 package com.deare.backend.api.setting.service;
 
 import com.deare.backend.api.setting.dto.request.UpdateFontRequestDTO;
+import com.deare.backend.api.setting.dto.request.UpdateHomeColorRequestDTO;
 import com.deare.backend.api.setting.dto.response.*;
 import com.deare.backend.domain.setting.entity.Font;
 import com.deare.backend.domain.setting.entity.MembershipPlan;
 import com.deare.backend.domain.setting.entity.UserSetting;
+import com.deare.backend.domain.setting.exception.HomeColorErrorCode;
 import com.deare.backend.domain.setting.exception.MembershipErrorCode;
 import com.deare.backend.domain.setting.exception.ThemeErrorCode;
 import com.deare.backend.domain.setting.repository.UserSettingRepository;
@@ -87,4 +89,13 @@ public class SettingService {
             throw new GeneralException(ThemeErrorCode.THEME_UNPROCESSABLE_ENTITY);
         }
     }
+    @Transactional
+    public UpdateHomeColorResponseDTO updateHomeColor(Long userId, UpdateHomeColorRequestDTO request) {
+        UserSetting setting = userSettingRepository.findByUser_Id(userId)
+                .orElseThrow(() -> new GeneralException(HomeColorErrorCode.SETTING_NOT_FOUND ));
+
+        setting.updateHomeColor(request.homeColor());
+        return new UpdateHomeColorResponseDTO(setting.getHomeColor());
+    }
+
 }

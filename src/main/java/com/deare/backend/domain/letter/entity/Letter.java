@@ -27,13 +27,13 @@ public class Letter extends BaseEntity {
     private Long id;
 
     @Lob
-    @Column(name="content", nullable = false)
+    @Column(name="content", columnDefinition = "TEXT", nullable = false)
     private String content;
 
     @Column(name="received_at")
     private LocalDate receivedAt;
 
-    @Column(name="ai_summary", nullable = false, length = 255)
+    @Column(name="ai_summary", columnDefinition = "TEXT",nullable = false, length = 255)
     private String aiSummary;
 
     @Column(name="reply", length = 100)
@@ -141,4 +141,9 @@ public class Letter extends BaseEntity {
     public void changeFolder(Folder folder) {
         this.folder = folder;
     }
+
+    public void updatePinned(boolean pinned) {
+        this.isPinned = pinned;
+    }
+
 }
