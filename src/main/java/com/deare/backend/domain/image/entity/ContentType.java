@@ -6,6 +6,7 @@ import com.deare.backend.global.common.exception.GeneralException;
 public enum ContentType {
     PROFILE("profile"),
     STICKER("sticker"),
+    LETTER("letter"),
     FOLDER("folder");
 
     private final String dirName;
@@ -20,13 +21,14 @@ public enum ContentType {
 
     public static ContentType from(String dir) {
         if (dir == null || dir.isBlank()) {
-            return FOLDER;
+            throw new GeneralException(ImageErrorCode.IMAGE_40002);
         }
 
         return switch (dir.toLowerCase()) {
             case "profile" -> PROFILE;
             case "sticker" -> STICKER;
-            case "folder", "letter" -> FOLDER;
+            case "folder" -> FOLDER;
+            case "letter"  -> LETTER;
             default -> throw new GeneralException(ImageErrorCode.IMAGE_40001);
         };
     }

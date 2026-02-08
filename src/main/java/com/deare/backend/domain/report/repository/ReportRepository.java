@@ -1,6 +1,6 @@
-package com.deare.backend.domain.from.repository;
+package com.deare.backend.domain.report.repository;
 
-import com.deare.backend.domain.from.entity.From;
+import com.deare.backend.domain.report.entity.Report;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -8,12 +8,12 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface FromRepository extends JpaRepository<From, Long> {
+public interface ReportRepository extends JpaRepository<Report, Long> {
 
     /**
-     * 해당 유저의 모든 from 삭제
+     * 해당 유저의 모든 Report 삭제
      */
     @Modifying(flushAutomatically = true, clearAutomatically = true)
-    @Query("DELETE FROM From f WHERE f.user.id = :userId")
+    @Query("DELETE FROM Report r WHERE r.user.id = :userId")
     void deleteAllByUserId(@Param("userId") Long userId);
 }
