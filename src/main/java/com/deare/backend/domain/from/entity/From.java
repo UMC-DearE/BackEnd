@@ -1,5 +1,6 @@
 package com.deare.backend.domain.from.entity;
 
+import com.deare.backend.domain.letter.entity.Letter;
 import com.deare.backend.domain.user.entity.User;
 import com.deare.backend.global.common.entity.BaseEntity;
 import jakarta.persistence.*;
@@ -7,10 +8,12 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 @Getter
-@Entity
+@Entity(name = "UserFrom")
 @Table(name="user_from")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class From extends BaseEntity {
@@ -57,4 +60,10 @@ public class From extends BaseEntity {
         this.backgroundColor = backgroundColor;
         this.fontColor = fontColor;
     }
+    @OneToMany(
+            mappedBy = "from",
+            cascade = CascadeType.REMOVE,
+            orphanRemoval = true
+    )
+    private List<Letter> letters = new ArrayList<>();
 }
