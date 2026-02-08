@@ -48,6 +48,11 @@ public enum FolderErrorCode implements BaseErrorCode {
             "FOLDER_42202",
             "폴더는 최대 3개까지 생성할 수 있습니다."
     ),
+    INVALID_FOLDER_ORDER(
+            HttpStatus.UNPROCESSABLE_ENTITY,
+            "FOLDER_42203",
+            "폴더 순서 배열이 유효하지 않습니다."
+    ),
 
     // 추후 고도화 시 COMMON으로 빼는 것도 고려
     FOLDER_50001(
