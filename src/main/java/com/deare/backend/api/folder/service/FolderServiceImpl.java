@@ -90,6 +90,7 @@ public class FolderServiceImpl implements FolderService {
 
         letterRepository.clearFolder(userId, folderId);
         folder.softDelete();
+        folderRepository.save(folder);
     }
 
     @Override
