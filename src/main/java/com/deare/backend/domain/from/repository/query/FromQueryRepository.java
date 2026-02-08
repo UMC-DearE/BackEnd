@@ -22,7 +22,7 @@ public class FromQueryRepository {
                     f.fontColor,
                     count(l.id)
                 )
-                from From f
+                from UserFrom f
                 left join Letter l
                     on l.from = f
                     and l.user.id = :userId
