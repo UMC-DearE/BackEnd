@@ -165,4 +165,41 @@ public class LetterRepositoryImpl implements LetterRepositoryCustom {
                 || property.equals("isLiked")
                 || property.equals("isPinned");
     }
+
+    @Override
+    public Optional<Letter> findRandomLetterByUser(Long userId, long offset) {
+        QLetter letter = QLetter.letter;
+
+        Letter result = queryFactory
+                .selectFrom(letter)
+                .where(
+                        letter.user.id.eq(userId),
+                        letter.isDeleted.eq(false),
+                        letter.isHidden.eq(false)
+                )
+                .orderBy(letter.id.asc())
+                .offset(offset)
+                .limit(1)
+                .fetchOne();
+
+        return Optional.ofNullable(result);
+    }
+
+    @Override
+    public long countVisibleLettersByUser(Long userId) {
+        QLetter letter = QLetter.letter;
+
+        Long count = queryFactory
+                .select(letter.count())
+                .from(letter)
+                .where(
+                        letter.user.id.eq(userId),
+                        letter.isDeleted.eq(false),
+                        letter.isHidden.eq(false)
+                )
+                .fetchOne();
+
+        return count == null ? 0L : count;
+    }
+
 }

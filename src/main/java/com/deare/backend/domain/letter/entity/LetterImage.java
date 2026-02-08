@@ -30,4 +30,11 @@ public class LetterImage {
     void setLetter(Letter letter){
         this.letter = letter;
     }
+
+    public static LetterImage create(Image image, int imageOrder) {
+        LetterImage li = new LetterImage();
+        li.image = image;
+        li.imageOrder = imageOrder;
+        return li;
+    }
 }

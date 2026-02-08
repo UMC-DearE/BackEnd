@@ -1,7 +1,11 @@
+server:
+  forward-headers-strategy: native
+
+# 첫 배포 스키마 임시 세팅
 spring:
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: update
     show-sql: false
 
 decorator:
@@ -9,7 +13,21 @@ decorator:
     p6spy:
       enable-logging: false
 
-# to-do
-# redis-host/port
-# db-url/app-user
 # oauth redirect-uri
+oauth:
+  kakao:
+    redirect-uri: ${KAKAO_REDIRECT_URI}
+  google:
+    redirect-uri: ${GOOGLE_REDIRECT_URI}
+
+# health check
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
+      probes:
+        enabled: true

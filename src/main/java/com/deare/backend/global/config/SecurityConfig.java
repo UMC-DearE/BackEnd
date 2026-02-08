@@ -4,6 +4,7 @@ import com.deare.backend.global.auth.jwt.filter.JwtAuthenticationFilter;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -41,7 +42,14 @@ public class SecurityConfig {
         // 인증/인가
         http.
                 authorizeHttpRequests(auth -> auth
+
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(
+
+                                // 헬스체크
+                                "/actuator/health",
+                                "/actuator/health/**",
+
                                 // 테스트 API 열기 + 스웨거 세팅
                                 "/test/**",
                                 "/swagger-ui/**",
@@ -95,15 +103,19 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
 
-        // TODO: 프론트 주소로 교체
+        // 2/5 프론트 주소로 추가 완료
         config.setAllowedOrigins(List.of(
                 "http://localhost:3000",
-                "http://localhost:5173"
-                // "nginx-도메인 주소"
+                "http://localhost:5173",
+                "https://deare.kr",
+                "https://www.deare.kr"
         ));
 
+        // refresh / signup-token -> cookie 전송
+        config.setAllowCredentials(true);
+
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        config.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept"));
+        config.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept", "Origin", "X-Requested-With")); // 브라우저 preflight 자주 요구하는 헤더 추가
         config.setExposedHeaders(List.of("Authorization")); // 필요하면 access 토큰 내려줄 때 노출
 
         // preflight 캐시

@@ -13,9 +13,9 @@ public interface LetterService {
             Boolean isLiked,
             String keyword
     );
-
     LetterDetailResponseDTO getLetterDetail(Long userId, Long letterId);
 
+    LetterCreateResponseDTO createLetter(Long userId, LetterCreateRequestDTO req);
     void updateLetter(Long userId, Long letterId, LetterUpdateRequestDTO req);
     void deleteLetter(Long userId, Long letterId);
 
@@ -24,4 +24,6 @@ public interface LetterService {
 
     void upsertReply(Long userId, Long letterId, LetterReplyUpsertRequestDTO req);
     void deleteReply(Long userId, Long letterId);
+
+    LetterPinResponseDTO updatePinned(Long userId, Long letterId, LetterPinRequestDTO request);
 }

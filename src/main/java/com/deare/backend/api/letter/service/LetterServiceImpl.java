@@ -1,15 +1,30 @@
 package com.deare.backend.api.letter.service;
 
+import com.deare.backend.api.analyze.dto.response.EmotionResponseDTO;
+import com.deare.backend.api.analyze.dto.response.ReAnalyzeResponseDTO;
+import com.deare.backend.api.analyze.service.LetterAnalyzeService;
 import com.deare.backend.api.letter.dto.*;
 import com.deare.backend.api.letter.util.ExcerptUtil;
+import com.deare.backend.domain.emotion.entity.Emotion;
+import com.deare.backend.domain.emotion.entity.LetterEmotion;
+import com.deare.backend.domain.emotion.repository.EmotionRepository;
+import com.deare.backend.domain.emotion.repository.LetterEmotionRepository;
 import com.deare.backend.domain.from.entity.From;
 import com.deare.backend.domain.from.exception.FromErrorCode;
 import com.deare.backend.domain.from.repository.FromRepository;
+import com.deare.backend.domain.image.entity.Image;
+import com.deare.backend.domain.image.exception.ImageErrorCode;
+import com.deare.backend.domain.image.repository.ImageRepository;
 import com.deare.backend.domain.letter.entity.Letter;
+import com.deare.backend.domain.letter.entity.LetterImage;
 import com.deare.backend.domain.letter.exception.LetterErrorCode;
+import com.deare.backend.domain.letter.repository.LetterImageRepository;
 import com.deare.backend.domain.letter.repository.LetterRepository;
 import com.deare.backend.domain.letter.repository.query.LetterEmotionQueryRepository;
+import com.deare.backend.domain.user.entity.User;
+import com.deare.backend.domain.user.repository.UserRepository;
 import com.deare.backend.global.common.exception.GeneralException;
+import com.deare.backend.global.external.feign.exception.ExternalApiException;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.data.domain.Page;
@@ -18,7 +33,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -29,6 +49,12 @@ public class LetterServiceImpl implements LetterService {
     private final LetterRepository letterRepository;
     private final LetterEmotionQueryRepository letterEmotionQueryRepository;
     private final FromRepository fromRepository;
+    private final UserRepository userRepository;
+    private final EmotionRepository emotionRepository;
+    private final LetterEmotionRepository letterEmotionRepository;
+    private final ImageRepository imageRepository;
+    private final LetterImageRepository letterImageRepository;
+    private final LetterAnalyzeService letterAnalyzeService;
 
     @Override
     @Transactional(readOnly = true)
@@ -117,6 +143,82 @@ public class LetterServiceImpl implements LetterService {
         );
     }
 
+    @Override
+    @Transactional
+    public LetterCreateResponseDTO createLetter(Long userId, LetterCreateRequestDTO req) {
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new GeneralException(LetterErrorCode.UNAUTHORIZED));
+
+        From from = fromRepository.findById(req.fromId())
+                .orElseThrow(() -> new GeneralException(LetterErrorCode.LETTER_NOT_FOUND));
+
+        if (!from.isOwnedBy(userId)) {
+            throw new GeneralException(FromErrorCode.FROM_40301);
+        }
+
+        String content = req.content().trim();
+        String aiSummary = req.aiSummary().trim();
+        String contentHash = DigestUtils.sha256Hex(content);
+        int contentVersion = 1;
+
+        LocalDate receivedAt = req.receivedAt();
+
+        Letter letter = new Letter(
+                content,
+                receivedAt,
+                aiSummary,
+                contentVersion,
+                contentHash,
+                user,
+                from,
+                null
+        );
+
+        List<Long> imageIds = (req.imageIds() == null) ? List.of() : req.imageIds();
+
+        if (!imageIds.isEmpty()) {
+            if (imageIds.size() > 10) {
+                throw new GeneralException(ImageErrorCode.IMAGE_41301);
+            }
+
+            List<Image> images = imageRepository.findAllById(imageIds);
+            if (images.size() != imageIds.size()) {
+                throw new GeneralException(ImageErrorCode.IMAGE_40401);
+            }
+
+            Set<Long> ownedImageIds = new HashSet<>(letterImageRepository.findOwnedImageIds(userId, imageIds));
+            if (ownedImageIds.size() != imageIds.size()) {
+                throw new GeneralException(ImageErrorCode.IMAGE_40301);
+            }
+            Map<Long, Image> imageMap = images.stream()
+                    .collect(Collectors.toMap(Image::getId, i -> i));
+
+            for (int i = 0; i < imageIds.size(); i++) {
+                Image image = imageMap.get(imageIds.get(i));
+                LetterImage li = LetterImage.create(image, i + 1);
+                letter.addLetterImage(li);
+            }
+        }
+
+        List<Long> emotionIds = req.emotionIds();
+        List<Long> distinctIds = emotionIds.stream().distinct().toList();
+        List<Emotion> emotions = emotionRepository.findAllById(distinctIds);
+
+        if (emotions.size() != distinctIds.size()) {
+            throw new GeneralException(LetterErrorCode.INVALID_REQUEST);
+            //추후 emotionerrorcode로 변경예정
+        }
+        Letter saved = letterRepository.save(letter);
+        List<LetterEmotion> mappings = emotions.stream()
+                .map(e -> new LetterEmotion(saved, e))
+                .toList();
+
+        letterEmotionRepository.saveAll(mappings);
+
+        return new LetterCreateResponseDTO(saved.getId(), saved.getCreatedAt());
+    }
+
     @Transactional
     public void updateLetter(Long userId, Long letterId, LetterUpdateRequestDTO req) {
 
@@ -150,16 +252,33 @@ public class LetterServiceImpl implements LetterService {
 
         if (StringUtils.hasText(req.getContent())) {
             try {
-                // TODO(ai-summary): content 변경 시 AI 요약 재생성 연동 필요
-                // TODO(emotion): content 변경 시 감정 분석/태그 재생성 연동 필요
-
-                String newSummary = "요약 결과"; // 임시값 (TODO 이후 변경)
-
                 String normalizedContent = req.getContent().trim();
                 String newHash = DigestUtils.sha256Hex(normalizedContent);
 
-                letter.updateContent(req.getContent(), newSummary, newHash);
-            } catch (Exception e) {
+                ReAnalyzeResponseDTO result = letterAnalyzeService.analyzeForUpdate(normalizedContent);
+
+                letterEmotionRepository.deleteByLetter(letter);
+                letterEmotionRepository.flush();
+
+                String AiSummary = result.getSummary();
+                List<Long> emotionIds=result.getEmotions().stream()
+                        .map(EmotionResponseDTO::getEmotionId)
+                        .toList();
+
+                List<Emotion> emotions = emotionRepository.findAllById(emotionIds);
+
+                List<LetterEmotion> updateEmotions=emotions.stream()
+                        .map(emotion->new LetterEmotion(letter, emotion))
+                        .toList();
+
+
+                letterEmotionRepository.saveAll(updateEmotions);
+                letter.updateContent(req.getContent(), AiSummary, newHash);
+
+            } catch(ExternalApiException e){
+                throw e;
+            }
+            catch (Exception e) {
                 throw new GeneralException(LetterErrorCode.SUMMARY_INTERNAL_ERROR);
             }
         }
@@ -248,6 +367,17 @@ public class LetterServiceImpl implements LetterService {
                 ),
                 letter.getFolder() != null ? letter.getFolder().getId() : null
         );
+    }
+
+    @Override
+    @Transactional
+    public LetterPinResponseDTO updatePinned(Long userId, Long letterId, LetterPinRequestDTO request) {
+
+        Letter letter = getOwnedActiveLetter(userId, letterId);
+
+        letter.updatePinned(request.pinned());
+
+        return new LetterPinResponseDTO(letter.isPinned());
     }
 
 }
