@@ -151,7 +151,7 @@ public class LetterServiceImpl implements LetterService {
                 .orElseThrow(() -> new GeneralException(LetterErrorCode.UNAUTHORIZED));
 
         From from = fromRepository.findById(req.fromId())
-                .orElseThrow(() -> new GeneralException(LetterErrorCode.LETTER_NOT_FOUND));
+                .orElseThrow(() -> new GeneralException(LetterErrorCode.FROM_NOT_FOUND));
 
         if (!from.isOwnedBy(userId)) {
             throw new GeneralException(FromErrorCode.FROM_40301);
@@ -315,7 +315,7 @@ public class LetterServiceImpl implements LetterService {
         }
 
         Letter letter = letterRepository
-                .findByIdAndUserIdAndIsDeletedFalse(letterId, userId)
+                .findByIdAndUser_IdAndIsDeletedFalse(letterId, userId)
                 .orElseThrow(() -> new GeneralException(LetterErrorCode.LETTER_NOT_FOUND));
 
         letter.updateReply(req.getReply());
@@ -325,7 +325,7 @@ public class LetterServiceImpl implements LetterService {
     @Transactional
     public void deleteReply(Long userId, Long letterId) {
         Letter letter = letterRepository
-                .findByIdAndUserIdAndIsDeletedFalse(letterId, userId)
+                .findByIdAndUser_IdAndIsDeletedFalse(letterId, userId)
                 .orElseThrow(() -> new GeneralException(LetterErrorCode.LETTER_NOT_FOUND));
 
         letter.deleteReply();

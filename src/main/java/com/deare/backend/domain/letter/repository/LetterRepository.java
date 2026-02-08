@@ -11,6 +11,7 @@ import java.util.Optional;
 @Repository
 public interface LetterRepository extends JpaRepository<Letter, Long>, LetterRepositoryCustom {
 
+    Optional<Letter> findByIdAndUser_IdAndIsDeletedFalse(Long id, Long userId);
     Optional<Letter> findByIdAndUserIdAndIsDeletedFalse(Long id, Long userId);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
