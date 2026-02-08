@@ -1,11 +1,13 @@
 package com.deare.backend.api.setting.controller;
 
 import com.deare.backend.api.setting.dto.request.UpdateFontRequestDTO;
+import com.deare.backend.api.setting.dto.request.UpdateHomeColorRequestDTO;
 import com.deare.backend.api.setting.dto.response.*;
 import com.deare.backend.api.setting.service.SettingService;
 import com.deare.backend.global.auth.util.SecurityUtil;
 import com.deare.backend.global.common.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -44,5 +46,12 @@ public class SettingController {
     public ApiResponse<UpgradeMembershipResponseDTO> upgradeMembership() {
         Long userId = SecurityUtil.getCurrentUserId();
         return ApiResponse.success(settingService.upgradeMembership(userId));
+    }
+    @PatchMapping("/homecolor")
+    public ApiResponse<UpdateHomeColorResponseDTO> updateHomeColor(
+            @Valid @RequestBody UpdateHomeColorRequestDTO request
+    ) {
+        Long userId = SecurityUtil.getCurrentUserId();
+        return ApiResponse.success(settingService.updateHomeColor(userId, request));
     }
 }

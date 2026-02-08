@@ -1,5 +1,8 @@
 package com.deare.backend.api.letter.service;
 
+import com.deare.backend.api.analyze.dto.response.EmotionResponseDTO;
+import com.deare.backend.api.analyze.dto.response.ReAnalyzeResponseDTO;
+import com.deare.backend.api.analyze.service.LetterAnalyzeService;
 import com.deare.backend.api.letter.dto.*;
 import com.deare.backend.api.letter.util.ExcerptUtil;
 import com.deare.backend.domain.emotion.entity.Emotion;
@@ -21,6 +24,7 @@ import com.deare.backend.domain.letter.repository.query.LetterEmotionQueryReposi
 import com.deare.backend.domain.user.entity.User;
 import com.deare.backend.domain.user.repository.UserRepository;
 import com.deare.backend.global.common.exception.GeneralException;
+import com.deare.backend.global.external.feign.exception.ExternalApiException;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.data.domain.Page;
@@ -50,6 +54,7 @@ public class LetterServiceImpl implements LetterService {
     private final LetterEmotionRepository letterEmotionRepository;
     private final ImageRepository imageRepository;
     private final LetterImageRepository letterImageRepository;
+    private final LetterAnalyzeService letterAnalyzeService;
 
     @Override
     @Transactional(readOnly = true)
@@ -91,7 +96,7 @@ public class LetterServiceImpl implements LetterService {
         Letter letter = letterRepository
                 .findLetterDetailById(userId, letterId)
                 .orElseThrow(() ->
-                        new GeneralException(LetterErrorCode.NOT_FOUND)
+                        new GeneralException(LetterErrorCode.LETTER_NOT_FOUND)
                 );
 
         List<EmotionTagDTO> emotionTags =
@@ -146,7 +151,7 @@ public class LetterServiceImpl implements LetterService {
                 .orElseThrow(() -> new GeneralException(LetterErrorCode.UNAUTHORIZED));
 
         From from = fromRepository.findById(req.fromId())
-                .orElseThrow(() -> new GeneralException(LetterErrorCode.NOT_FOUND));
+                .orElseThrow(() -> new GeneralException(LetterErrorCode.FROM_NOT_FOUND));
 
         if (!from.isOwnedBy(userId)) {
             throw new GeneralException(FromErrorCode.FROM_40301);
@@ -247,16 +252,33 @@ public class LetterServiceImpl implements LetterService {
 
         if (StringUtils.hasText(req.getContent())) {
             try {
-                // TODO(ai-summary): content 변경 시 AI 요약 재생성 연동 필요
-                // TODO(emotion): content 변경 시 감정 분석/태그 재생성 연동 필요
-
-                String newSummary = "요약 결과"; // 임시값 (TODO 이후 변경)
-
                 String normalizedContent = req.getContent().trim();
                 String newHash = DigestUtils.sha256Hex(normalizedContent);
 
-                letter.updateContent(req.getContent(), newSummary, newHash);
-            } catch (Exception e) {
+                ReAnalyzeResponseDTO result = letterAnalyzeService.analyzeForUpdate(normalizedContent);
+
+                letterEmotionRepository.deleteByLetter(letter);
+                letterEmotionRepository.flush();
+
+                String AiSummary = result.getSummary();
+                List<Long> emotionIds=result.getEmotions().stream()
+                        .map(EmotionResponseDTO::getEmotionId)
+                        .toList();
+
+                List<Emotion> emotions = emotionRepository.findAllById(emotionIds);
+
+                List<LetterEmotion> updateEmotions=emotions.stream()
+                        .map(emotion->new LetterEmotion(letter, emotion))
+                        .toList();
+
+
+                letterEmotionRepository.saveAll(updateEmotions);
+                letter.updateContent(req.getContent(), AiSummary, newHash);
+
+            } catch(ExternalApiException e){
+                throw e;
+            }
+            catch (Exception e) {
                 throw new GeneralException(LetterErrorCode.SUMMARY_INTERNAL_ERROR);
             }
         }
@@ -285,6 +307,30 @@ public class LetterServiceImpl implements LetterService {
         return new LetterLikeResponseDTO(false);
     }
 
+    @Override
+    @Transactional
+    public void upsertReply(Long userId, Long letterId, LetterReplyUpsertRequestDTO req) {
+        if (req == null || req.getReply() == null) {
+            throw new GeneralException(LetterErrorCode.INVALID_REQUEST);
+        }
+
+        Letter letter = letterRepository
+                .findByIdAndUser_IdAndIsDeletedFalse(letterId, userId)
+                .orElseThrow(() -> new GeneralException(LetterErrorCode.LETTER_NOT_FOUND));
+
+        letter.updateReply(req.getReply());
+    }
+
+    @Override
+    @Transactional
+    public void deleteReply(Long userId, Long letterId) {
+        Letter letter = letterRepository
+                .findByIdAndUser_IdAndIsDeletedFalse(letterId, userId)
+                .orElseThrow(() -> new GeneralException(LetterErrorCode.LETTER_NOT_FOUND));
+
+        letter.deleteReply();
+    }
+
     private Letter getOwnedActiveLetter(Long userId, Long letterId) {
         if (userId == null) {
             throw new GeneralException(LetterErrorCode.UNAUTHORIZED);
@@ -294,7 +340,7 @@ public class LetterServiceImpl implements LetterService {
         }
 
         Letter letter = letterRepository.findById(letterId)
-                .orElseThrow(() -> new GeneralException(LetterErrorCode.NOT_FOUND));
+                .orElseThrow(() -> new GeneralException(LetterErrorCode.LETTER_NOT_FOUND));
 
         if (letter.isDeleted()) {
             throw new GeneralException(LetterErrorCode.DELETED_LETTER);
@@ -322,4 +368,16 @@ public class LetterServiceImpl implements LetterService {
                 letter.getFolder() != null ? letter.getFolder().getId() : null
         );
     }
+
+    @Override
+    @Transactional
+    public LetterPinResponseDTO updatePinned(Long userId, Long letterId, LetterPinRequestDTO request) {
+
+        Letter letter = getOwnedActiveLetter(userId, letterId);
+
+        letter.updatePinned(request.pinned());
+
+        return new LetterPinResponseDTO(letter.isPinned());
+    }
+
 }
