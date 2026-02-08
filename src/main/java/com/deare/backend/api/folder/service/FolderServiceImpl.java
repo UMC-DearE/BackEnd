@@ -1,9 +1,6 @@
 package com.deare.backend.api.folder.service;
 
-import com.deare.backend.api.folder.dto.FolderCreateRequestDTO;
-import com.deare.backend.api.folder.dto.FolderCreateResponseDTO;
-import com.deare.backend.api.folder.dto.FolderItemDTO;
-import com.deare.backend.api.folder.dto.FolderListResponseDTO;
+import com.deare.backend.api.folder.dto.*;
 import com.deare.backend.domain.folder.entity.Folder;
 import com.deare.backend.domain.folder.exception.FolderErrorCode;
 import com.deare.backend.domain.folder.repository.FolderRepository;
@@ -126,4 +123,61 @@ public class FolderServiceImpl implements FolderService {
 
         letter.changeFolder(null);
     }
+
+    @Override
+    @Transactional
+    public FolderOrderResponseDTO updateOrders(Long userId, FolderOrderRequestDTO reqDTO) {
+        if (reqDTO == null || reqDTO.foldersOrder() == null) {
+            throw new GeneralException(FolderErrorCode.INVALID_FOLDER_ORDER);
+        }
+
+        List<Long> requestedIds = reqDTO.foldersOrder();
+
+        if (requestedIds.size() != new java.util.HashSet<>(requestedIds).size()) {
+            throw new GeneralException(FolderErrorCode.INVALID_FOLDER_ORDER);
+        }
+
+        List<Folder> folders =
+                folderRepository.findAllByUser_IdAndIsDeletedFalseOrderByFolderOrderAsc(userId);
+
+        List<Long> existingIds = folders.stream().map(Folder::getId).toList();
+
+        if (existingIds.size() != requestedIds.size()
+                || !new java.util.HashSet<>(existingIds).equals(new java.util.HashSet<>(requestedIds))) {
+            throw new GeneralException(FolderErrorCode.INVALID_FOLDER_ORDER);
+        }
+
+        java.util.Map<Long, Folder> folderMap = folders.stream()
+                .collect(java.util.stream.Collectors.toMap(Folder::getId, f -> f));
+
+        for (int i = 0; i < requestedIds.size(); i++) {
+            Folder folder = folderMap.get(requestedIds.get(i));
+            folder.changeOrder(i + 1);
+        }
+
+        return new FolderOrderResponseDTO(requestedIds);
+    }
+
+    @Override
+    @Transactional
+    public void updateFolder(Long userId, Long folderId, FolderUpdateRequestDTO reqDTO) {
+        if (reqDTO == null || !reqDTO.hasAnyField()) {
+            throw new GeneralException(FolderErrorCode.INVALID_REQUEST);
+        }
+
+        Folder folder = folderRepository.findByIdAndUser_IdAndIsDeletedFalse(folderId, userId)
+                .orElseThrow(() -> new GeneralException(FolderErrorCode.FOLDER_NOT_FOUND));
+
+        if (reqDTO.name() != null) {
+            folder.rename(reqDTO.name().trim());
+        }
+
+        if (reqDTO.imageId() != null) {
+            Image image = imageRepository.findById(reqDTO.imageId())
+                    .orElseThrow(() -> new GeneralException(FolderErrorCode.INVALID_REQUEST));
+
+            folder.changeImage(image);
+        }
+    }
+
 }

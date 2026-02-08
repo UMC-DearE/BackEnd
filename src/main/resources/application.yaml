@@ -15,8 +15,14 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     show-sql: true
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    baseline-version: 0
 
   data:
     redis:
@@ -51,6 +57,9 @@ external:
     base-url: https://generativelanguage.googleapis.com/v1beta/openai
     api-key: ${GEMINI_API_KEY}
     model: gemini-3-flash-preview
+
+app:
+  frontend-base-url: ${FRONTEND_BASE_URL:https://www.deare.kr}
 
 oauth:
   kakao:

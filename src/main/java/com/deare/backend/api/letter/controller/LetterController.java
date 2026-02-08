@@ -91,10 +91,12 @@ public class LetterController {
     @PatchMapping("/{letterId}/reply")
     @Operation(summary = "편지 답장 등록/수정",
             description = "사용자가 소유한 편지의 답장을 등록/수정하는 API입니다.")
-    public ApiResponse<Void> updateReply(
+    public ApiResponse<Void> upsertReply(
             @PathVariable Long letterId,
-            @Valid @RequestBody LetterReplyUpsertRequestDTO request
+            @Valid @RequestBody LetterReplyUpsertRequestDTO reqDTO
     ){
+        Long userId = SecurityUtil.getCurrentUserId();
+        letterService.upsertReply(userId, letterId, reqDTO);
         return ApiResponse.success(null);
     }
 
@@ -104,6 +106,8 @@ public class LetterController {
     public ApiResponse<Void> deleteReply(
             @PathVariable Long letterId
     ){
+        Long userId = SecurityUtil.getCurrentUserId();
+        letterService.deleteReply(userId, letterId);
         return ApiResponse.success(null);
     }
 
@@ -144,6 +148,19 @@ public class LetterController {
             return ApiResponse.success("아직 추가한 편지가 없습니다.", data);
         }
         return ApiResponse.success("랜덤 편지 조회에 성공했습니다.", data);
+    }
+
+    @PatchMapping("/{letterId}/pin")
+    @Operation(
+            summary = "편지 고정/해제",
+            description = "사용자가 본인 소유의 편지를 홈 화면 상단에 고정하거나, 이미 고정된 편지를 해제하는 API입니다."
+    )
+    public ApiResponse<LetterPinResponseDTO> updatePinned(
+            @PathVariable Long letterId,
+            @Valid @RequestBody LetterPinRequestDTO request
+    ) {
+        Long userId = SecurityUtil.getCurrentUserId();
+        return ApiResponse.success(letterService.updatePinned(userId, letterId, request));
     }
 
 }

@@ -26,22 +26,27 @@ public enum LetterErrorCode implements BaseErrorCode {
             "로그인이 필요한 요청입니다."
     ),
 
-    DELETED_LETTER(
-            HttpStatus.GONE,
-            "LETTER_41001",
-            "삭제된 편지입니다."
-    ),
-
     FORBIDDEN(
             HttpStatus.FORBIDDEN,
             "LETTER_40301",
             "해당 편지에 접근할 권한이 없습니다."
     ),
 
-    NOT_FOUND(
+    LETTER_NOT_FOUND(
             HttpStatus.NOT_FOUND,
             "LETTER_40401",
             "편지를 찾을 수 없습니다."
+    ),
+    FROM_NOT_FOUND(
+            HttpStatus.NOT_FOUND,
+            "LETTER_40402",
+            "프롬을 찾을 수 없습니다."
+    ),
+
+    DELETED_LETTER(
+            HttpStatus.GONE,
+            "LETTER_41001",
+            "삭제된 편지입니다."
     ),
 
     INTERNAL_ERROR(

@@ -11,11 +11,14 @@ import com.deare.backend.domain.setting.repository.UserSettingRepository;
 import com.deare.backend.domain.user.entity.User;
 import com.deare.backend.domain.user.exception.UserErrorCode;
 import com.deare.backend.domain.user.repository.UserRepository;
+import com.deare.backend.global.auth.jwt.JwtService;
 import com.deare.backend.global.common.exception.GeneralException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -24,6 +27,7 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final ImageRepository imageRepository;
     private final UserSettingRepository userSettingRepository;
+    private final JwtService jwtService;
 
     // 프로필 조회
     @Override
@@ -91,5 +95,24 @@ public class UserServiceImpl implements UserService {
                 user.getIntro(),
                 user.getImage() != null ? user.getImage().getUrl() : null
         );
+    }
+
+    /**
+     * 회원 탈퇴 (소프트 딜리트)
+     * - status를 INACTIVE로 변경
+     * - isDeleted=true, deletedAt=now()
+     * - RefreshToken 삭제 (강제 로그아웃)
+     */
+    @Override
+    public void deactivateUser(Long userId) {
+        User user = userRepository.findByIdAndIsDeletedFalse(userId)
+                .orElseThrow(() -> new GeneralException(UserErrorCode.USER_NOT_FOUND));
+
+        user.deactivate();
+
+        // RefreshToken 삭제 (강제 로그아웃)
+        jwtService.deleteRefreshToken(userId);
+
+        log.info("회원 탈퇴 처리 완료 - User ID: {}, Email: {}", user.getId(), user.getEmail());
     }
 }

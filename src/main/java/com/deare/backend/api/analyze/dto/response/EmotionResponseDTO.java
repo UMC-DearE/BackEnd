@@ -19,4 +19,11 @@ public class EmotionResponseDTO {
                 .category(CategoryResponseDTO.from(emotion.getEmotionCategory()))
                 .build();
     }
+
+    public static EmotionResponseDTO simpleFrom(Emotion emotion){
+        return EmotionResponseDTO.builder()
+                .emotionId(emotion.getId())
+                .emotionName(emotion.getName())
+                .build();
+    }
 }

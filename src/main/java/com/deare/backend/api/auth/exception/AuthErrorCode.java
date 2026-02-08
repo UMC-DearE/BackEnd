@@ -12,10 +12,10 @@ public enum AuthErrorCode implements BaseErrorCode {
     MISSING_REFRESH_TOKEN(HttpStatus.BAD_REQUEST, "AUTH_40004", "Refresh Token이 없습니다."),
 
     // 401 Unauthorized
-    UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "AUTH_40100", "인증이 필요합니다."),
-    INVALID_SIGNUP_TOKEN(HttpStatus.UNAUTHORIZED, "AUTH_40101", "유효하지 않은 Signup Token입니다."),
-    EXPIRED_SIGNUP_TOKEN(HttpStatus.UNAUTHORIZED, "AUTH_40102", "Signup Token이 만료되었거나 이미 사용되었습니다."),
-    INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "AUTH_40103", "유효하지 않은 Refresh Token입니다."),
+    UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "AUTH_40101", "인증이 필요합니다."),
+    INVALID_SIGNUP_TOKEN(HttpStatus.UNAUTHORIZED, "AUTH_40102", "유효하지 않은 Signup Token입니다."),
+    EXPIRED_SIGNUP_TOKEN(HttpStatus.UNAUTHORIZED, "AUTH_40103", "Signup Token이 만료되었거나 이미 사용되었습니다."),
+    INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "AUTH_40104", "유효하지 않은 Refresh Token입니다."),
     REFRESH_TOKEN_MISMATCH(HttpStatus.UNAUTHORIZED, "AUTH_40105", "Refresh Token이 일치하지 않습니다."),
 
     // 404 Not Found
