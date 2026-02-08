@@ -50,6 +50,14 @@ public class AnalyzeAdapterImpl implements AnalyzeAdapter {
                     ExternalApiErrorCode.AI_CONNECTION_FAILED
             );
         }
+        catch(ExternalApiException e){
+            throw e;
+        }
+        catch (Exception e) {
+            throw new ExternalApiException(
+                    ExternalApiErrorCode.AI_REQUEST_FAILED
+            );
+        }
     }
 
     private AnalyzeResponseDTO parse(String raw) {
