@@ -70,7 +70,7 @@ public class LetterServiceImpl implements LetterService {
         Letter letter = letterRepository
                 .findLetterDetailById(userId, letterId)
                 .orElseThrow(() ->
-                        new GeneralException(LetterErrorCode.NOT_FOUND)
+                        new GeneralException(LetterErrorCode.LETTER_NOT_FOUND)
                 );
 
         List<EmotionTagDTO> emotionTags =
@@ -188,6 +188,30 @@ public class LetterServiceImpl implements LetterService {
         return new LetterLikeResponseDTO(false);
     }
 
+    @Override
+    @Transactional
+    public void upsertReply(Long userId, Long letterId, LetterReplyUpsertRequestDTO req) {
+        if (req == null || req.getReply() == null) {
+            throw new GeneralException(LetterErrorCode.INVALID_REQUEST);
+        }
+
+        Letter letter = letterRepository
+                .findByIdAndUserIdAndIsDeletedFalse(letterId, userId)
+                .orElseThrow(() -> new GeneralException(LetterErrorCode.LETTER_NOT_FOUND));
+
+        letter.updateReply(req.getReply());
+    }
+
+    @Override
+    @Transactional
+    public void deleteReply(Long userId, Long letterId) {
+        Letter letter = letterRepository
+                .findByIdAndUserIdAndIsDeletedFalse(letterId, userId)
+                .orElseThrow(() -> new GeneralException(LetterErrorCode.LETTER_NOT_FOUND));
+
+        letter.deleteReply();
+    }
+
     private Letter getOwnedActiveLetter(Long userId, Long letterId) {
         if (userId == null) {
             throw new GeneralException(LetterErrorCode.UNAUTHORIZED);
@@ -197,7 +221,7 @@ public class LetterServiceImpl implements LetterService {
         }
 
         Letter letter = letterRepository.findById(letterId)
-                .orElseThrow(() -> new GeneralException(LetterErrorCode.NOT_FOUND));
+                .orElseThrow(() -> new GeneralException(LetterErrorCode.LETTER_NOT_FOUND));
 
         if (letter.isDeleted()) {
             throw new GeneralException(LetterErrorCode.DELETED_LETTER);
@@ -225,4 +249,5 @@ public class LetterServiceImpl implements LetterService {
                 letter.getFolder() != null ? letter.getFolder().getId() : null
         );
     }
+
 }

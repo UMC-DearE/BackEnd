@@ -76,10 +76,12 @@ public class LetterController {
     @PatchMapping("/{letterId}/reply")
     @Operation(summary = "편지 답장 등록/수정",
             description = "사용자가 소유한 편지의 답장을 등록/수정하는 API입니다.")
-    public ApiResponse<Void> updateReply(
+    public ApiResponse<Void> upsertReply(
             @PathVariable Long letterId,
-            @Valid @RequestBody LetterReplyUpsertRequestDTO request
+            @Valid @RequestBody LetterReplyUpsertRequestDTO reqDTO
     ){
+        Long userId = SecurityUtil.getCurrentUserId();
+        letterService.upsertReply(userId, letterId, reqDTO);
         return ApiResponse.success(null);
     }
 
@@ -89,6 +91,8 @@ public class LetterController {
     public ApiResponse<Void> deleteReply(
             @PathVariable Long letterId
     ){
+        Long userId = SecurityUtil.getCurrentUserId();
+        letterService.deleteReply(userId, letterId);
         return ApiResponse.success(null);
     }
 

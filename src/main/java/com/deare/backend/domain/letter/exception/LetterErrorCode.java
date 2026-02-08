@@ -38,7 +38,7 @@ public enum LetterErrorCode implements BaseErrorCode {
             "해당 편지에 접근할 권한이 없습니다."
     ),
 
-    NOT_FOUND(
+    LETTER_NOT_FOUND(
             HttpStatus.NOT_FOUND,
             "LETTER_40401",
             "편지를 찾을 수 없습니다."

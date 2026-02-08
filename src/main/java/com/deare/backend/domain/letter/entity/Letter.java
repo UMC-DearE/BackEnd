@@ -138,6 +138,10 @@ public class Letter extends BaseEntity {
         this.reply = reply;
     }
 
+    public void deleteReply() {
+        this.reply = null;
+    }
+
     public void changeFolder(Folder folder) {
         this.folder = folder;
     }
