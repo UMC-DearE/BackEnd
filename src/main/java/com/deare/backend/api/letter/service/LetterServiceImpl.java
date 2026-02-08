@@ -340,7 +340,7 @@ public class LetterServiceImpl implements LetterService {
         }
 
         Letter letter = letterRepository.findById(letterId)
-                .orElseThrow(() -> new GeneralException(LetterErrorCode.NOT_FOUND));
+                .orElseThrow(() -> new GeneralException(LetterErrorCode.LETTER_NOT_FOUND));
 
         if (letter.isDeleted()) {
             throw new GeneralException(LetterErrorCode.DELETED_LETTER);
