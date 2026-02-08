@@ -5,10 +5,9 @@ import com.deare.backend.api.folder.dto.FolderCreateResponseDTO;
 import com.deare.backend.api.folder.dto.FolderListResponseDTO;
 import com.deare.backend.api.folder.dto.FolderOrderRequestDTO;
 import com.deare.backend.api.folder.dto.FolderUpdateRequestDTO;
+import com.deare.backend.api.folder.dto.FolderOrderResponseDTO;
 import com.deare.backend.api.folder.service.FolderService;
-import com.deare.backend.domain.folder.exception.FolderErrorCode;
 import com.deare.backend.global.auth.util.SecurityUtil;
-import com.deare.backend.global.common.exception.GeneralException;
 import com.deare.backend.global.common.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
@@ -29,11 +28,6 @@ public class FolderController {
     )
     public ApiResponse<FolderListResponseDTO> getFolderList() {
         Long userId = SecurityUtil.getCurrentUserId();
-
-        if (userId == null) {
-            throw new GeneralException(FolderErrorCode.UNAUTHORIZED);
-        }
-
         FolderListResponseDTO data = folderService.getFolderList(userId);
         return ApiResponse.success(data);
     }
@@ -45,11 +39,6 @@ public class FolderController {
     )
     public ApiResponse<FolderCreateResponseDTO> createFolder(@Valid @RequestBody FolderCreateRequestDTO reqDTO) {
         Long userId = SecurityUtil.getCurrentUserId();
-
-        if (userId == null) {
-            throw new GeneralException(FolderErrorCode.UNAUTHORIZED);
-        }
-
         FolderCreateResponseDTO data = folderService.createFolder(userId, reqDTO);
         return ApiResponse.success(data);
     }
@@ -60,35 +49,30 @@ public class FolderController {
     )
     public ApiResponse<Void> deleteFolder(@PathVariable("folderId") Long folderId) {
         Long userId = SecurityUtil.getCurrentUserId();
-
-        if (userId == null) {
-            throw new GeneralException(FolderErrorCode.UNAUTHORIZED);
-        }
-
         folderService.deleteFolder(userId, folderId);
         return ApiResponse.success(null);
     }
 
     @PatchMapping("/orders")
-    @Operation(
-            summary = "폴더 순서 변경"
-    )
-    public ApiResponse<Void> updateOrders(@Valid @RequestBody FolderOrderRequestDTO reqDTO) {
+    @Operation(summary = "폴더 순서 변경")
+    public ApiResponse<FolderOrderResponseDTO> updateOrders(
+            @Valid @RequestBody FolderOrderRequestDTO reqDTO
+    ) {
         Long userId = SecurityUtil.getCurrentUserId();
-        return ApiResponse.success(null);
+        FolderOrderResponseDTO data = folderService.updateOrders(userId, reqDTO);
+        return ApiResponse.success(data);
     }
 
     @PatchMapping("/{folderId}")
-    @Operation(
-            summary = "폴더 수정"
-    )
+    @Operation(summary = "폴더 수정")
     public ApiResponse<Void> updateFolder(
             @PathVariable("folderId") Long folderId,
-            @Valid @RequestBody FolderUpdateRequestDTO reqDTO) {
+            @Valid @RequestBody FolderUpdateRequestDTO reqDTO
+    ) {
         Long userId = SecurityUtil.getCurrentUserId();
+        folderService.updateFolder(userId, folderId, reqDTO);
         return ApiResponse.success(null);
     }
-
 
     @PostMapping("/{folderId}/letters/{letterId}")
     @Operation(
@@ -98,11 +82,6 @@ public class FolderController {
             @PathVariable("folderId") Long folderId,
             @PathVariable("letterId") Long letterId) {
         Long userId = SecurityUtil.getCurrentUserId();
-
-        if (userId == null) {
-            throw new GeneralException(FolderErrorCode.UNAUTHORIZED);
-        }
-
         folderService.addLetterToFolder(userId, folderId, letterId);
         return ApiResponse.success(null);
     }
@@ -115,11 +94,6 @@ public class FolderController {
             @PathVariable("folderId") Long folderId,
             @PathVariable("letterId") Long letterId) {
         Long userId = SecurityUtil.getCurrentUserId();
-
-        if (userId == null) {
-            throw new GeneralException(FolderErrorCode.UNAUTHORIZED);
-        }
-
         folderService.removeLetterFromFolder(userId, folderId, letterId);
         return ApiResponse.success(null);
     }

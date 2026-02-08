@@ -48,7 +48,8 @@ public class AuthService {
 
     /**
      * OAuth 콜백 처리
-     * - 기존 회원: JWT 발급 + REGISTERED 반환
+     * - 기존 회원 (활성): JWT 발급 + REGISTERED 반환
+     * - 삭제 중인 회원: 복구 후 JWT 발급 + REGISTERED 반환
      * - 신규 회원: Signup Token 발급 + Redis 저장 + SIGNUP_REQUIRED 반환
      */
     @Transactional
@@ -60,34 +61,30 @@ public class AuthService {
         // provider와 providerId로 기존 사용자 조회
         Provider providerEnum = Provider.valueOf(oauthInfo.provider().toUpperCase());
 
-        Optional<User> userOptional = userRepository.findByProviderAndProviderId(
+        // 유저 (isActive=true) 조회
+        Optional<User> activeUser = userRepository.findByProviderAndProviderIdAndIsDeletedFalse(
                 providerEnum,
                 oauthInfo.providerUserId()
         );
 
-        // 분기
-
-        // 3-1 기존 회원 -> JWT 발급
-        if (userOptional.isPresent()) {
-            User user = userOptional.get();
-
-            String accessToken = jwtProvider.generateAccessToken(user);
-            String refreshToken = jwtProvider.generateRefreshToken(user);
-
-            jwtService.saveRefreshToken(user.getId(), refreshToken);
-
-            log.info("기존 회원 로그인 성공 - User ID: {}, Email: {}", user.getId(), user.getEmail());
-
-            return new OAuthCallbackResult(
-                    true,
-                    accessToken,
-                    refreshToken,
-                    null,
-                    OAuthCallbackResponseDTO.registered()
-            );
+        if (activeUser.isPresent()) {
+            User user = activeUser.get();
+            return issueJwtAndReturn(user, "기존 회원 로그인 성공");
         }
 
-        // 3-2 신규 회원 -> signup-token 발급 + Redis 저장
+        // 삭제 중인 유저 조회(isActive=false (deactive)) -> 복구 처리
+        Optional<User> deletedUser = userRepository.findByProviderAndProviderIdAndIsDeletedTrue(
+                providerEnum,
+                oauthInfo.providerUserId()
+        );
+
+        if (deletedUser.isPresent()) {
+            User user = deletedUser.get();
+            user.reactivate();
+            return issueJwtAndReturn(user, "삭제 중인 회원 복구 및 로그인 성공");
+        }
+
+        // 신규 회원 -> signup-token 발급 + Redis 저장
         String signupToken = signupTokenProvider.generateSignupToken(
                 oauthInfo.provider(),
                 oauthInfo.providerUserId(),
@@ -111,6 +108,26 @@ public class AuthService {
                 null,
                 signupToken,
                 OAuthCallbackResponseDTO.signupRequired()
+        );
+    }
+
+    /**
+     * JWT 발급 및 OAuthCallbackResult 반환 (공통 로직)
+     */
+    private OAuthCallbackResult issueJwtAndReturn(User user, String logMessage) {
+        String accessToken = jwtProvider.generateAccessToken(user);
+        String refreshToken = jwtProvider.generateRefreshToken(user);
+
+        jwtService.saveRefreshToken(user.getId(), refreshToken);
+
+        log.info("{} - User ID: {}, Email: {}", logMessage, user.getId(), user.getEmail());
+
+        return new OAuthCallbackResult(
+                true,
+                accessToken,
+                refreshToken,
+                null,
+                OAuthCallbackResponseDTO.registered()
         );
     }
 
