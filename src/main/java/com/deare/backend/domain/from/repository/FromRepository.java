@@ -8,5 +8,4 @@ import java.util.List;
 
 @Repository
 public interface FromRepository extends JpaRepository<From, Long> {
-    List<From> findAllByUserIdOrderByIdDesc(Long userId);
 }
