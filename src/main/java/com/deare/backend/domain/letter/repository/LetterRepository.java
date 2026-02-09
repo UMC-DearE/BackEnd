@@ -23,11 +23,8 @@ public interface LetterRepository extends JpaRepository<Letter, Long>, LetterRep
            and l.folder.id = :folderId
            and l.isDeleted = false
     """)
-    int clearFolder(Long userId, Long folderId);
+    int clearFolder(@Param("userId") Long userId, @Param("folderId") Long folderId);
 
-    /**
-     * 해당 유저의 모든 편지 조회
-     */
     List<Letter> findAllByUser_Id(Long userId);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
@@ -39,6 +36,8 @@ public interface LetterRepository extends JpaRepository<Letter, Long>, LetterRep
            and l.from.id = :fromId
            and l.isDeleted = false
     """)
-    void softDeleteAllByUserIdAndFromId(@Param("userId") Long userId,
-                                        @Param("fromId") Long fromId);
+    int softDeleteAllByUserIdAndFromId(@Param("userId") Long userId,
+                                       @Param("fromId") Long fromId);
+
+    List<Letter> findAllByUser_IdAndFrom_IdAndIsDeletedFalse(Long userId, Long fromId);
 }
