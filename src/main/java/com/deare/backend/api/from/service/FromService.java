@@ -5,6 +5,7 @@ import com.deare.backend.domain.from.entity.From;
 import com.deare.backend.domain.from.exception.FromErrorCode;
 import com.deare.backend.domain.from.repository.FromRepository;
 import com.deare.backend.domain.from.repository.query.FromQueryRepository;
+import com.deare.backend.domain.letter.repository.LetterRepository;
 import com.deare.backend.domain.user.entity.User;
 import com.deare.backend.domain.user.exception.UserErrorCode;
 import com.deare.backend.domain.user.repository.UserRepository;
@@ -20,6 +21,7 @@ public class FromService {
     private final FromRepository fromRepository;
     private final FromQueryRepository fromQueryRepository;
     private final UserRepository userRepository;
+    private final LetterRepository letterRepository;
 
     @Transactional(readOnly = true)
     public FromListResponseDTO getFroms(Long userId) {
@@ -94,6 +96,7 @@ public class FromService {
         }
 
         from.softDelete();
+        letterRepository.softDeleteAllByUserIdAndFromId(userId, fromId);
 
         return new FromDeleteResponseDTO(fromId);
     }
