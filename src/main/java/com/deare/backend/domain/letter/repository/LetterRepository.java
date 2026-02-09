@@ -29,5 +29,16 @@ public interface LetterRepository extends JpaRepository<Letter, Long>, LetterRep
      * 해당 유저의 모든 편지 조회
      */
     List<Letter> findAllByUser_Id(Long userId);
-    void softDeleteAllByUserIdAndFromId(@Param("userId") Long userId, @Param("fromId") Long fromId);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+        update Letter l
+           set l.isDeleted = true,
+               l.deletedAt = CURRENT_TIMESTAMP
+         where l.user.id = :userId
+           and l.from.id = :fromId
+           and l.isDeleted = false
+    """)
+    void softDeleteAllByUserIdAndFromId(@Param("userId") Long userId,
+                                        @Param("fromId") Long fromId);
 }
