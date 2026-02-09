@@ -29,15 +29,16 @@ public interface LetterRepository extends JpaRepository<Letter, Long>, LetterRep
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
-        update Letter l
-           set l.isDeleted = true,
-               l.deletedAt = CURRENT_TIMESTAMP
-         where l.user.id = :userId
-           and l.from.id = :fromId
-           and l.isDeleted = false
-    """)
+    update Letter l
+       set l.isDeleted = true,
+           l.deletedAt = CURRENT_TIMESTAMP
+     where l.user.id = :userId
+       and l.from.id = :fromId
+       and l.isDeleted = false
+""")
     int softDeleteAllByUserIdAndFromId(@Param("userId") Long userId,
                                        @Param("fromId") Long fromId);
+
 
     List<Letter> findAllByUser_IdAndFrom_IdAndIsDeletedFalse(Long userId, Long fromId);
 }
