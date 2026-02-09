@@ -96,9 +96,6 @@ public class FromService {
 
         from.softDelete();
 
-        int affected = letterRepository.softDeleteAllByUserIdAndFromId(userId, fromId);
-        System.out.println("soft delete letters affected = " + affected);
-
         return new FromDeleteResponseDTO(fromId);
     }
 }
