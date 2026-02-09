@@ -153,9 +153,6 @@ public class LetterServiceImpl implements LetterService {
         From from = fromRepository.findById(req.fromId())
                 .orElseThrow(() -> new GeneralException(LetterErrorCode.FROM_NOT_FOUND));
 
-        if (!from.isOwnedBy(userId)) {
-            throw new GeneralException(FromErrorCode.FROM_40301);
-        }
 
         String content = req.content().trim();
         String aiSummary = req.aiSummary().trim();
