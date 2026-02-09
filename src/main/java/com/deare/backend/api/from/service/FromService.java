@@ -87,7 +87,6 @@ public class FromService {
 
     @Transactional
     public FromDeleteResponseDTO deleteFrom(Long userId, Long fromId) {
-
         From from = fromRepository.findByIdAndIsDeletedFalse(fromId)
                 .orElseThrow(() -> new GeneralException(FromErrorCode.FROM_40401));
 
@@ -96,7 +95,9 @@ public class FromService {
         }
 
         from.softDelete();
-        letterRepository.softDeleteAllByUserIdAndFromId(userId, fromId);
+
+        int affected = letterRepository.softDeleteAllByUserIdAndFromId(userId, fromId);
+        System.out.println("soft delete letters affected = " + affected);
 
         return new FromDeleteResponseDTO(fromId);
     }
