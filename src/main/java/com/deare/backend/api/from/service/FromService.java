@@ -13,8 +13,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Objects;
-
 @Service
 @RequiredArgsConstructor
 public class FromService {
@@ -49,22 +47,27 @@ public class FromService {
     @Transactional
     public FromUpdateResponseDTO updateFrom(Long userId, Long fromId, FromUpdateRequestDTO request) {
 
-        From from = fromRepository.findById(fromId)
+        From from = fromRepository.findByIdAndIsDeletedFalse(fromId)
                 .orElseThrow(() -> new GeneralException(FromErrorCode.FROM_40401));
 
         if (!from.isOwnedBy(userId)) {
             throw new GeneralException(FromErrorCode.FROM_40301);
         }
 
-        if (request.name() != null) {
-            from.changeFromName(request.name());
-        }
-
+        boolean nameProvided = request.name() != null;
         boolean bgProvided = request.bgColor() != null;
         boolean fontProvided = request.fontColor() != null;
 
+        if (!nameProvided && !bgProvided && !fontProvided) {
+            throw new GeneralException(FromErrorCode.FROM_40002);
+        }
+
         if (bgProvided ^ fontProvided) {
             throw new GeneralException(FromErrorCode.FROM_40001);
+        }
+
+        if (nameProvided) {
+            from.changeFromName(request.name());
         }
 
         if (bgProvided && fontProvided) {
@@ -81,17 +84,17 @@ public class FromService {
     }
 
     @Transactional
-    public FromDeleteDTO deleteFrom(Long userId, Long fromId) {
+    public FromDeleteResponseDTO deleteFrom(Long userId, Long fromId) {
 
-        From from = fromRepository.findById(fromId)
+        From from = fromRepository.findByIdAndIsDeletedFalse(fromId)
                 .orElseThrow(() -> new GeneralException(FromErrorCode.FROM_40401));
 
         if (!from.isOwnedBy(userId)) {
             throw new GeneralException(FromErrorCode.FROM_40301);
         }
 
-        fromRepository.delete(from);
+        from.softDelete();
 
-        return new FromDeleteDTO(fromId);
+        return new FromDeleteResponseDTO(fromId);
     }
 }

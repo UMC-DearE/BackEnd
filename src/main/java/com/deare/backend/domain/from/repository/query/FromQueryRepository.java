@@ -26,7 +26,9 @@ public class FromQueryRepository {
                 left join Letter l
                     on l.from = f
                     and l.user.id = :userId
+                    and l.isDeleted = false
                 where f.user.id = :userId
+                  and f.isDeleted = false
                 group by f.id, f.name, f.backgroundColor, f.fontColor
                 order by f.id desc
                 """, FromResponseDTO.class)

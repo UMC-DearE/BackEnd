@@ -14,7 +14,11 @@ public enum FromErrorCode implements BaseErrorCode {
             "FROM_40001",
             "잘못된 요청입니다."
     ),
-
+    FROM_40002(
+            HttpStatus.BAD_REQUEST,
+            "FROM_40002",
+            "수정할 값이 없습니다."
+    ),
     FROM_40301(
             HttpStatus.FORBIDDEN,
             "FROM_40301",

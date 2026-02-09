@@ -1,6 +1,6 @@
 package com.deare.backend.api.from.dto;
 
-public record FromDeleteDTO(
+public record FromDeleteResponseDTO(
         Long fromId
 ) {
 }

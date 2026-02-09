@@ -10,7 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/from")
+@RequestMapping("/froms")
 @RequiredArgsConstructor
 public class FromController {
 
@@ -65,7 +65,7 @@ public class FromController {
             summary = "From 삭제",
             description = "사용자가 생성한 From 태그를 삭제하는 API입니다."
     )
-    public ApiResponse<FromDeleteDTO> deleteFrom(
+    public ApiResponse<FromDeleteResponseDTO> deleteFrom(
             @PathVariable Long fromId
     ) {
         Long userId = SecurityUtil.getCurrentUserId();
