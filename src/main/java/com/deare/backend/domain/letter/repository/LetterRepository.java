@@ -13,7 +13,7 @@ import java.util.Optional;
 @Repository
 public interface LetterRepository extends JpaRepository<Letter, Long>, LetterRepositoryCustom {
 
-    Optional<Letter> findByIdAndUserIdAndIsDeletedFalse(Long id, Long userId);
+    Optional<Letter> findByIdAndUser_IdAndIsDeletedFalse(Long id, Long userId);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
@@ -29,7 +29,5 @@ public interface LetterRepository extends JpaRepository<Letter, Long>, LetterRep
      * 해당 유저의 모든 편지 조회
      */
     List<Letter> findAllByUser_Id(Long userId);
-
-
     void softDeleteAllByUserIdAndFromId(@Param("userId") Long userId, @Param("fromId") Long fromId);
 }
