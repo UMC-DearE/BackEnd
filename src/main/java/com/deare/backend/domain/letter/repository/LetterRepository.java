@@ -4,6 +4,7 @@ import com.deare.backend.domain.letter.entity.Letter;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -14,8 +15,6 @@ public interface LetterRepository extends JpaRepository<Letter, Long>, LetterRep
 
     Optional<Letter> findByIdAndUser_IdAndIsDeletedFalse(Long id, Long userId);
 
-    Optional<Letter> findByIdAndUserIdAndIsDeletedFalse(Long id, Long userId);
-
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
         update Letter l
@@ -24,10 +23,22 @@ public interface LetterRepository extends JpaRepository<Letter, Long>, LetterRep
            and l.folder.id = :folderId
            and l.isDeleted = false
     """)
-    int clearFolder(Long userId, Long folderId);
+    int clearFolder(@Param("userId") Long userId, @Param("folderId") Long folderId);
 
-    /**
-     * 해당 유저의 모든 편지 조회
-     */
     List<Letter> findAllByUser_Id(Long userId);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+    update Letter l
+       set l.isDeleted = true,
+           l.deletedAt = CURRENT_TIMESTAMP
+     where l.user.id = :userId
+       and l.from.id = :fromId
+       and l.isDeleted = false
+""")
+    int softDeleteAllByUserIdAndFromId(@Param("userId") Long userId,
+                                       @Param("fromId") Long fromId);
+
+
+    List<Letter> findAllByUser_IdAndFrom_IdAndIsDeletedFalse(Long userId, Long fromId);
 }

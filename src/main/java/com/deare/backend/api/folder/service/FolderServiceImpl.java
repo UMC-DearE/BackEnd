@@ -178,6 +178,8 @@ public class FolderServiceImpl implements FolderService {
                     .orElseThrow(() -> new GeneralException(FolderErrorCode.INVALID_REQUEST));
 
             folder.changeImage(image);
+        }else{
+            folder.changeImage(null);
         }
     }
 
