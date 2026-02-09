@@ -2,7 +2,6 @@ package com.deare.backend.api.letter.service;
 
 import com.deare.backend.api.letter.dto.*;
 import org.springframework.data.domain.Pageable;
-import org.springframework.transaction.annotation.Transactional;
 
 public interface LetterService {
     LetterListResponseDTO getLetterList(
