@@ -1,4 +1,4 @@
-package com.deare.backend.api.folder.dto;
+package com.deare.backend.api.folder.dto.request;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;

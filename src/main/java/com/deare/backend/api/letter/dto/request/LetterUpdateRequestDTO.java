@@ -1,4 +1,4 @@
-package com.deare.backend.api.letter.dto;
+package com.deare.backend.api.letter.dto.request;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSetter;
