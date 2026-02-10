@@ -1,7 +1,7 @@
 package com.deare.backend.api.letter.service;
 
 import com.deare.backend.api.letter.cache.RandomLetterCacheValue;
-import com.deare.backend.api.letter.dto.RandomLetterResponseDTO;
+import com.deare.backend.api.letter.dto.response.RandomLetterResponseDTO;
 import com.deare.backend.domain.letter.exception.LetterErrorCode;
 import com.deare.backend.domain.letter.entity.Letter;
 import com.deare.backend.domain.letter.repository.LetterRepository;

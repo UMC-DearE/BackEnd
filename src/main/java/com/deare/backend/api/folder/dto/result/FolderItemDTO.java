@@ -1,4 +1,4 @@
-package com.deare.backend.api.folder.dto;
+package com.deare.backend.api.folder.dto.result;
 
 public record FolderItemDTO (
         Long id,

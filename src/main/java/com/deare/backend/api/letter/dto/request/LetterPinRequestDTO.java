@@ -1,4 +1,4 @@
-package com.deare.backend.api.letter.dto;
+package com.deare.backend.api.letter.dto.request;
 
 import jakarta.validation.constraints.NotNull;
 
