@@ -1,4 +1,4 @@
-package com.deare.backend.api.letter.dto;
+package com.deare.backend.api.letter.dto.response;
 
 public record LetterPinResponseDTO(
         Boolean pinned

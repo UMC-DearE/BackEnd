@@ -1,6 +1,12 @@
 package com.deare.backend.api.folder.service;
 
-import com.deare.backend.api.folder.dto.*;
+import com.deare.backend.api.folder.dto.request.FolderCreateRequestDTO;
+import com.deare.backend.api.folder.dto.request.FolderOrderRequestDTO;
+import com.deare.backend.api.folder.dto.request.FolderUpdateRequestDTO;
+import com.deare.backend.api.folder.dto.response.FolderCreateResponseDTO;
+import com.deare.backend.api.folder.dto.response.FolderListResponseDTO;
+import com.deare.backend.api.folder.dto.response.FolderOrderResponseDTO;
+import com.deare.backend.api.folder.dto.result.FolderItemDTO;
 import com.deare.backend.domain.folder.entity.Folder;
 import com.deare.backend.domain.folder.exception.FolderErrorCode;
 import com.deare.backend.domain.folder.repository.FolderRepository;

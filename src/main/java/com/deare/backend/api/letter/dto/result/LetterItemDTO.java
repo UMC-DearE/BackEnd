@@ -1,4 +1,4 @@
-package com.deare.backend.api.letter.dto;
+package com.deare.backend.api.letter.dto.result;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
