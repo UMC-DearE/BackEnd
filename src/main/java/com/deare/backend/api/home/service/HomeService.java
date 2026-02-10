@@ -48,7 +48,7 @@ public class HomeService {
 
         String homeColor = (userSetting != null)
                 ? userSetting.getHomeColor()
-                : "#FFFFFF";
+                : "#F7F7F7F7";
 
         HomeSettingDto settingDto = new HomeSettingDto(homeColor);
 
