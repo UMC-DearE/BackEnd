@@ -91,6 +91,9 @@ public class SettingService {
     }
     @Transactional
     public UpdateHomeColorResponseDTO updateHomeColor(Long userId, UpdateHomeColorRequestDTO request) {
+
+        settingWriteService.ensureSettingExists(userId);
+
         UserSetting setting = userSettingRepository.findByUser_Id(userId)
                 .orElseThrow(() -> new GeneralException(HomeColorErrorCode.SETTING_NOT_FOUND ));
 
