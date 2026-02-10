@@ -49,6 +49,7 @@ public class LetterRepositoryImpl implements LetterRepositoryCustom {
                 .join(letter.from, from).fetchJoin()
                 .leftJoin(letter.folder, folder).fetchJoin()
                 .where(
+                        letter.isDeleted.isFalse(),
                         ownedBy(letter, userId),
                         folderIdEq(letter, folderId),
                         fromIdEq(letter, fromId),
@@ -71,6 +72,7 @@ public class LetterRepositoryImpl implements LetterRepositoryCustom {
                 .select(letter.count())
                 .from(letter)
                 .where(
+                        letter.isDeleted.isFalse(),
                         ownedBy(letter, userId),
                         folderIdEq(letter, folderId),
                         fromIdEq(letter, fromId),
