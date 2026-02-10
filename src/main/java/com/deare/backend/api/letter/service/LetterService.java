@@ -1,6 +1,10 @@
 package com.deare.backend.api.letter.service;
 
-import com.deare.backend.api.letter.dto.*;
+import com.deare.backend.api.letter.dto.request.LetterCreateRequestDTO;
+import com.deare.backend.api.letter.dto.request.LetterPinRequestDTO;
+import com.deare.backend.api.letter.dto.request.LetterReplyUpsertRequestDTO;
+import com.deare.backend.api.letter.dto.request.LetterUpdateRequestDTO;
+import com.deare.backend.api.letter.dto.response.*;
 import org.springframework.data.domain.Pageable;
 
 public interface LetterService {

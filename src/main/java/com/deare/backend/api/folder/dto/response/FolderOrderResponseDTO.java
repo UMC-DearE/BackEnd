@@ -1,4 +1,4 @@
-package com.deare.backend.api.folder.dto;
+package com.deare.backend.api.folder.dto.response;
 
 import java.util.List;
 
