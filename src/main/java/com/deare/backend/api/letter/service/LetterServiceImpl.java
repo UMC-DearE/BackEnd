@@ -153,10 +153,6 @@ public class LetterServiceImpl implements LetterService {
         From from = fromRepository.findById(req.fromId())
                 .orElseThrow(() -> new GeneralException(LetterErrorCode.FROM_NOT_FOUND));
 
-        if (!from.isOwnedBy(userId)) {
-            throw new GeneralException(FromErrorCode.FROM_40301);
-        }
-
         String content = req.content().trim();
         String aiSummary = req.aiSummary().trim();
         String contentHash = DigestUtils.sha256Hex(content);
@@ -187,10 +183,6 @@ public class LetterServiceImpl implements LetterService {
                 throw new GeneralException(ImageErrorCode.IMAGE_40401);
             }
 
-            Set<Long> ownedImageIds = new HashSet<>(letterImageRepository.findOwnedImageIds(userId, imageIds));
-            if (ownedImageIds.size() != imageIds.size()) {
-                throw new GeneralException(ImageErrorCode.IMAGE_40301);
-            }
             Map<Long, Image> imageMap = images.stream()
                     .collect(Collectors.toMap(Image::getId, i -> i));
 
@@ -207,9 +199,10 @@ public class LetterServiceImpl implements LetterService {
 
         if (emotions.size() != distinctIds.size()) {
             throw new GeneralException(LetterErrorCode.INVALID_REQUEST);
-            //추후 emotionerrorcode로 변경예정
         }
+
         Letter saved = letterRepository.save(letter);
+
         List<LetterEmotion> mappings = emotions.stream()
                 .map(e -> new LetterEmotion(saved, e))
                 .toList();
@@ -240,9 +233,6 @@ public class LetterServiceImpl implements LetterService {
             From from = fromRepository.findById(req.getFromId())
                     .orElseThrow(() -> new GeneralException(FromErrorCode.FROM_40401));
 
-            if (!from.isOwnedBy(userId)) {
-                throw new GeneralException(FromErrorCode.FROM_40301);
-            }
             letter.changeFrom(from);
         }
 
@@ -261,24 +251,22 @@ public class LetterServiceImpl implements LetterService {
                 letterEmotionRepository.flush();
 
                 String AiSummary = result.getSummary();
-                List<Long> emotionIds=result.getEmotions().stream()
+                List<Long> emotionIds = result.getEmotions().stream()
                         .map(EmotionResponseDTO::getEmotionId)
                         .toList();
 
                 List<Emotion> emotions = emotionRepository.findAllById(emotionIds);
 
-                List<LetterEmotion> updateEmotions=emotions.stream()
-                        .map(emotion->new LetterEmotion(letter, emotion))
+                List<LetterEmotion> updateEmotions = emotions.stream()
+                        .map(emotion -> new LetterEmotion(letter, emotion))
                         .toList();
-
 
                 letterEmotionRepository.saveAll(updateEmotions);
                 letter.updateContent(req.getContent(), AiSummary, newHash);
 
-            } catch(ExternalApiException e){
+            } catch (ExternalApiException e) {
                 throw e;
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 throw new GeneralException(LetterErrorCode.SUMMARY_INTERNAL_ERROR);
             }
         }
@@ -345,9 +333,6 @@ public class LetterServiceImpl implements LetterService {
         if (letter.isDeleted()) {
             throw new GeneralException(LetterErrorCode.DELETED_LETTER);
         }
-        if (!letter.isOwnedBy(userId)) {
-            throw new GeneralException(LetterErrorCode.FORBIDDEN);
-        }
 
         return letter;
     }
@@ -379,5 +364,4 @@ public class LetterServiceImpl implements LetterService {
 
         return new LetterPinResponseDTO(letter.isPinned());
     }
-
 }
