@@ -48,6 +48,7 @@ aws:
     access-key: ${AWS_ACCESS_KEY_ID}
     secret-key: ${AWS_SECRET_ACCESS_KEY}
     enabled: true
+    cloudfront-domain: ${AWS_CLOUDFRONT_DOMAIN}
 
 ocr:
   enabled: true
