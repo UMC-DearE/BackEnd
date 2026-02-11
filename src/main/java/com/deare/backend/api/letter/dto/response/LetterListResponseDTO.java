@@ -1,4 +1,6 @@
-package com.deare.backend.api.letter.dto;
+package com.deare.backend.api.letter.dto.response;
+
+import com.deare.backend.api.letter.dto.result.LetterItemDTO;
 
 import java.util.List;
 
