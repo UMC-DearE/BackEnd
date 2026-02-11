@@ -44,7 +44,7 @@ public class AuthController {
             @PathVariable String provider
     ) {
         OAuthAuthorizeResponseDTO data = oauthService.buildAuthorizeUrl(provider);
-        return ResponseEntity.ok(ApiResponse.success("OAuth인증 코드 발급에 성공하였습니다.", data));
+        return ResponseEntity.ok(ApiResponse.success(data));
     }
 
     @Operation(
@@ -70,13 +70,13 @@ public class AuthController {
             return ResponseEntity.ok()
                     .header(HttpHeaders.AUTHORIZATION, "Bearer " + result.accessToken())
                     .header(HttpHeaders.SET_COOKIE, cookieProvider.createRefreshTokenCookie(result.refreshToken()).toString())
-                    .body(ApiResponse.success("소셜 로그인 인증에 성공하였습니다.", result.response()));
+                    .body(ApiResponse.success(result.response()));
         }
 
         // 신규 회원 -> Signup Token : HttpOnly Cookie
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, cookieProvider.createSignupTokenCookie(result.signupToken()).toString())
-                .body(ApiResponse.success("소셜 로그인 인증에 성공하였습니다.", result.response()));
+                .body(ApiResponse.success(result.response()));
     }
 
     @Operation(
@@ -93,7 +93,7 @@ public class AuthController {
         return ResponseEntity.ok()
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenPair.accessToken())
                 .header(HttpHeaders.SET_COOKIE, cookieProvider.createRefreshTokenCookie(tokenPair.refreshToken()).toString())
-                .body(ApiResponse.success("토큰 발행에 성공하였습니다.", null));
+                .body(ApiResponse.success(null));
     }
 
     @Operation(
@@ -113,7 +113,7 @@ public class AuthController {
 
         TermResponseDTO data = authService.getSignupTerms();
 
-        return ResponseEntity.ok(ApiResponse.success("회원 가입용 약관 조회에 성공하였습니다.", data));
+        return ResponseEntity.ok(ApiResponse.success(data));
     }
 
     @Operation(
@@ -137,7 +137,7 @@ public class AuthController {
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + result.tokenPair().accessToken())
                 .header(HttpHeaders.SET_COOKIE, cookieProvider.createRefreshTokenCookie(result.tokenPair().refreshToken()).toString())
                 .header(HttpHeaders.SET_COOKIE, cookieProvider.expireSignupTokenCookie().toString())
-                .body(ApiResponse.success("회원가입에 성공하였습니다.", result.response()));
+                .body(ApiResponse.success(result.response()));
     }
 
     @Operation(
@@ -151,6 +151,6 @@ public class AuthController {
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, cookieProvider.expireRefreshTokenCookie().toString())
-                .body(ApiResponse.success("로그아웃이 완료되었습니다.", null));
+                .body(ApiResponse.success(null));
     }
 }
