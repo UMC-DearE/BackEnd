@@ -1,8 +1,9 @@
-package com.deare.backend.api.sticker.dto;
+package com.deare.backend.api.sticker.dto.request;
 
 import java.math.BigDecimal;
 
-public record StickerUpdateRequestDTO(
+public record StickerCreateRequestDTO(
+        Long imageId,
         BigDecimal posX,
         BigDecimal posY,
         Integer posZ,

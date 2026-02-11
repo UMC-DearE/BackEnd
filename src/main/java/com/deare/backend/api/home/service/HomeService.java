@@ -1,9 +1,9 @@
 package com.deare.backend.api.home.service;
 
-import com.deare.backend.api.home.dto.HomeDashboardResponse;
-import com.deare.backend.api.home.dto.HomeSettingDto;
-import com.deare.backend.api.home.dto.HomeStickerDto;
-import com.deare.backend.api.home.dto.HomeUserDto;
+import com.deare.backend.api.home.dto.response.HomeDashboardResponse;
+import com.deare.backend.api.home.dto.result.HomeSettingDto;
+import com.deare.backend.api.home.dto.result.HomeStickerDto;
+import com.deare.backend.api.home.dto.result.HomeUserDto;
 import com.deare.backend.api.home.exception.HomeErrorCode;
 import com.deare.backend.domain.setting.entity.UserSetting;
 import com.deare.backend.domain.setting.repository.UserSettingRepository;

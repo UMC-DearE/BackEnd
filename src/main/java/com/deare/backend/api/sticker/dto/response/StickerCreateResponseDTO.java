@@ -1,4 +1,4 @@
-package com.deare.backend.api.sticker.dto;
+package com.deare.backend.api.sticker.dto.response;
 
 public record StickerCreateResponseDTO(
         Long stickerId

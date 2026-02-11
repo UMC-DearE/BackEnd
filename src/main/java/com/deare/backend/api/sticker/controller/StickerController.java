@@ -1,6 +1,10 @@
 package com.deare.backend.api.sticker.controller;
 
-import com.deare.backend.api.sticker.dto.*;
+import com.deare.backend.api.sticker.dto.request.StickerCreateRequestDTO;
+import com.deare.backend.api.sticker.dto.request.StickerUpdateRequestDTO;
+import com.deare.backend.api.sticker.dto.response.StickerCreateResponseDTO;
+import com.deare.backend.api.sticker.dto.response.StickerDeleteResponseDTO;
+import com.deare.backend.api.sticker.dto.response.StickerUpdateResponseDTO;
 import com.deare.backend.api.sticker.service.StickerService;
 import com.deare.backend.global.auth.util.SecurityUtil;
 import com.deare.backend.global.common.response.ApiResponse;
@@ -46,7 +50,7 @@ public class StickerController {
             summary = "스티커 삭제",
             description = "홈 화면에 배치된 스티커를 삭제하는 API입니다."
     )
-    public ApiResponse<StickerDeleteDTO> deleteSticker(
+    public ApiResponse<StickerDeleteResponseDTO> deleteSticker(
             @PathVariable Long stickerId
     ) {
         Long userId = SecurityUtil.getCurrentUserId();
