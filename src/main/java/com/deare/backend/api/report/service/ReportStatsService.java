@@ -4,7 +4,7 @@ import com.deare.backend.api.report.dto.response.EmotionDistributionDTO;
 import com.deare.backend.api.report.dto.response.ReportStatsResponseDTO;
 import com.deare.backend.api.report.dto.response.Top3FromDTO;
 import com.deare.backend.domain.report.exception.ReportErrorCode;
-import com.deare.backend.domain.user.entity.Status;
+import com.deare.backend.domain.user.entity.enums.Status;
 import com.deare.backend.domain.user.entity.User;
 import com.deare.backend.domain.user.repository.UserRepository;
 import com.deare.backend.global.common.exception.GeneralException;

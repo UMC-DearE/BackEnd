@@ -1,4 +1,4 @@
-package com.deare.backend.domain.image.entity;
+package com.deare.backend.domain.image.entity.enums;
 
 import com.deare.backend.domain.image.exception.ImageErrorCode;
 import com.deare.backend.global.common.exception.GeneralException;

@@ -1,5 +1,6 @@
 package com.deare.backend.domain.report.entity;
 
+import com.deare.backend.domain.report.entity.enums.ReportScope;
 import com.deare.backend.domain.user.entity.User;
 import com.deare.backend.global.common.entity.BaseEntity;
 import jakarta.persistence.*;
