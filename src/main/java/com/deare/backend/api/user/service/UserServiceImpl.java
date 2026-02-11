@@ -84,7 +84,9 @@ public class UserServiceImpl implements UserService {
                 user.getNickname(),
                 user.getIntro(),
                 user.getImage() != null ? user.getImage().getUrl() : null,
-                plan
+                plan,
+                user.getEmail(),
+                user.getProvider()
         );
     }
 
