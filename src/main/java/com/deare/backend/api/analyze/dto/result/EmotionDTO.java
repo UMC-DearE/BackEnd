@@ -1,4 +1,4 @@
-package com.deare.backend.api.analyze.dto.response;
+package com.deare.backend.api.analyze.dto.result;
 
 import com.deare.backend.domain.emotion.entity.Emotion;
 import lombok.Builder;
@@ -6,22 +6,22 @@ import lombok.Getter;
 
 @Getter
 @Builder
-public class EmotionResponseDTO {
+public class EmotionDTO {
 
     private Long emotionId;
     private String emotionName;
-    private CategoryResponseDTO category;
+    private CategoryDTO category;
 
-    public static EmotionResponseDTO from(Emotion emotion){
-        return EmotionResponseDTO.builder()
+    public static EmotionDTO from(Emotion emotion){
+        return EmotionDTO.builder()
                 .emotionId(emotion.getId())
                 .emotionName(emotion.getName())
-                .category(CategoryResponseDTO.from(emotion.getEmotionCategory()))
+                .category(CategoryDTO.from(emotion.getEmotionCategory()))
                 .build();
     }
 
-    public static EmotionResponseDTO simpleFrom(Emotion emotion){
-        return EmotionResponseDTO.builder()
+    public static EmotionDTO simpleFrom(Emotion emotion){
+        return EmotionDTO.builder()
                 .emotionId(emotion.getId())
                 .emotionName(emotion.getName())
                 .build();
