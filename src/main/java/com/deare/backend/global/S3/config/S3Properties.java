@@ -1,4 +1,4 @@
-package com.deare.backend.global.config;
+package com.deare.backend.global.S3.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
@@ -6,5 +6,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public record S3Properties(
         boolean enabled,
         String bucket,
-        String region
+        String region,
+        String cloudfrontDomain
 ) {}

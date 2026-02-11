@@ -7,7 +7,7 @@ import com.deare.backend.domain.image.entity.Image;
 import com.deare.backend.domain.image.exception.ImageErrorCode;
 import com.deare.backend.domain.image.repository.ImageRepository;
 import com.deare.backend.global.common.exception.GeneralException;
-import com.deare.backend.global.service.S3Service;
+import com.deare.backend.global.S3.service.S3Service;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
