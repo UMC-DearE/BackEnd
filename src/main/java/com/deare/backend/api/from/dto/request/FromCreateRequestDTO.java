@@ -1,4 +1,4 @@
-package com.deare.backend.api.from.dto;
+package com.deare.backend.api.from.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;

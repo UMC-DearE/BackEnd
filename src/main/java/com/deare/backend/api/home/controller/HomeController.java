@@ -1,7 +1,7 @@
 package com.deare.backend.api.home.controller;
 
 import com.deare.backend.api.home.service.HomeService;
-import com.deare.backend.api.home.dto.HomeDashboardResponse;
+import com.deare.backend.api.home.dto.response.HomeDashboardResponse;
 import com.deare.backend.global.auth.util.SecurityUtil;
 import com.deare.backend.global.common.response.ApiResponse;
 import lombok.RequiredArgsConstructor;

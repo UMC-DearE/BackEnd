@@ -1,6 +1,10 @@
 package com.deare.backend.api.sticker.service;
 
-import com.deare.backend.api.sticker.dto.*;
+import com.deare.backend.api.sticker.dto.request.StickerCreateRequestDTO;
+import com.deare.backend.api.sticker.dto.request.StickerUpdateRequestDTO;
+import com.deare.backend.api.sticker.dto.response.StickerCreateResponseDTO;
+import com.deare.backend.api.sticker.dto.response.StickerDeleteResponseDTO;
+import com.deare.backend.api.sticker.dto.response.StickerUpdateResponseDTO;
 import com.deare.backend.domain.image.entity.Image;
 import com.deare.backend.domain.image.exception.ImageErrorCode;
 import com.deare.backend.domain.image.repository.ImageRepository;
@@ -15,8 +19,6 @@ import com.deare.backend.global.common.exception.GeneralException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -71,7 +73,7 @@ public class StickerServiceImpl implements StickerService {
     }
 
     @Override
-    public StickerDeleteDTO delete(Long userId, Long stickerId) {
+    public StickerDeleteResponseDTO delete(Long userId, Long stickerId) {
         UserSticker sticker = userStickerRepository.findById(stickerId)
                 .orElseThrow(() -> new GeneralException(StickerErrorCode.NOT_FOUND));
 
@@ -80,7 +82,7 @@ public class StickerServiceImpl implements StickerService {
         }
 
         userStickerRepository.delete(sticker);
-        return new StickerDeleteDTO(stickerId);
+        return new StickerDeleteResponseDTO(stickerId);
     }
 }
 

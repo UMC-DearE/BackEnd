@@ -1,6 +1,6 @@
 package com.deare.backend.api.image.service;
 
-import com.deare.backend.api.image.dto.ImageUploadResponseDTO;
+import com.deare.backend.api.image.dto.response.ImageUploadResponseDTO;
 import com.deare.backend.domain.image.entity.enums.ContentType;
 import com.deare.backend.domain.image.entity.enums.FileType;
 import com.deare.backend.domain.image.entity.Image;

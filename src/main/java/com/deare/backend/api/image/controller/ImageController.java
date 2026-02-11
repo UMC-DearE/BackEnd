@@ -1,6 +1,6 @@
 package com.deare.backend.api.image.controller;
 
-import com.deare.backend.api.image.dto.ImageUploadResponseDTO;
+import com.deare.backend.api.image.dto.response.ImageUploadResponseDTO;
 import com.deare.backend.api.image.service.ImageUploadService;
 import com.deare.backend.global.common.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
