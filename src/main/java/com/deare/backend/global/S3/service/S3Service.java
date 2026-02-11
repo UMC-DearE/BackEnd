@@ -132,7 +132,7 @@ public class S3Service {
     private String buildCloudFrontUrl(String key) {
         String cf = props.cloudfrontDomain();
         if (cf == null || cf.isBlank()) {
-            throw new GeneralException(S3ErrorCode.EMPTY_KEY);
+            throw new GeneralException(S3ErrorCode.CLOUDFRONT_FAILED);
         }
         String base = cf.endsWith("/") ? cf.substring(0, cf.length() - 1) : cf;
         String path = key.startsWith("/") ? key : "/" + key;
