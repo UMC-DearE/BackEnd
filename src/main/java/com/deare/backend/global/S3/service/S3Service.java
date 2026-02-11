@@ -134,7 +134,6 @@ public class S3Service {
         if (cf == null || cf.isBlank()) {
             throw new GeneralException(S3ErrorCode.EMPTY_KEY);
         }
-
         String base = cf.endsWith("/") ? cf.substring(0, cf.length() - 1) : cf;
         String path = key.startsWith("/") ? key : "/" + key;
         return base + path;
