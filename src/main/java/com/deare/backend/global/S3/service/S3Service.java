@@ -132,7 +132,7 @@ public class S3Service {
     private String buildCloudFrontUrl(String key) {
         String cf = props.cloudfrontDomain();
         if (cf == null || cf.isBlank()) {
-            throw new GeneralException(S3ErrorCode.EMPTY_KEY); // 에러코드 없으면 임시로 이거 쓰고, 가능하면 CONFIG 에러코드 추가 추천
+            throw new GeneralException(S3ErrorCode.EMPTY_KEY);
         }
 
         String base = cf.endsWith("/") ? cf.substring(0, cf.length() - 1) : cf;
