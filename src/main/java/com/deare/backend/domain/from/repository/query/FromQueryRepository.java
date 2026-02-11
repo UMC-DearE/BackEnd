@@ -1,6 +1,6 @@
 package com.deare.backend.domain.from.repository.query;
 
-import com.deare.backend.api.from.dto.FromResponseDTO;
+import com.deare.backend.api.from.dto.response.FromResponseDTO;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;

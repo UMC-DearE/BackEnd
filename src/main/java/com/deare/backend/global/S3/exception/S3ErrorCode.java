@@ -1,5 +1,6 @@
-package com.deare.backend.global.common.exception;
+package com.deare.backend.global.S3.exception;
 
+import com.deare.backend.global.common.exception.BaseErrorCode;
 import org.springframework.http.HttpStatus;
 
 public enum S3ErrorCode implements BaseErrorCode {
@@ -15,7 +16,7 @@ public enum S3ErrorCode implements BaseErrorCode {
     IO_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "S3_50001", "파일 처리 중 오류가 발생했습니다."),
     UPLOAD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "S3_50002", "S3 업로드에 실패했습니다."),
     DELETE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "S3_50003", "S3 삭제에 실패했습니다."),
-    PRESIGN_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "S3_50004", "Presigned URL 생성에 실패했습니다."),
+    CLOUDFRONT_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "S3_50004", "URL 생성에 실패했습니다."),
     DOWNLOAD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "S3_50005", "S3 파일 다운로드에 실패했습니다.");
 
     private final HttpStatus status;

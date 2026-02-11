@@ -2,11 +2,10 @@ package com.deare.backend.api.ocr.service;
 
 import com.deare.backend.api.ocr.dto.request.OcrLettersRequestDTO;
 import com.deare.backend.api.ocr.dto.response.OcrLettersResponseDTO;
-import com.deare.backend.api.ocr.dto.response.OcrLettersResponseDTO.OcrResultDTO;
+import com.deare.backend.api.ocr.dto.result.OcrResultDTO;
 import com.deare.backend.domain.letter.exception.OcrErrorCode;
 import com.deare.backend.domain.image.entity.Image;
 import com.deare.backend.domain.image.repository.ImageRepository;
-import com.deare.backend.global.auth.util.SecurityUtil;
 import com.deare.backend.global.common.exception.GeneralException;
 import com.deare.backend.global.external.feign.exception.ExternalApiException;
 import com.deare.backend.global.external.gemini.adapter.ocr.OcrAdapter;
@@ -31,8 +30,6 @@ public class LetterOcrService {
     public OcrLettersResponseDTO ocrLetters(OcrLettersRequestDTO request) {
         List<Long> imageIds = request.getImageIds();
         validateImageIds(imageIds);
-
-        Long userId = SecurityUtil.getCurrentUserId();
 
         // DB에서 이미지들 조회
         List<Image> images = imageRepository.findAllById(imageIds);

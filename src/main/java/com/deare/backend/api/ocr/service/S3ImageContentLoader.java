@@ -1,6 +1,6 @@
 package com.deare.backend.api.ocr.service;
 
-import com.deare.backend.global.service.S3Service;
+import com.deare.backend.global.S3.service.S3Service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;

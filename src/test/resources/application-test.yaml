@@ -47,6 +47,7 @@ aws:
   s3:
     bucket: ${AWS_S3_BUCKET}
     region: ${AWS_REGION}
+    cloudfront-domain: ${AWS_CLOUDFRONT_DOMAIN}
     enabled: false
 
 ocr:

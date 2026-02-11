@@ -48,10 +48,16 @@ public class SettingController {
         return ApiResponse.success(settingService.upgradeMembership(userId));
     }
     @PatchMapping("/homecolor")
+    @Operation(
+            summary = "홈 배경색 변경",
+            description = "사용자의 홈 화면 배경색을 변경하는 API입니다."
+    )
     public ApiResponse<UpdateHomeColorResponseDTO> updateHomeColor(
             @Valid @RequestBody UpdateHomeColorRequestDTO request
     ) {
         Long userId = SecurityUtil.getCurrentUserId();
-        return ApiResponse.success(settingService.updateHomeColor(userId, request));
+        UpdateHomeColorResponseDTO res = settingService.updateHomeColor(userId, request);
+        return ApiResponse.success(res);
     }
+
 }
