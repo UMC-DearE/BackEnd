@@ -2,10 +2,10 @@ package com.deare.backend.api.auth;
 
 import com.deare.backend.api.auth.dto.request.SignupRequestDTO;
 import com.deare.backend.domain.term.entity.Term;
-import com.deare.backend.domain.term.entity.TermType;
+import com.deare.backend.domain.term.entity.enums.TermType;
 import com.deare.backend.domain.term.repository.TermRepository;
 import com.deare.backend.domain.term.repository.UserTermRepository;
-import com.deare.backend.domain.user.entity.Provider;
+import com.deare.backend.domain.user.entity.enums.Provider;
 import com.deare.backend.domain.user.repository.UserRepository;
 import com.deare.backend.global.auth.signupToken.SignupTokenProvider;
 import com.deare.backend.global.auth.signupToken.SignupTokenService;

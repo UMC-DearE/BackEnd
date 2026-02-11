@@ -5,7 +5,7 @@ import com.deare.backend.api.user.dto.request.ProfileUpdateRequestDTO;
 import com.deare.backend.api.user.dto.response.ProfileUpdateResponseDTO;
 import com.deare.backend.domain.image.entity.Image;
 import com.deare.backend.domain.image.repository.ImageRepository;
-import com.deare.backend.domain.setting.entity.MembershipPlan;
+import com.deare.backend.domain.setting.entity.enums.MembershipPlan;
 import com.deare.backend.domain.setting.entity.UserSetting;
 import com.deare.backend.domain.setting.repository.UserSettingRepository;
 import com.deare.backend.domain.user.entity.User;
@@ -84,7 +84,9 @@ public class UserServiceImpl implements UserService {
                 user.getNickname(),
                 user.getIntro(),
                 user.getImage() != null ? user.getImage().getUrl() : null,
-                plan
+                plan,
+                user.getEmail(),
+                user.getProvider()
         );
     }
 
