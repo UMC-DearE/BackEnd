@@ -1,6 +1,6 @@
 package com.deare.backend.domain.user.repository;
 
-import com.deare.backend.domain.user.entity.Provider;
+import com.deare.backend.domain.user.entity.enums.Provider;
 import com.deare.backend.domain.user.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;

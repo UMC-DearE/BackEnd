@@ -3,7 +3,12 @@ package com.deare.backend.api.letter.service;
 import com.deare.backend.api.analyze.dto.response.EmotionResponseDTO;
 import com.deare.backend.api.analyze.dto.response.ReAnalyzeResponseDTO;
 import com.deare.backend.api.analyze.service.LetterAnalyzeService;
-import com.deare.backend.api.letter.dto.*;
+import com.deare.backend.api.letter.dto.request.LetterCreateRequestDTO;
+import com.deare.backend.api.letter.dto.request.LetterPinRequestDTO;
+import com.deare.backend.api.letter.dto.request.LetterReplyUpsertRequestDTO;
+import com.deare.backend.api.letter.dto.request.LetterUpdateRequestDTO;
+import com.deare.backend.api.letter.dto.response.*;
+import com.deare.backend.api.letter.dto.result.*;
 import com.deare.backend.api.letter.util.ExcerptUtil;
 import com.deare.backend.domain.emotion.entity.Emotion;
 import com.deare.backend.domain.emotion.entity.LetterEmotion;
@@ -34,10 +39,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDate;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service

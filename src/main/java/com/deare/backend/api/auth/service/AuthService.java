@@ -11,7 +11,7 @@ import com.deare.backend.api.auth.exception.AuthErrorCode;
 import com.deare.backend.api.term.service.UserTermService;
 import com.deare.backend.domain.term.entity.Term;
 import com.deare.backend.domain.term.repository.TermRepository;
-import com.deare.backend.domain.user.entity.Provider;
+import com.deare.backend.domain.user.entity.enums.Provider;
 import com.deare.backend.domain.user.entity.User;
 import com.deare.backend.domain.user.repository.UserRepository;
 import com.deare.backend.global.auth.jwt.JwtProvider;
