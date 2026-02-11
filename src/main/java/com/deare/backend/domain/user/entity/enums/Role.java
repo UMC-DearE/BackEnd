@@ -1,4 +1,4 @@
-package com.deare.backend.domain.user.entity;
+package com.deare.backend.domain.user.entity.enums;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

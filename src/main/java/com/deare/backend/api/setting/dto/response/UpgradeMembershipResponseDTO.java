@@ -1,6 +1,6 @@
 package com.deare.backend.api.setting.dto.response;
 
-import com.deare.backend.domain.setting.entity.MembershipPlan;
+import com.deare.backend.domain.setting.entity.enums.MembershipPlan;
 
 import java.time.LocalDateTime;
 

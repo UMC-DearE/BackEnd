@@ -1,5 +1,6 @@
 package com.deare.backend.domain.term.entity;
 
+import com.deare.backend.domain.term.entity.enums.TermType;
 import com.deare.backend.global.common.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
