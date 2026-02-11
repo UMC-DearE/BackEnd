@@ -1,5 +1,8 @@
 package com.deare.backend.domain.setting.entity;
 
+import com.deare.backend.domain.setting.entity.enums.Font;
+import com.deare.backend.domain.setting.entity.enums.MembershipPlan;
+import com.deare.backend.domain.setting.entity.enums.Theme;
 import com.deare.backend.domain.user.entity.User;
 import com.deare.backend.global.common.entity.BaseEntity;
 import jakarta.persistence.*;

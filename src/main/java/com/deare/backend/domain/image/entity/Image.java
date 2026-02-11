@@ -1,5 +1,8 @@
 package com.deare.backend.domain.image.entity;
 
+import com.deare.backend.domain.image.entity.enums.ContentType;
+import com.deare.backend.domain.image.entity.enums.FileType;
+import com.deare.backend.domain.image.entity.enums.UploadStatus;
 import com.deare.backend.global.common.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;

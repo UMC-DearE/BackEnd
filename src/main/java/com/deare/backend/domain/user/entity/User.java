@@ -1,5 +1,8 @@
 package com.deare.backend.domain.user.entity;
 
+import com.deare.backend.domain.user.entity.enums.Provider;
+import com.deare.backend.domain.user.entity.enums.Role;
+import com.deare.backend.domain.user.entity.enums.Status;
 import com.deare.backend.global.common.entity.BaseEntity;
 import com.deare.backend.domain.image.entity.Image;
 import jakarta.persistence.*;
