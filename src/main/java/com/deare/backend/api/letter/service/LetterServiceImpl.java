@@ -1,6 +1,6 @@
 package com.deare.backend.api.letter.service;
 
-import com.deare.backend.api.analyze.dto.response.EmotionResponseDTO;
+import com.deare.backend.api.analyze.dto.result.EmotionDTO;
 import com.deare.backend.api.analyze.dto.response.ReAnalyzeResponseDTO;
 import com.deare.backend.api.analyze.service.LetterAnalyzeService;
 import com.deare.backend.api.letter.dto.request.LetterCreateRequestDTO;
@@ -255,7 +255,7 @@ public class LetterServiceImpl implements LetterService {
 
                 String AiSummary = result.getSummary();
                 List<Long> emotionIds = result.getEmotions().stream()
-                        .map(EmotionResponseDTO::getEmotionId)
+                        .map(EmotionDTO::getEmotionId)
                         .toList();
 
                 List<Emotion> emotions = emotionRepository.findAllById(emotionIds);
