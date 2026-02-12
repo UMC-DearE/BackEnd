@@ -1,4 +1,4 @@
-package com.deare.backend.api.analyze.dto.response;
+package com.deare.backend.api.analyze.dto.result;
 
 import com.deare.backend.domain.emotion.entity.EmotionCategory;
 import lombok.Builder;
@@ -6,14 +6,14 @@ import lombok.Getter;
 
 @Getter
 @Builder
-public class CategoryResponseDTO {
+public class CategoryDTO {
     private Long  categoryId;
     private String categoryType;
     private String bgColor;
     private String fontColor;
 
-    public static CategoryResponseDTO from(EmotionCategory category) {
-        return CategoryResponseDTO.builder()
+    public static CategoryDTO from(EmotionCategory category) {
+        return CategoryDTO.builder()
                 .categoryId(category.getId())
                 .categoryType(category.getType())
                 .bgColor(category.getBgColor())
