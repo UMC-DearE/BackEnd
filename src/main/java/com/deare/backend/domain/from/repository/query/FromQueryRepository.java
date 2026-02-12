@@ -15,7 +15,7 @@ public class FromQueryRepository {
 
     public List<FromResponseDTO> findFromsWithLetterCount(Long userId) {
         return em.createQuery("""
-                select new com.deare.backend.api.from.dto.FromResponseDTO(
+                select new com.deare.backend.api.from.dto.response.FromResponseDTO(
                     f.id,
                     f.name,
                     f.backgroundColor,
