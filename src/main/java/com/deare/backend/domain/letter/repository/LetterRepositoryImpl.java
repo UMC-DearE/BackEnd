@@ -204,4 +204,23 @@ public class LetterRepositoryImpl implements LetterRepositoryCustom {
         return count == null ? 0L : count;
     }
 
+    @Override
+    public Optional<Letter> findPinnedLetterByUser(Long userId) {
+        QLetter letter = QLetter.letter;
+
+        Letter result = queryFactory
+                .selectFrom(letter)
+                .where(
+                        letter.user.id.eq(userId),
+                        letter.isPinned.isTrue(),
+                        letter.isDeleted.isFalse(),
+                        letter.isHidden.isFalse()
+                )
+                .orderBy(letter.updatedAt.desc(), letter.id.desc())
+                .limit(1)
+                .fetchOne();
+
+        return Optional.ofNullable(result);
+    }
+
 }

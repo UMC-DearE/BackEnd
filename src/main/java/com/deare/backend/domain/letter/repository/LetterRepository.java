@@ -41,4 +41,29 @@ public interface LetterRepository extends JpaRepository<Letter, Long>, LetterRep
 
 
     List<Letter> findAllByUser_IdAndFrom_IdAndIsDeletedFalse(Long userId, Long fromId);
+
+    @Query("""
+        select l.isPinned
+            from Letter l
+        where l.id = :letterId
+            and l.user.id = :userId
+            and l.isDeleted = false
+            and l.isHidden = false
+    """)
+    Optional<Boolean> findIsPinnedByUserIdAndLetterId(
+            @Param("userId") Long userId,
+            @Param("letterId") Long letterId
+    );
+
+    @Query("""
+        select l
+            from Letter l
+        where l.user.id = :userId
+            and l.isPinned = true
+            and l.isDeleted = false
+            and l.isHidden = false
+        order by l.updatedAt desc, l.id desc
+    """)
+    Optional<Letter> findTopPinnedByUserId(@Param("userId") Long userId);
+
 }

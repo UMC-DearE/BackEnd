@@ -21,4 +21,6 @@ public interface LetterRepositoryCustom {
     Optional<Letter> findRandomLetterByUser(Long userId, long offset);
 
     long countVisibleLettersByUser(Long userId);
+
+    Optional<Letter> findPinnedLetterByUser(Long userId);
 }
