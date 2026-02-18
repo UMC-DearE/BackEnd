@@ -55,4 +55,15 @@ public interface LetterRepository extends JpaRepository<Letter, Long>, LetterRep
             @Param("letterId") Long letterId
     );
 
+    @Query("""
+        select l
+            from Letter l
+        where l.user.id = :userId
+            and l.isPinned = true
+            and l.isDeleted = false
+            and l.isHidden = false
+        order by l.updatedAt desc, l.id desc
+    """)
+    Optional<Letter> findTopPinnedByUserId(@Param("userId") Long userId);
+
 }

@@ -35,6 +35,100 @@ public class RandomLetterService {
     public RandomLetterResponseDTO getTodayRandomLetter(long userId) {
         LocalDate today = LocalDate.now(ZONE);
 
+        // 오늘 날짜 기준 고정 해제 유예 캐시 키
+        String graceKey = unpinGraceKey(userId, today);
+
+        String graceCached = redisTemplate.opsForValue().get(graceKey);
+        if (graceCached != null) {
+            RandomLetterCacheValue v = fromJson(graceCached);
+
+            // 캐시가 정상이고 letterId가 존재하는 경우
+            if (v != null && v.letterId() != null) {
+
+                // DB에서 현재 고정 상태 확인
+                Optional<Boolean> pinnedOpt = letterRepository.findIsPinnedByUserIdAndLetterId(userId, v.letterId());
+
+                // DB에 해당 편지가 없거나 권한 불일치면 유예 캐시 삭제
+                if (pinnedOpt.isEmpty()) {
+                    redisTemplate.delete(graceKey);
+
+                } else {
+                    // 오늘은 기존 고정 편지를 그대로 내려줌
+                    return toResponseDTO(true, today, v.letterId(), v.randomPhrase(), false);
+                }
+            } else {
+                redisTemplate.delete(graceKey);
+            }
+        }
+
+        // 현재 DB 기준으로 고정된 편지가 있는지 조회
+        Optional<Letter> pinnedLetterOpt =
+                letterRepository.findPinnedLetterByUser(userId);
+
+        if (pinnedLetterOpt.isPresent()) {
+            Letter pinnedLetter = pinnedLetterOpt.get();
+
+            // 사용자 고정 편지 전용 캐시 키
+            String pinnedKey = pinnedKey(userId);
+
+            String pinnedCached = redisTemplate.opsForValue().get(pinnedKey);
+
+            if (pinnedCached != null) {
+                RandomLetterCacheValue v = fromJson(pinnedCached);
+
+                if (v == null || v.letterId() == null) {
+                    redisTemplate.delete(pinnedKey);
+
+                } else if (!Objects.equals(v.letterId(), pinnedLetter.getId())) {
+                    redisTemplate.delete(pinnedKey);
+
+                } else {
+                    // 캐시가 정상이고 DB와 일치하면 그대로 반환
+                    return toResponseDTO(true, today, v.letterId(), v.randomPhrase(), true);
+                }
+            }
+
+            // 캐시가 없거나 무효한 경우 -> 새로 문구 생성 후 저장
+            String phrase = extractRandomPhrase(pinnedLetter.getContent());
+            RandomLetterCacheValue createdPinned = new RandomLetterCacheValue(pinnedLetter.getId(), phrase);
+
+            redisTemplate.opsForValue().set(pinnedKey, toJson(createdPinned));
+
+            return toResponseDTO(true, today,
+                    createdPinned.letterId(), createdPinned.randomPhrase(), true);
+        }
+
+        // 현재 DB에는 고정 편지가 없는데 pinned 캐시는 남아 있는 경우 (고정 해제 직후)
+        String pinnedKey = pinnedKey(userId);
+        String pinnedCached = redisTemplate.opsForValue().get(pinnedKey);
+
+        if (pinnedCached != null) {
+            RandomLetterCacheValue v = fromJson(pinnedCached);
+
+            if (v != null && v.letterId() != null) {
+
+                Optional<Boolean> pinnedOpt =
+                        letterRepository.findIsPinnedByUserIdAndLetterId(userId, v.letterId());
+
+                // DB에 편지가 여전히 존재하면 오늘 자정까지 유예로 유지
+                if (pinnedOpt.isPresent()) {
+
+                    Duration ttl = ttlUntilNextMidnight();
+
+                    // 오늘 날짜 유예 캐시에 저장 (자정까지 유지)
+                    redisTemplate.opsForValue().set(graceKey, toJson(v), ttl);
+
+                    // pinned 캐시는 제거
+                    redisTemplate.delete(pinnedKey);
+
+                    return toResponseDTO(true, today,
+                            v.letterId(), v.randomPhrase(), false);
+                }
+            }
+
+            redisTemplate.delete(pinnedKey);
+        }
+
         // userId + 날짜 키
         String key = cacheKey(userId, today);
 
@@ -185,6 +279,14 @@ public class RandomLetterService {
 
     private String cacheKey(long userId, LocalDate date) {
         return "letters:random:" + userId + ":" + date;
+    }
+
+    private String pinnedKey(long userId) {
+        return "letters:pinned:" + userId;
+    }
+
+    private String unpinGraceKey(long userId, LocalDate date) {
+        return "letters:unpin-grace:" + userId + ":" + date;
     }
 
     private String toJson(RandomLetterCacheValue v) {
