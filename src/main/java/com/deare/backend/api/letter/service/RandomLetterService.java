@@ -199,7 +199,7 @@ public class RandomLetterService {
         try {
             return objectMapper.readValue(json, RandomLetterCacheValue.class);
         } catch (Exception e) {
-            throw new GeneralException(LetterErrorCode.INTERNAL_ERROR);
+            return null;
         }
     }
 }
