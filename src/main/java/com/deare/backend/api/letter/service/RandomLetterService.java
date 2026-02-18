@@ -52,6 +52,10 @@ public class RandomLetterService {
                 if (pinnedOpt.isEmpty()) {
                     redisTemplate.delete(graceKey);
 
+                } else if (Boolean.TRUE.equals(pinnedOpt.get())) {
+                    // 유예 중이던 편지가 다시 고정된 경우
+                    redisTemplate.delete(graceKey);
+
                 } else {
                     // 오늘은 기존 고정 편지를 그대로 내려줌
                     return toResponseDTO(true, today, v.letterId(), v.randomPhrase(), false);
