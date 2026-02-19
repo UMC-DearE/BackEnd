@@ -12,4 +12,9 @@ public class FeignProdConfig {
     Logger.Level feignLoggerLevel() {
         return Logger.Level.BASIC;
     }
+
+    @Bean
+    public feign.Request.Options feignRequestOptions() {
+        return new feign.Request.Options(10_000, 180_000);
+    }
 }
