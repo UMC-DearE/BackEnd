@@ -31,3 +31,11 @@ management:
       show-details: never
       probes:
         enabled: true
+
+  cloud:
+    openfeign:
+      client:
+        config:
+          default:
+            connectTimeout: 10000 # 10초
+            readTimeout: 180000 # 3분
