@@ -10,11 +10,3 @@ decorator:
       enable-logging: true
       logging: slf4j
       multiline: true
-
-  cloud:
-    openfeign:
-      client:
-        config:
-          default:
-            connectTimeout: 10000 # 10초
-            readTimeout: 180000 # 3분
