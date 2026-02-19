@@ -248,6 +248,10 @@ public class LetterServiceImpl implements LetterService {
                 String normalizedContent = req.getContent().trim();
                 String newHash = DigestUtils.sha256Hex(normalizedContent);
 
+                if (newHash.equals(letter.getContentHash())) {
+                    return;
+                }
+
                 ReAnalyzeResponseDTO result = letterAnalyzeService.analyzeForUpdate(normalizedContent);
 
                 letterEmotionRepository.deleteByLetter(letter);
