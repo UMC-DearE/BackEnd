@@ -73,6 +73,7 @@ jobs:
             set -e
             cd /home/ubuntu/deare
 
+            ENV_FILE=/home/ubuntu/deare/.env.prod
             COMPOSE_FILE=/home/ubuntu/deare/docker-compose-dev.yml
 
             docker-compose -f $COMPOSE_FILE pull app
