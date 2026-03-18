@@ -76,6 +76,7 @@ jobs:
             ENV_FILE=/home/ubuntu/deare/.env.prod
             COMPOSE_FILE=/home/ubuntu/deare/docker-compose-dev.yml
 
+
             docker-compose --env-file $ENV_FILE -f $COMPOSE_FILE pull app
 
             if docker-compose --env-file $ENV_FILE -f $COMPOSE_FILE up -d; then
