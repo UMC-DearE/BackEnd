@@ -75,15 +75,15 @@ jobs:
 
             COMPOSE_FILE=/home/ubuntu/deare/docker-compose-dev.yml
 
-            docker compose -f $COMPOSE_FILE pull app
+            docker-compose -f $COMPOSE_FILE pull app
 
-            if docker compose -f $COMPOSE_FILE up -d; then
+            if docker-compose -f $COMPOSE_FILE up -d; then
               echo "compose up succeeded without down"
             else
               echo "compose up failed. fallback to down -> up"
-              docker compose -f $COMPOSE_FILE down
-              docker compose -f $COMPOSE_FILE up -d
+              docker-compose -f $COMPOSE_FILE down
+              docker-compose -f $COMPOSE_FILE up -d
             fi
 
-            docker compose -f $COMPOSE_FILE ps
+            docker-compose -f $COMPOSE_FILE ps
             docker image prune -f
