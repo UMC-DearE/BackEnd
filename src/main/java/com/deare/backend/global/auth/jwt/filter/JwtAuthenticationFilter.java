@@ -1,7 +1,5 @@
 package com.deare.backend.global.auth.jwt.filter;
 
-import com.deare.backend.domain.user.entity.User;
-import com.deare.backend.domain.user.repository.UserRepository;
 import com.deare.backend.global.auth.jwt.JwtProvider;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -24,7 +22,6 @@ import java.util.Collections;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     
     private final JwtProvider jwtProvider;
-    private final UserRepository userRepository;
     
     private static final String AUTHORIZATION_HEADER = "Authorization";
     private static final String BEARER_PREFIX = "Bearer ";
@@ -39,37 +36,33 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             // Authorization 헤더에서 JWT 토큰 추출
             String token = extractTokenFromRequest(request);
-
+            
             // 토큰이 있고 유효한 경우
             if (StringUtils.hasText(token) && jwtProvider.validateToken(token)) {
-
-                // 토큰에서 사용자 ID 추출
+                
+                // 토큰에서 사용자 ID, Role 추출
                 Long userId = jwtProvider.getUserIdFromToken(token);
-
-                // DB에서 사용자 조회
-                User user = userRepository.findById(userId)
-                        .orElseThrow(() -> new RuntimeException("User not found"));
+                String role = jwtProvider.getRoleFromToken(token);
 
                 // Spring Security 인증 객체 생성
                 UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(
                                 userId,
                                 null,
-                                Collections.singletonList(new SimpleGrantedAuthority(user.getRole().name()))
+                                Collections.singletonList(new SimpleGrantedAuthority(role))
                         );
-
+                
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
+                
                 // SecurityContext에 인증 정보 설정
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
-
-            filterChain.doFilter(request, response);
-
+            
         } catch (Exception e) {
             logger.error("JWT 인증 실패", e);
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         }
+        
+        filterChain.doFilter(request, response);
     }
     
     /**
