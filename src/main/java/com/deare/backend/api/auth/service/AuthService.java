@@ -100,7 +100,7 @@ public class AuthService {
         );
 
         log.info("신규 회원 - Signup Token 발급 및 Redis 저장 - Provider: {}, ProviderId: {}, Email: {}",
-                provider, oauthInfo.providerUserId(), oauthInfo.email());
+                provider, oauthInfo.providerUserId(), maskEmail(oauthInfo.email()));
 
         return new OAuthCallbackResult(
                 false,
@@ -120,7 +120,7 @@ public class AuthService {
 
         jwtService.saveRefreshToken(user.getId(), refreshToken);
 
-        log.info("{} - User ID: {}, Email: {}", logMessage, user.getId(), user.getEmail());
+        log.info("{} - User ID: {}, Email: {}", logMessage, user.getId(), maskEmail(user.getEmail()));
 
         return new OAuthCallbackResult(
                 true,
@@ -260,5 +260,15 @@ public class AuthService {
     public void logout(Long userId) {
         jwtService.deleteRefreshToken(userId);
         log.info("로그아웃 - User ID: {}", userId);
+    }
+
+    private String maskEmail(String email) {
+        if (email == null || !email.contains("@")) return "***";
+        String[] parts = email.split("@");
+        String local = parts[0];
+        String masked = local.length() <= 2
+                ? "***"
+                : local.substring(0, 2) + "***";
+        return masked + "@" + parts[1];
     }
 }
