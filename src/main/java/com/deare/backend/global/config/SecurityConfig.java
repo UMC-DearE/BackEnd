@@ -44,6 +44,7 @@ public class SecurityConfig {
                 authorizeHttpRequests(auth -> auth
 
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers("/api/v1/auth/logout").authenticated()
                         .requestMatchers(
 
                                 // 헬스체크
