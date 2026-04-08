@@ -20,14 +20,20 @@ oauth:
   google:
     redirect-uri: ${GOOGLE_REDIRECT_URI}
 
-# health check
+# health check & monitoring
 management:
   endpoints:
     web:
       exposure:
-        include: health
+        include: health, prometheus
   endpoint:
     health:
       show-details: never
       probes:
+        enabled: true
+    prometheus:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
         enabled: true

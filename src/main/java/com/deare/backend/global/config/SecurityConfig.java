@@ -44,23 +44,28 @@ public class SecurityConfig {
                 authorizeHttpRequests(auth -> auth
 
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers("/api/v1/auth/logout").authenticated()
                         .requestMatchers(
 
-                                // 헬스체크
+                                // 헬스체크 & 모니터링
                                 "/actuator/health",
                                 "/actuator/health/**",
+                                "/actuator/prometheus",
 
-                                // 테스트 API 열기 + 스웨거 세팅
-                                "/test/**",
-                                "/swagger-ui/**",
-                                "/v3/api-docs/**",
-                                "/images/**",
+                                // 스웨거 (비활성화)
+                                // "/swagger-ui/**",
+                                // "/v3/api-docs/**",
 
-                                // 인증 관련 엔드포인트 오픈
-                                "/auth/**",
+                                // 테스트 API
+                                "/api/v1/test/**",
 
-                                // OAuth2 사용 시 - 콜백/리다이렉트 경로도 permitAll 필요
-                                "/login/**",
+                                // 이미지
+                                "/api/v1/images/**",
+
+                                // 인증 관련 엔드포인트
+                                "/api/v1/auth/**",
+
+                                // OAuth2
                                 "/oauth2/**"
                         ).permitAll()
                         .anyRequest().authenticated()

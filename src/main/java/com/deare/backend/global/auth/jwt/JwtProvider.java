@@ -72,6 +72,14 @@ public class JwtProvider {
         Claims claims = parseClaims(token);
         return claims.get("userId", Long.class);
     }
+
+    /**
+     * 토큰에서 사용자 Role 추출
+     */
+    public String getRoleFromToken(String token) {
+        Claims claims = parseClaims(token);
+        return claims.get("role", String.class);
+    }
     
     /**
      * 토큰 파싱
