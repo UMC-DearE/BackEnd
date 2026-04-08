@@ -50,17 +50,20 @@ public class SecurityConfig {
                                 "/actuator/health",
                                 "/actuator/health/**",
 
-                                // 테스트 API 열기 + 스웨거 세팅
-                                "/test/**",
+                                // 스웨거
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
-                                "/images/**",
 
-                                // 인증 관련 엔드포인트 오픈
-                                "/auth/**",
+                                // 테스트 API
+                                "/api/v1/test/**",
 
-                                // OAuth2 사용 시 - 콜백/리다이렉트 경로도 permitAll 필요
-                                "/login/**",
+                                // 이미지
+                                "/api/v1/images/**",
+
+                                // 인증 관련 엔드포인트
+                                "/api/v1/auth/**",
+
+                                // OAuth2
                                 "/oauth2/**"
                         ).permitAll()
                         .anyRequest().authenticated()

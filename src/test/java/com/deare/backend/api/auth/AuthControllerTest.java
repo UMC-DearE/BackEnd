@@ -60,7 +60,7 @@ class AuthControllerTest {
     @Test
     @DisplayName("OAuth Gate - Kakao URL 생성")
     void authorize_kakao() throws Exception {
-        mockMvc.perform(get("/auth/oauth2/kakao"))
+        mockMvc.perform(get("/api/v1/auth/oauth2/kakao"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.authorizeUrl").value(containsString("kauth.kakao.com")));
@@ -69,7 +69,7 @@ class AuthControllerTest {
     @Test
     @DisplayName("OAuth Gate - Google URL 생성")
     void authorize_google() throws Exception {
-        mockMvc.perform(get("/auth/oauth2/google"))
+        mockMvc.perform(get("/api/v1/auth/oauth2/google"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.authorizeUrl").value(containsString("accounts.google.com")));
@@ -78,7 +78,7 @@ class AuthControllerTest {
     @Test
     @DisplayName("OAuth Gate - 잘못된 Provider")
     void authorize_invalidProvider() throws Exception {
-        mockMvc.perform(get("/auth/oauth2/naver"))
+        mockMvc.perform(get("/api/v1/auth/oauth2/naver"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("AUTH_40001"));
     }
@@ -86,7 +86,7 @@ class AuthControllerTest {
     @Test
     @DisplayName("약관 조회 - 토큰 없음")
     void getTerms_noToken() throws Exception {
-        mockMvc.perform(get("/auth/terms"))
+        mockMvc.perform(get("/api/v1/auth/terms"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("AUTH_40003"));
     }
@@ -98,7 +98,7 @@ class AuthControllerTest {
         String token = signupTokenProvider.generateSignupToken("kakao", "terms1", "t@test.com");
         signupTokenService.saveSignupToken("kakao", "terms1", "t@test.com", token);
 
-        mockMvc.perform(get("/auth/terms").cookie(new Cookie("signup_token", token)))
+        mockMvc.perform(get("/api/v1/auth/terms").cookie(new Cookie("signup_token", token)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.terms").isArray());
@@ -111,7 +111,7 @@ class AuthControllerTest {
         String token = signupTokenProvider.generateSignupToken("kakao", "signup1", "s@test.com");
         signupTokenService.saveSignupToken("kakao", "signup1", "s@test.com", token);
 
-        mockMvc.perform(post("/auth/signup")
+        mockMvc.perform(post("/api/v1/auth/signup")
                         .cookie(new Cookie("signup_token", token))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(new SignupRequestDTO("유저", List.of(term.getId())))))
@@ -124,7 +124,7 @@ class AuthControllerTest {
     @Test
     @DisplayName("회원가입 - 토큰 없음")
     void signup_noToken() throws Exception {
-        mockMvc.perform(post("/auth/signup")
+        mockMvc.perform(post("/api/v1/auth/signup")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(new SignupRequestDTO("유저", List.of(1L)))))
                 .andExpect(status().isBadRequest())
@@ -134,7 +134,7 @@ class AuthControllerTest {
     @Test
     @DisplayName("JWT 재발급 - 토큰 없음")
     void refresh_noToken() throws Exception {
-        mockMvc.perform(post("/auth/jwt/refresh"))
+        mockMvc.perform(post("/api/v1/auth/jwt/refresh"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("AUTH_40004"));
     }
@@ -142,7 +142,7 @@ class AuthControllerTest {
     @Test
     @DisplayName("OAuth Callback - 잘못된 State")
     void callback_invalidState() throws Exception {
-        mockMvc.perform(get("/auth/oauth2/kakao/callback")
+        mockMvc.perform(get("/api/v1/auth/oauth2/kakao/callback")
                         .param("code", "code")
                         .param("state", "invalid"))
                 .andExpect(status().isBadRequest())
