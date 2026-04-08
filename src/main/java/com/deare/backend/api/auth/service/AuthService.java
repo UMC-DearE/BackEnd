@@ -235,7 +235,7 @@ public class AuthService {
         userRepository.save(newUser);
 
         log.info("회원가입 완료 - User ID: {}, Provider: {}, Email: {}",
-                newUser.getId(), provider, email);
+                newUser.getId(), provider, maskEmail(email));
 
         // 약관 동의 처리
         userTermService.createUserTerms(newUser, request.termIds());
