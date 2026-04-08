@@ -47,9 +47,10 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/auth/logout").authenticated()
                         .requestMatchers(
 
-                                // 헬스체크
+                                // 헬스체크 & 모니터링
                                 "/actuator/health",
                                 "/actuator/health/**",
+                                "/actuator/prometheus",
 
                                 // 스웨거 (비활성화)
                                 // "/swagger-ui/**",
