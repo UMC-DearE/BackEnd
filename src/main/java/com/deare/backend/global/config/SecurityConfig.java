@@ -44,15 +44,16 @@ public class SecurityConfig {
                 authorizeHttpRequests(auth -> auth
 
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers("/api/v1/auth/logout").authenticated()
                         .requestMatchers(
 
                                 // 헬스체크
                                 "/actuator/health",
                                 "/actuator/health/**",
 
-                                // 스웨거
-                                "/swagger-ui/**",
-                                "/v3/api-docs/**",
+                                // 스웨거 (비활성화)
+                                // "/swagger-ui/**",
+                                // "/v3/api-docs/**",
 
                                 // 테스트 API
                                 "/api/v1/test/**",
