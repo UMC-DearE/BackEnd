@@ -64,7 +64,7 @@ public class UserTermService {
         // 모든 필수 약관 조회
         List<Term> allTerms = termRepository.findAll();
         List<Term> requiredTerms = allTerms.stream()
-                .filter(Term::isRequired)
+                .filter(term -> term.isRequired() && term.isActive())
                 .toList();
         
         // 필수 약관이 없으면 통과
