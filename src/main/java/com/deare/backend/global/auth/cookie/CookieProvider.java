@@ -50,7 +50,7 @@ public class CookieProvider {
         return ResponseCookie.from("signup_token", signupToken)
                 .httpOnly(true)
                 .secure(true)
-                .path("/auth")
+                .path("/api/v1/auth")
                 .maxAge(Duration.ofMillis(signupTokenProperties.getExpiration()))
                 .sameSite("None")
                 .build();
@@ -60,7 +60,7 @@ public class CookieProvider {
         return ResponseCookie.from("signup_token", "")
                 .httpOnly(true)
                 .secure(true)
-                .path("/auth")
+                .path("/api/v1/auth")
                 .maxAge(0)
                 .sameSite("None")
                 .build();
