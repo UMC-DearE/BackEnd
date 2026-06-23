@@ -70,6 +70,7 @@ jobs:
           COMMAND_ID=$(aws ssm send-command \
             --instance-ids "${{ secrets.EC2_INSTANCE_ID }}" \
             --document-name "AWS-RunShellScript" \
+            --timeout-seconds 600 \
             --parameters 'commands=[
               "set -e",
               "cd /home/ubuntu/deare",
