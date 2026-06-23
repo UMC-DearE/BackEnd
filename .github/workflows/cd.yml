@@ -3,7 +3,7 @@ name: CD - build/push image & deploy to EC2 on main push
 on:
   push:
     branches: ["main"]
-  workflow_dispatch: # main 머지 전 테스팅 - 실 배포 시 각주 처리할 것
+#  workflow_dispatch: ->  main 머지 전 테스팅 - 실 배포 시 각주 처리할 것
 
 env:
   IMAGE_NAME: deare-backend
