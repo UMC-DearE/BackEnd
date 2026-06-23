@@ -3,14 +3,9 @@ name: CD - build/push image & deploy to EC2 on main push
 on:
   push:
     branches: ["main"]
-  workflow_dispatch: # main 머지 전 테스팅 - 실 배포 시 각주 처리할 것
 
 env:
   IMAGE_NAME: deare-backend
-
-permissions:
-  id-token: write
-  contents: read
 
 jobs:
   deploy:
@@ -57,66 +52,40 @@ jobs:
             ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:latest
             ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
 
-      # 4) OIDC로 AWS 임시 자격증명 획득
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
+      # 4) docker-compose-dev.yml을 EC2로 복사 -> 추후 docker-compose-prod 교체
+      - name: Copy docker-compose-dev.yml to EC2
+        uses: appleboy/scp-action@v1
         with:
-          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
-          aws-region: ap-northeast-2
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: "docker-compose-dev.yml"
+          target: "/home/ubuntu/deare"
 
-      # 5) SSM으로 EC2에 배포 (pull + up -d, fallback to down)
-      - name: Deploy on EC2 via SSM
-        run: |
-          COMMAND_ID=$(aws ssm send-command \
-            --instance-ids "${{ secrets.EC2_INSTANCE_ID }}" \
-            --document-name "AWS-RunShellScript" \
-            --parameters 'commands=[
-              "set -e",
-              "cd /home/ubuntu/deare",
-              "ENV_FILE=/home/ubuntu/deare/.env.prod",
-              "COMPOSE_FILE=/home/ubuntu/deare/docker-compose-dev.yml",
-              "docker-compose --env-file $ENV_FILE -f $COMPOSE_FILE pull app",
-              "if docker-compose --env-file $ENV_FILE -f $COMPOSE_FILE up -d; then echo compose up succeeded without down; else docker-compose --env-file $ENV_FILE -f $COMPOSE_FILE down && docker-compose --env-file $ENV_FILE -f $COMPOSE_FILE up -d; fi",
-              "docker-compose --env-file $ENV_FILE -f $COMPOSE_FILE ps",
-              "docker image prune -f"
-            ]' \
-            --query "Command.CommandId" \
-            --output text)
+      # 5) EC2에서 pull + up (down은 실패 시에만) / #87 수정
+      - name: Deploy on EC2 (pull + up -d, fallback to down)
+        uses: appleboy/ssh-action@v1.2.4
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            set -e
+            cd /home/ubuntu/deare
 
-          # waiter 대신 직접 폴링 (10초 간격, 최대 60회 = 600초)
-          for i in $(seq 1 60); do
-            STATUS=$(aws ssm get-command-invocation \
-              --command-id "$COMMAND_ID" \
-              --instance-id "${{ secrets.EC2_INSTANCE_ID }}" \
-              --query "Status" \
-              --output text 2>/dev/null || echo "Pending")
+            ENV_FILE=/home/ubuntu/deare/.env.prod
+            COMPOSE_FILE=/home/ubuntu/deare/docker-compose-dev.yml
 
-            echo "[$i/60] Status: $STATUS"
 
-            if [[ "$STATUS" == "Success" || "$STATUS" == "Failed" || "$STATUS" == "Cancelled" || "$STATUS" == "TimedOut" ]]; then
-              break
+            docker-compose --env-file $ENV_FILE -f $COMPOSE_FILE pull app
+
+            if docker-compose --env-file $ENV_FILE -f $COMPOSE_FILE up -d; then
+              echo "compose up succeeded without down"
+            else
+              echo "compose up failed. fallback to down -> up"
+              docker-compose --env-file $ENV_FILE -f $COMPOSE_FILE down
+              docker-compose --env-file $ENV_FILE -f $COMPOSE_FILE up -d
             fi
 
-            sleep 10
-          done
-
-          # 성공/실패 무관하게 stdout, stderr 항상 출력
-          echo "=== stdout ==="
-          aws ssm get-command-invocation \
-            --command-id "$COMMAND_ID" \
-            --instance-id "${{ secrets.EC2_INSTANCE_ID }}" \
-            --query "StandardOutputContent" \
-            --output text
-
-          echo "=== stderr ==="
-          aws ssm get-command-invocation \
-            --command-id "$COMMAND_ID" \
-            --instance-id "${{ secrets.EC2_INSTANCE_ID }}" \
-            --query "StandardErrorContent" \
-            --output text
-
-          # 상태 기반 종료 코드 결정
-          if [[ "$STATUS" != "Success" ]]; then
-            echo "Deploy failed with status: $STATUS"
-            exit 1
-          fi
+            docker-compose --env-file $ENV_FILE -f $COMPOSE_FILE ps
+            docker image prune -f
