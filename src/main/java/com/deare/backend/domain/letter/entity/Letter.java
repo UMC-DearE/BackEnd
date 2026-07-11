@@ -27,7 +27,7 @@ public class Letter extends BaseEntity {
     private Long id;
 
     @Lob
-    @Column(name="content", columnDefinition = "TEXT", nullable = false)
+    @Column(name="content", columnDefinition = "LONGTEXT", nullable = false)
     private String content;
 
     @Column(name="received_at")

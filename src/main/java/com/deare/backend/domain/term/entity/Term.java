@@ -26,7 +26,7 @@ public class Term extends BaseEntity {
     private TermType type;
 
     @Lob
-    @Column(name = "content", nullable = false)
+    @Column(name = "content", columnDefinition = "MEDIUMTEXT", nullable = false, length = 16777215)
     private String content;
 
     @Column(name = "is_required", nullable = false)

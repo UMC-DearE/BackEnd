@@ -1,10 +1,14 @@
 package com.deare.backend.api.home.service;
 
+import com.deare.backend.api.home.dto.request.HomeEditRequest;
 import com.deare.backend.api.home.dto.response.HomeDashboardResponse;
 import com.deare.backend.api.home.dto.result.HomeSettingDto;
 import com.deare.backend.api.home.dto.result.HomeStickerDto;
 import com.deare.backend.api.home.dto.result.HomeUserDto;
 import com.deare.backend.api.home.exception.HomeErrorCode;
+import com.deare.backend.domain.image.entity.Image;
+import com.deare.backend.domain.image.exception.ImageErrorCode;
+import com.deare.backend.domain.image.repository.ImageRepository;
 import com.deare.backend.domain.setting.entity.UserSetting;
 import com.deare.backend.domain.setting.repository.UserSettingRepository;
 import com.deare.backend.domain.sticker.entity.UserSticker;
@@ -25,6 +29,7 @@ public class HomeService {
     private final UserRepository userRepository;
     private final UserSettingRepository userSettingRepository;
     private final UserStickerRepository stickerRepository;
+    private final ImageRepository imageRepository;
 
     @Transactional(readOnly=true)
     public HomeDashboardResponse getHome(Long userId) {
@@ -63,6 +68,40 @@ public class HomeService {
                 settingDto,
                 stickerDtos
         );
+    }
+    @Transactional
+    public void editHome(Long userId, HomeEditRequest request){
+        User user = userRepository.findById(userId).orElseThrow(()->new GeneralException(HomeErrorCode.USER_NOT_FOUND));
+
+        UserSetting userSetting = userSettingRepository.findByUser_Id(userId).orElse(null);
+
+        if(userSetting!=null){
+            userSetting.updateHomeColor(request.getHomeColor());
+        }else{
+            UserSetting newSetting = UserSetting.createDefault(user, request.getHomeColor());
+            userSettingRepository.save(newSetting);
+        }
+        stickerRepository.deleteAllByUserId(userId);
+
+        List<UserSticker> newStickers = request.getStickers().stream()
+                .map(dto -> {
+                    Image image = imageRepository.findById(dto.getImageId())
+                            .orElseThrow(() -> new GeneralException(ImageErrorCode.IMAGE_40001));
+
+                    return UserSticker.create(
+                            user,
+                            image,
+                            dto.getPosX(),
+                            dto.getPosY(),
+                            dto.getPosZ(),
+                            dto.getRotation(),
+                            dto.getScale()
+                    );
+                })
+                .toList();
+
+        stickerRepository.saveAll(newStickers);
+
     }
 
     private HomeStickerDto toStickerDto(UserSticker sticker) {
