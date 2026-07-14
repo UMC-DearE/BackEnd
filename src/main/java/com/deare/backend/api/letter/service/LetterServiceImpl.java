@@ -183,7 +183,7 @@ public class LetterServiceImpl implements LetterService {
 
             List<Image> images = imageRepository.findAllById(imageIds);
             if (images.size() != imageIds.size()) {
-                throw new GeneralException(ImageErrorCode.IMAGE_40401);
+                throw new GeneralException(ImageErrorCode.IMAGE_NOT_FOUND);
             }
 
             Map<Long, Image> imageMap = images.stream()

@@ -11,6 +11,7 @@ import com.deare.backend.domain.folder.entity.Folder;
 import com.deare.backend.domain.folder.exception.FolderErrorCode;
 import com.deare.backend.domain.folder.repository.FolderRepository;
 import com.deare.backend.domain.image.entity.Image;
+import com.deare.backend.domain.image.exception.ImageErrorCode;
 import com.deare.backend.domain.image.repository.ImageRepository;
 import com.deare.backend.domain.letter.entity.Letter;
 import com.deare.backend.domain.letter.exception.LetterErrorCode;
@@ -58,7 +59,7 @@ public class FolderServiceImpl implements FolderService {
     @Transactional
     public FolderCreateResponseDTO createFolder(Long userId, FolderCreateRequestDTO req) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new GeneralException(FolderErrorCode.FOLDER_50001));
+                .orElseThrow(() -> new GeneralException(FolderErrorCode.FOLDER_SERVER_ERROR));
 
         long count = folderRepository.countByUser_IdAndIsDeletedFalse(userId);
         if (count >= MAX_FOLDERS) {
@@ -168,7 +169,9 @@ public class FolderServiceImpl implements FolderService {
     @Override
     @Transactional
     public void updateFolder(Long userId, Long folderId, FolderUpdateRequestDTO reqDTO) {
-        if (reqDTO == null || !reqDTO.hasAnyField()) {
+        if (reqDTO == null
+                || !reqDTO.hasAnyField()
+                || reqDTO.hasInvalidImageRequest()) {
             throw new GeneralException(FolderErrorCode.INVALID_REQUEST);
         }
 
@@ -179,13 +182,22 @@ public class FolderServiceImpl implements FolderService {
             folder.rename(reqDTO.name().trim());
         }
 
-        if (reqDTO.imageId() != null) {
-            Image image = imageRepository.findById(reqDTO.imageId())
-                    .orElseThrow(() -> new GeneralException(FolderErrorCode.INVALID_REQUEST));
+        if (reqDTO.imageAction() == null) {
+            return;
+        }
 
-            folder.changeImage(image);
-        }else{
-            folder.changeImage(null);
+        switch (reqDTO.imageAction()) {
+            case KEEP -> {
+            }
+
+            case CHANGE -> {
+                Image image = imageRepository.findById(reqDTO.imageId())
+                        .orElseThrow(() -> new GeneralException(ImageErrorCode.IMAGE_NOT_FOUND));
+
+                folder.changeImage(image);
+            }
+
+            case DELETE -> folder.changeImage(null);
         }
     }
 

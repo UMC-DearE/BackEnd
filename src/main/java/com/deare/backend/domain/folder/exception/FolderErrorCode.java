@@ -55,7 +55,7 @@ public enum FolderErrorCode implements BaseErrorCode {
     ),
 
     // 추후 고도화 시 COMMON으로 빼는 것도 고려
-    FOLDER_50001(
+    FOLDER_SERVER_ERROR(
             HttpStatus.INTERNAL_SERVER_ERROR,
             "FOLDER_50001",
             "폴더 처리 중 서버 오류가 발생했습니다."
