@@ -1,6 +1,6 @@
 package com.deare.backend.api.home.controller;
 
-import com.deare.backend.api.home.dto.request.HomeEditRequest;
+import com.deare.backend.api.home.dto.request.HomeEditRequestDTO;
 import com.deare.backend.api.home.dto.response.HomeDashboardResponse;
 import com.deare.backend.api.home.service.HomeService;
 import com.deare.backend.global.auth.util.SecurityUtil;
@@ -28,12 +28,12 @@ public class HomeController {
         return ApiResponse.success(res);
     }
 
-    @PutMapping("/edit")
+    @PutMapping
     @Operation(
             summary = "홈 화면 편집 저장",
             description = "스티커 배치 , 배경색 변경 등 홈화면 편집 내용을 저장하는 API입니다."
     )
-    public ApiResponse<Void>editHome(@Valid @RequestBody HomeEditRequest request){
+    public ApiResponse<Void> editHome(@Valid @RequestBody HomeEditRequestDTO request){
         Long userId = SecurityUtil.getCurrentUserId();
         homeService.editHome(userId, request);
         return ApiResponse.success(null);
