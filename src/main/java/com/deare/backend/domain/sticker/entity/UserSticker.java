@@ -61,22 +61,4 @@ public class UserSticker extends BaseEntity {
         us.scale = scale;
         return us;
     }
-    public boolean isOwnedBy(Long userId) {
-        return user != null && user.getId() != null && user.getId().equals(userId);
-    }
-
-    public void updateTransform(
-            BigDecimal posX,
-            BigDecimal posY,
-            int posZ,
-            BigDecimal rotation,
-            BigDecimal scale
-    ) {
-        this.posX = posX;
-        this.posY = posY;
-        this.posZ = posZ;
-        this.rotation = rotation;
-        this.scale = scale;
-    }
-
 }

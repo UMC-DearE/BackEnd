@@ -1,10 +1,15 @@
 package com.deare.backend.api.home.service;
 
+import com.deare.backend.api.home.dto.request.HomeEditRequestDTO;
+import com.deare.backend.api.home.dto.request.HomeEditRequestDTO.StickerRequest;
 import com.deare.backend.api.home.dto.response.HomeDashboardResponse;
 import com.deare.backend.api.home.dto.result.HomeSettingDto;
 import com.deare.backend.api.home.dto.result.HomeStickerDto;
 import com.deare.backend.api.home.dto.result.HomeUserDto;
 import com.deare.backend.api.home.exception.HomeErrorCode;
+import com.deare.backend.domain.image.entity.Image;
+import com.deare.backend.domain.image.exception.ImageErrorCode;
+import com.deare.backend.domain.image.repository.ImageRepository;
 import com.deare.backend.domain.setting.entity.UserSetting;
 import com.deare.backend.domain.setting.repository.UserSettingRepository;
 import com.deare.backend.domain.sticker.entity.UserSticker;
@@ -17,6 +22,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -25,6 +32,7 @@ public class HomeService {
     private final UserRepository userRepository;
     private final UserSettingRepository userSettingRepository;
     private final UserStickerRepository stickerRepository;
+    private final ImageRepository imageRepository;
 
     @Transactional(readOnly=true)
     public HomeDashboardResponse getHome(Long userId) {
@@ -63,6 +71,50 @@ public class HomeService {
                 settingDto,
                 stickerDtos
         );
+    }
+    @Transactional
+    public void editHome(Long userId, HomeEditRequestDTO request) {
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new GeneralException(HomeErrorCode.USER_NOT_FOUND));
+
+        UserSetting userSetting = userSettingRepository.findByUser_Id(userId).orElse(null);
+        if (userSetting != null) {
+            userSetting.updateHomeColor(request.homeColor());
+        } else {
+            userSettingRepository.save(UserSetting.createDefault(user, request.homeColor()));
+        }
+
+        stickerRepository.deleteAllByUserId(userId);
+
+        List<StickerRequest> stickerRequests = request.stickers();
+        if (stickerRequests.isEmpty()) {
+            return;
+        }
+
+        List<Long> imageIds = stickerRequests.stream()
+                .map(HomeEditRequestDTO.StickerRequest::imageId)
+                .distinct()
+                .toList();
+
+        Map<Long, Image> imageMap = imageRepository.findAllById(imageIds).stream()
+                .collect(Collectors.toMap(Image::getId, image -> image));
+
+        List<UserSticker> newStickers = stickerRequests.stream()
+                .map(dto -> {
+                    Image image = imageMap.get(dto.imageId());
+                    if (image == null) {
+                        throw new GeneralException(ImageErrorCode.IMAGE_40001);
+                    }
+                    return UserSticker.create(
+                            user, image,
+                            dto.posX(), dto.posY(), dto.posZ(),
+                            dto.rotation(), dto.scale()
+                    );
+                })
+                .toList();
+
+        stickerRepository.saveAll(newStickers);
     }
 
     private HomeStickerDto toStickerDto(UserSticker sticker) {
