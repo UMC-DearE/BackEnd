@@ -7,7 +7,7 @@ import jakarta.validation.constraints.Size;
 public record FromCreateRequestDTO(
 
         @NotBlank(message = "From 이름은 필수입니다.")
-        @Size(max = 7, message = "From 이름은 최대 7자까지 가능합니다.")
+        @Size(max = 10, message = "From 이름은 최대 10자까지 가능합니다.")
         String name,
 
         @NotBlank(message = "배경색은 필수입니다.")
