@@ -35,10 +35,14 @@ public class RandomLetterService {
     public RandomLetterResponseDTO getTodayRandomLetter(long userId) {
         LocalDate today = LocalDate.now(ZONE);
 
+        // 오늘 하루의 랜덤 편지 최종 결정 캐시 키
+        String key = cacheKey(userId, today);
+
         // 오늘 날짜 기준 고정 해제 유예 캐시 키
         String graceKey = unpinGraceKey(userId, today);
 
         String graceCached = redisTemplate.opsForValue().get(graceKey);
+
         if (graceCached != null) {
             RandomLetterCacheValue v = fromJson(graceCached);
 
@@ -48,9 +52,10 @@ public class RandomLetterService {
                 // DB에서 현재 고정 상태 확인
                 Optional<Boolean> pinnedOpt = letterRepository.findIsPinnedByUserIdAndLetterId(userId, v.letterId());
 
-                // DB에 해당 편지가 없거나 권한 불일치면 유예 캐시 삭제
+                // 유예 캐시가 가리키던 편지가 삭제된 경우
                 if (pinnedOpt.isEmpty()) {
                     redisTemplate.delete(graceKey);
+                    return lockOutForToday(key, today);
 
                 } else if (Boolean.TRUE.equals(pinnedOpt.get())) {
                     // 유예 중이던 편지가 다시 고정된 경우
@@ -58,9 +63,16 @@ public class RandomLetterService {
 
                 } else {
                     // 오늘은 기존 고정 편지를 그대로 내려줌
-                    return toResponseDTO(true, today, v.letterId(), v.randomPhrase(), false);
+                    return toResponseDTO(
+                            true,
+                            today,
+                            v.letterId(),
+                            v.randomPhrase(),
+                            false
+                    );
                 }
             } else {
+                // JSON 파싱 실패 또는 비정상 캐시는 삭제 후 정상 흐름 진행
                 redisTemplate.delete(graceKey);
             }
         }
@@ -88,7 +100,13 @@ public class RandomLetterService {
 
                 } else {
                     // 캐시가 정상이고 DB와 일치하면 그대로 반환
-                    return toResponseDTO(true, today, v.letterId(), v.randomPhrase(), true);
+                    return toResponseDTO(
+                            true,
+                            today,
+                            v.letterId(),
+                            v.randomPhrase(),
+                            true
+                    );
                 }
             }
 
@@ -98,12 +116,18 @@ public class RandomLetterService {
 
             redisTemplate.opsForValue().set(pinnedKey, toJson(createdPinned));
 
-            return toResponseDTO(true, today,
-                    createdPinned.letterId(), createdPinned.randomPhrase(), true);
+            return toResponseDTO(
+                    true,
+                    today,
+                    createdPinned.letterId(),
+                    createdPinned.randomPhrase(),
+                    true
+            );
         }
 
         // 현재 DB에는 고정 편지가 없는데 pinned 캐시는 남아 있는 경우 (고정 해제 직후)
         String pinnedKey = pinnedKey(userId);
+
         String pinnedCached = redisTemplate.opsForValue().get(pinnedKey);
 
         if (pinnedCached != null) {
@@ -125,43 +149,87 @@ public class RandomLetterService {
                     // pinned 캐시는 제거
                     redisTemplate.delete(pinnedKey);
 
-                    return toResponseDTO(true, today,
-                            v.letterId(), v.randomPhrase(), false);
+                    return toResponseDTO(
+                            true,
+                            today,
+                            v.letterId(),
+                            v.randomPhrase(),
+                            false
+                    );
                 }
             }
 
+            // pinned 캐시가 가리키던 편지가 삭제된 경우
             redisTemplate.delete(pinnedKey);
+            return lockOutForToday(key, today);
         }
-
-        // userId + 날짜 키
-        String key = cacheKey(userId, today);
 
         // 1) Redis HIT: 오늘 이미 랜덤 결과가 있으면 그걸 사용
         String cached = redisTemplate.opsForValue().get(key);
+
         if (cached != null) {
             RandomLetterCacheValue v = fromJson(cached);
 
-            // 캐시가 깨진 경우 -> 캐시 삭제 후 재생성
-            if (v == null || v.letterId() == null) {
+            // JSON 자체를 읽지 못한 경우 캐시 삭제 후 재생성
+            if (v == null) {
                 redisTemplate.delete(key);
                 return createAndCache(userId, today, key);
+            }
+
+            // 오늘은 더 이상 편지를 보여주지 않는 경우
+            if (v.letterId() == null) {
+                return toResponseDTO(
+                        false,
+                        today,
+                        null,
+                        null,
+                        false
+                );
             }
 
             Optional<Boolean> pinnedOpt = letterRepository.findIsPinnedByUserIdAndLetterId(userId, v.letterId());
 
+            // 오늘 추첨된 편지가 삭제된 경우 재추첨하지 않음
             if (pinnedOpt.isEmpty()) {
-                // 삭제/숨김/권한불일치 등 -> 캐시 삭제 후 재생성
-                redisTemplate.delete(key);
-                return createAndCache(userId, today, key);
+                return lockOutForToday(key, today);
             }
 
-            // pinned는 최신값
+            // pinned 상태는 DB의 최신값 사용
             boolean pinnedNow = pinnedOpt.orElse(false);
-            return toResponseDTO(true, today, v.letterId(), v.randomPhrase(), pinnedNow);
+
+            return toResponseDTO(
+                    true,
+                    today,
+                    v.letterId(),
+                    v.randomPhrase(),
+                    pinnedNow
+            );
         }
 
         // 2) Redis MISS: 오늘의 랜덤 편지 새로 생성
         return createAndCache(userId, today, key);
+    }
+
+    private RandomLetterResponseDTO lockOutForToday(
+            String key,
+            LocalDate today
+    ) {
+        RandomLetterCacheValue empty =
+                new RandomLetterCacheValue(null, null);
+
+        redisTemplate.opsForValue().set(
+                key,
+                toJson(empty),
+                ttlUntilNextMidnight()
+        );
+
+        return toResponseDTO(
+                false,
+                today,
+                null,
+                null,
+                false
+        );
     }
 
     private RandomLetterResponseDTO createAndCache(long userId, LocalDate today, String key) {
@@ -169,7 +237,13 @@ public class RandomLetterService {
 
         // 편지가 없으면 캐시 저장 없이 바로 응답
         if (count == 0) {
-            return toResponseDTO(false, today, null, null, false);
+            return toResponseDTO(
+                    false,
+                    today,
+                    null,
+                    null,
+                    false
+            );
         }
 
         // 0 ~ count-1 사이 랜덤 offset
@@ -201,11 +275,17 @@ public class RandomLetterService {
             }
         }
 
-        // pinned는 항상 최신 조회
+        // pinned 상태는 DB의 최신값 사용
         boolean pinnedNow = letterRepository.findIsPinnedByUserIdAndLetterId(userId, finalValue.letterId())
                 .orElse(false);
 
-        return toResponseDTO(true, today, finalValue.letterId(), finalValue.randomPhrase(), pinnedNow);
+        return toResponseDTO(
+                true,
+                today,
+                finalValue.letterId(),
+                finalValue.randomPhrase(),
+                pinnedNow
+        );
     }
 
     private String extractRandomPhrase(String content) {
@@ -214,9 +294,11 @@ public class RandomLetterService {
         String normalized = content.trim();
         if (normalized.isEmpty()) return null;
 
-        // 기본 문장 분리:
-        // 1) 문장부호(.!?)+공백 기준
-        // 2) 줄바꿈 기준
+        /*
+         * 기본 문장 분리:
+         * 1. 문장부호(.!?)+공백 기준
+         * 2. 줄바꿈 기준
+         */
         String[] raw = normalized.split("(?<=[.!?])\\s+|\\n+");
 
         // 너무 짧은 후보 제거
@@ -227,17 +309,17 @@ public class RandomLetterService {
         }
 
         // 후보가 하나도 없으면 전체 본문 일부를 잘라서 반환
-        if (candidates.isEmpty()) return ellipsis(normalized, MAX_PHRASE_CHARS);
+        if (candidates.isEmpty()) return ellipsis(normalized);
 
         // 후보 중 랜덤 선택
         String picked = candidates.get(ThreadLocalRandom.current().nextInt(candidates.size()));
-        return ellipsis(picked, MAX_PHRASE_CHARS);
+        return ellipsis(picked);
     }
 
-    private String ellipsis(String s, int maxChars) {
+    private String ellipsis(String s) {
         if (s == null) return null;
-        if (s.length() <= maxChars) return s;
-        return s.substring(0, Math.max(0, maxChars - 1)) + "…";
+        if (s.length() <= RandomLetterService.MAX_PHRASE_CHARS) return s;
+        return s.substring(0, Math.max(0, RandomLetterService.MAX_PHRASE_CHARS - 1)) + "…";
     }
 
     private RandomLetterResponseDTO toResponseDTO(
