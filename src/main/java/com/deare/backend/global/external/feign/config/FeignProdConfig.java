@@ -15,6 +15,6 @@ public class FeignProdConfig {
 
     @Bean
     public feign.Request.Options feignRequestOptions() {
-        return new feign.Request.Options(10_000, 180_000);
+        return new feign.Request.Options(10_000, 30_000);
     }
 }
