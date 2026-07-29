@@ -271,26 +271,54 @@ public class RandomLetterService {
         // 동시성 처리: 먼저 저장한 요청이 있으면 그 값을 사용
         Boolean ok = redisTemplate.opsForValue().setIfAbsent(key, json, ttl);
 
-        RandomLetterCacheValue finalValue = created;
         if (Boolean.FALSE.equals(ok)) {
             String latest = redisTemplate.opsForValue().get(key);
-            if (latest != null) {
-                RandomLetterCacheValue parsed = fromJson(latest);
-                if (parsed != null && parsed.letterId() != null) {
-                    finalValue = parsed;
-                }
+            RandomLetterCacheValue parsed =
+                    latest != null ? fromJson(latest) : null;
+
+            if (parsed == null) {
+                // 캐시가 삭제되거나 손상된 예외 상황에서는 현재 요청 결과 반환
+                return toResponseDTO(
+                        true,
+                        today,
+                        created.letterId(),
+                        created.randomPhrase(),
+                        false
+                );
             }
+
+            // 다른 요청이 당일 종료를 먼저 기록한 경우
+            if (parsed.letterId() == null) {
+                return toResponseDTO(
+                        false,
+                        today,
+                        null,
+                        null,
+                        false
+                );
+            }
+
+            boolean pinnedNow = letterRepository.findIsPinnedByUserIdAndLetterId(userId, parsed.letterId())
+                    .orElse(false);
+
+            return toResponseDTO(
+                    true,
+                    today,
+                    parsed.letterId(),
+                    parsed.randomPhrase(),
+                    pinnedNow
+            );
         }
 
         // pinned 상태는 DB의 최신값 사용
-        boolean pinnedNow = letterRepository.findIsPinnedByUserIdAndLetterId(userId, finalValue.letterId())
+        boolean pinnedNow = letterRepository.findIsPinnedByUserIdAndLetterId(userId, created.letterId())
                 .orElse(false);
 
         return toResponseDTO(
                 true,
                 today,
-                finalValue.letterId(),
-                finalValue.randomPhrase(),
+                created.letterId(),
+                created.randomPhrase(),
                 pinnedNow
         );
     }
