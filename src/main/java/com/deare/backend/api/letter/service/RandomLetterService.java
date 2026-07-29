@@ -133,20 +133,27 @@ public class RandomLetterService {
         if (pinnedCached != null) {
             RandomLetterCacheValue v = fromJson(pinnedCached);
 
-            if (v != null && v.letterId() != null) {
+            // JSON 파싱 실패 또는 비정상 캐시는 삭제 후 일반 흐름 계속
+            if (v == null || v.letterId() == null) {
+                redisTemplate.delete(pinnedKey);
 
+            } else {
                 Optional<Boolean> pinnedOpt =
-                        letterRepository.findIsPinnedByUserIdAndLetterId(userId, v.letterId());
+                        letterRepository.findIsPinnedByUserIdAndLetterId(
+                                userId,
+                                v.letterId()
+                        );
 
                 // DB에 편지가 여전히 존재하면 오늘 자정까지 유예로 유지
                 if (pinnedOpt.isPresent()) {
-
                     Duration ttl = ttlUntilNextMidnight();
 
-                    // 오늘 날짜 유예 캐시에 저장 (자정까지 유지)
-                    redisTemplate.opsForValue().set(graceKey, toJson(v), ttl);
+                    redisTemplate.opsForValue().set(
+                            graceKey,
+                            toJson(v),
+                            ttl
+                    );
 
-                    // pinned 캐시는 제거
                     redisTemplate.delete(pinnedKey);
 
                     return toResponseDTO(
@@ -157,11 +164,11 @@ public class RandomLetterService {
                             false
                     );
                 }
-            }
 
-            // pinned 캐시가 가리키던 편지가 삭제된 경우
-            redisTemplate.delete(pinnedKey);
-            return lockOutForToday(key, today);
+                // pinned 캐시가 가리키던 편지가 실제로 삭제된 경우
+                redisTemplate.delete(pinnedKey);
+                return lockOutForToday(key, today);
+            }
         }
 
         // 1) Redis HIT: 오늘 이미 랜덤 결과가 있으면 그걸 사용
