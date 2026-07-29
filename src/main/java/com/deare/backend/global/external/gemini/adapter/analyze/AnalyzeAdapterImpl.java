@@ -47,7 +47,7 @@ public class AnalyzeAdapterImpl implements AnalyzeAdapter {
             return result;
         }catch(feign.RetryableException e){
             throw new ExternalApiException(
-                    ExternalApiErrorCode.AI_CONNECTION_FAILED
+                    ExternalApiErrorCode.AI_TIMEOUT
             );
         }
         catch(ExternalApiException e){
