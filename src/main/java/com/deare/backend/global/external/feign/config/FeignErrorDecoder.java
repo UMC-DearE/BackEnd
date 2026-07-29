@@ -44,19 +44,25 @@ public class FeignErrorDecoder implements ErrorDecoder {
             );
         }
 
-        return mapToAiException(status);
+        return mapToAiException(status, response);
 
     }
 
-    private Exception mapToAiException(int status){
+    private Exception mapToAiException(int status, Response response){
         if(status==401){
             return new ExternalApiException(ExternalApiErrorCode.AI_UNAUTHORIZED);
         }
         if(status==429){
             return new ExternalApiException(ExternalApiErrorCode.AI_RATE_LIMITED);
         }
-        if(status==504){
-            return new ExternalApiException(ExternalApiErrorCode.AI_TIMEOUT);
+        if(status==502 || status==503 || status==504){
+            return new feign.RetryableException(
+                    status,
+                    response.reason(),
+                    response.request().httpMethod(),
+                    (Long) null,
+                    response.request()
+            );
         }
         if(status>=500){
             return new ExternalApiException(ExternalApiErrorCode.AI_UPSTREAM_ERROR);
