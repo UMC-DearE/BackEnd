@@ -9,9 +9,11 @@ import com.deare.backend.global.external.gemini.dto.response.GeminiTextResponseD
 import com.deare.backend.global.external.gemini.dto.response.analyze.AnalyzeResponseDTO;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class AnalyzeAdapterImpl implements AnalyzeAdapter {
@@ -46,6 +48,8 @@ public class AnalyzeAdapterImpl implements AnalyzeAdapter {
 
             return result;
         }catch(feign.RetryableException e){
+            log.warn("[Analyze] AI 호출 실패 (재시도 소진 또는 네트워크 장애) - status={}, message={}",
+                    e.status(), e.getMessage());
             throw new ExternalApiException(
                     ExternalApiErrorCode.AI_TIMEOUT
             );

@@ -6,11 +6,13 @@ import com.deare.backend.global.external.gemini.client.GeminiFeignClient;
 import com.deare.backend.global.external.gemini.dto.request.ocr.GeminiOcrRequestDTO;
 import com.deare.backend.global.external.gemini.dto.response.GeminiTextResponseDTO;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class OcrAdapterImpl implements OcrAdapter {
@@ -47,6 +49,8 @@ public class OcrAdapterImpl implements OcrAdapter {
 
         } catch (feign.RetryableException e) {
             // 네트워크 / 타임아웃 / DNS, 또는 5xx 재시도 소진
+            log.warn("[OCR] AI 호출 실패 (재시도 소진 또는 네트워크 장애) - status={}, message={}",
+                    e.status(), e.getMessage());
             throw new ExternalApiException(ExternalApiErrorCode.AI_TIMEOUT);
         } catch (ExternalApiException e) {
             throw e;
