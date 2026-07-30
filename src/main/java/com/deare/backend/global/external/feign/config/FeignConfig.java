@@ -19,7 +19,7 @@ public class FeignConfig {
     @Bean
     public Retryer feignRetryer() {
         // period, maxPeriod, maxAttempts(최초 시도 포함 총 시도 횟수)
-        return new Retryer.Default(1_000, 3_000, 3);
+        return new LoggingRetryer(1_000, 3_000, 3);
     }
 
 }
