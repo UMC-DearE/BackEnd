@@ -40,6 +40,10 @@ public class FromService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new GeneralException(UserErrorCode.USER_NOT_FOUND));
 
+        if (fromRepository.existsByUser_IdAndNameAndIsDeletedFalse(userId, request.name())) {
+            throw new GeneralException(FromErrorCode.FROM_40901);
+        }
+
         From from = new From(
                 request.name(),
                 request.bgColor(),
@@ -73,7 +77,10 @@ public class FromService {
             throw new GeneralException(FromErrorCode.FROM_40001);
         }
 
-        if (nameProvided) {
+        if (nameProvided && !request.name().equals(from.getName())) {
+            if (fromRepository.existsByUser_IdAndNameAndIsDeletedFalse(userId, request.name())) {
+                throw new GeneralException(FromErrorCode.FROM_40901);
+            }
             from.changeFromName(request.name());
         }
 
