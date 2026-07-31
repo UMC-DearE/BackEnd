@@ -18,6 +18,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.support.PageableExecutionUtils;
 import org.springframework.util.StringUtils;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -169,7 +170,7 @@ public class LetterRepositoryImpl implements LetterRepositoryCustom {
     }
 
     @Override
-    public Optional<Letter> findRandomLetterByUser(Long userId, long offset) {
+    public Optional<Letter> findRandomLetterByUser(Long userId, long offset, LocalDateTime createdBefore) {
         QLetter letter = QLetter.letter;
 
         Letter result = queryFactory
@@ -177,7 +178,8 @@ public class LetterRepositoryImpl implements LetterRepositoryCustom {
                 .where(
                         letter.user.id.eq(userId),
                         letter.isDeleted.eq(false),
-                        letter.isHidden.eq(false)
+                        letter.isHidden.eq(false),
+                        letter.createdAt.lt(createdBefore)
                 )
                 .orderBy(letter.id.asc())
                 .offset(offset)
@@ -188,7 +190,7 @@ public class LetterRepositoryImpl implements LetterRepositoryCustom {
     }
 
     @Override
-    public long countVisibleLettersByUser(Long userId) {
+    public long countVisibleLettersByUser(Long userId, LocalDateTime createdBefore) {
         QLetter letter = QLetter.letter;
 
         Long count = queryFactory
@@ -197,7 +199,8 @@ public class LetterRepositoryImpl implements LetterRepositoryCustom {
                 .where(
                         letter.user.id.eq(userId),
                         letter.isDeleted.eq(false),
-                        letter.isHidden.eq(false)
+                        letter.isHidden.eq(false),
+                        letter.createdAt.lt(createdBefore)
                 )
                 .fetchOne();
 

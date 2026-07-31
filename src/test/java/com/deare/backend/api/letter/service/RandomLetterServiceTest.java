@@ -12,6 +12,7 @@ import org.springframework.data.redis.core.ValueOperations;
 
 import java.time.Duration;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Map;
 import java.util.Optional;
@@ -92,8 +93,8 @@ class RandomLetterServiceTest {
         Letter letter = mockLetter(10L, "테스트용 편지 본문입니다. 오늘 하루도 힘내세요!");
 
         when(letterRepository.findPinnedLetterByUser(userId)).thenReturn(Optional.empty());
-        when(letterRepository.countVisibleLettersByUser(userId)).thenReturn(2L);
-        when(letterRepository.findRandomLetterByUser(eq(userId), anyLong())).thenReturn(Optional.of(letter));
+        when(letterRepository.countVisibleLettersByUser(eq(userId), any(LocalDateTime.class))).thenReturn(2L);
+        when(letterRepository.findRandomLetterByUser(eq(userId), anyLong(), any(LocalDateTime.class))).thenReturn(Optional.of(letter));
         when(letterRepository.findIsPinnedByUserIdAndLetterId(userId, 10L)).thenReturn(Optional.of(false));
 
         RandomLetterResponseDTO first = service.getTodayRandomLetter(userId);
@@ -104,7 +105,7 @@ class RandomLetterServiceTest {
         RandomLetterResponseDTO second = service.getTodayRandomLetter(userId);
         assertThat(second.letterId()).isEqualTo(10L);
 
-        verify(letterRepository, times(1)).findRandomLetterByUser(eq(userId), anyLong());
+        verify(letterRepository, times(1)).findRandomLetterByUser(eq(userId), anyLong(), any(LocalDateTime.class));
     }
 
     @Test
@@ -114,8 +115,8 @@ class RandomLetterServiceTest {
         Letter letter = mockLetter(11L, "테스트용 편지 본문입니다. 오늘 하루도 힘내세요!");
 
         when(letterRepository.findPinnedLetterByUser(userId)).thenReturn(Optional.empty());
-        when(letterRepository.countVisibleLettersByUser(userId)).thenReturn(1L);
-        when(letterRepository.findRandomLetterByUser(eq(userId), anyLong())).thenReturn(Optional.of(letter));
+        when(letterRepository.countVisibleLettersByUser(eq(userId), any(LocalDateTime.class))).thenReturn(1L);
+        when(letterRepository.findRandomLetterByUser(eq(userId), anyLong(), any(LocalDateTime.class))).thenReturn(Optional.of(letter));
         when(letterRepository.findIsPinnedByUserIdAndLetterId(userId, 11L)).thenReturn(Optional.of(false));
 
         RandomLetterResponseDTO drawn = service.getTodayRandomLetter(userId);
@@ -130,7 +131,7 @@ class RandomLetterServiceTest {
         RandomLetterResponseDTO stillLocked = service.getTodayRandomLetter(userId);
         assertThat(stillLocked.hasLetter()).isFalse();
 
-        verify(letterRepository, times(1)).findRandomLetterByUser(eq(userId), anyLong());
+        verify(letterRepository, times(1)).findRandomLetterByUser(eq(userId), anyLong(), any(LocalDateTime.class));
     }
 
     @Test
@@ -155,8 +156,8 @@ class RandomLetterServiceTest {
         RandomLetterResponseDTO stillLocked = service.getTodayRandomLetter(userId);
         assertThat(stillLocked.hasLetter()).isFalse();
 
-        verify(letterRepository, never()).countVisibleLettersByUser(anyLong());
-        verify(letterRepository, never()).findRandomLetterByUser(anyLong(), anyLong());
+        verify(letterRepository, never()).countVisibleLettersByUser(anyLong(), any(LocalDateTime.class));
+        verify(letterRepository, never()).findRandomLetterByUser(anyLong(), anyLong(), any(LocalDateTime.class));
     }
 
     @Test
@@ -185,7 +186,7 @@ class RandomLetterServiceTest {
         RandomLetterResponseDTO stillLocked = service.getTodayRandomLetter(userId);
         assertThat(stillLocked.hasLetter()).isFalse();
 
-        verify(letterRepository, never()).countVisibleLettersByUser(anyLong());
+        verify(letterRepository, never()).countVisibleLettersByUser(anyLong(), any(LocalDateTime.class));
     }
 
     @Test
@@ -197,8 +198,8 @@ class RandomLetterServiceTest {
         Letter letter = mockLetter(40L, "정상적으로 새로 뽑힌 편지 본문입니다. 오늘도 힘내세요!");
 
         when(letterRepository.findPinnedLetterByUser(userId)).thenReturn(Optional.empty());
-        when(letterRepository.countVisibleLettersByUser(userId)).thenReturn(1L);
-        when(letterRepository.findRandomLetterByUser(eq(userId), anyLong())).thenReturn(Optional.of(letter));
+        when(letterRepository.countVisibleLettersByUser(eq(userId), any(LocalDateTime.class))).thenReturn(1L);
+        when(letterRepository.findRandomLetterByUser(eq(userId), anyLong(), any(LocalDateTime.class))).thenReturn(Optional.of(letter));
         when(letterRepository.findIsPinnedByUserIdAndLetterId(userId, 40L)).thenReturn(Optional.of(false));
 
         RandomLetterResponseDTO result = service.getTodayRandomLetter(userId);
@@ -216,8 +217,8 @@ class RandomLetterServiceTest {
         String key = dateKeyOf(userId);
 
         when(letterRepository.findPinnedLetterByUser(userId)).thenReturn(Optional.empty());
-        when(letterRepository.countVisibleLettersByUser(userId)).thenReturn(1L);
-        when(letterRepository.findRandomLetterByUser(eq(userId), anyLong())).thenReturn(Optional.of(letter));
+        when(letterRepository.countVisibleLettersByUser(eq(userId), any(LocalDateTime.class))).thenReturn(1L);
+        when(letterRepository.findRandomLetterByUser(eq(userId), anyLong(), any(LocalDateTime.class))).thenReturn(Optional.of(letter));
 
         when(valueOperations.setIfAbsent(eq(key), anyString(), any(Duration.class)))
                 .thenAnswer(inv -> {
@@ -239,8 +240,8 @@ class RandomLetterServiceTest {
         Letter pinned = mockLetter(61L, "고정된 편지 본문입니다. 늘 응원합니다!");
 
         when(letterRepository.findPinnedLetterByUser(userId)).thenReturn(Optional.empty());
-        when(letterRepository.countVisibleLettersByUser(userId)).thenReturn(2L);
-        when(letterRepository.findRandomLetterByUser(eq(userId), anyLong())).thenReturn(Optional.of(drawn));
+        when(letterRepository.countVisibleLettersByUser(eq(userId), any(LocalDateTime.class))).thenReturn(2L);
+        when(letterRepository.findRandomLetterByUser(eq(userId), anyLong(), any(LocalDateTime.class))).thenReturn(Optional.of(drawn));
         when(letterRepository.findIsPinnedByUserIdAndLetterId(userId, 60L)).thenReturn(Optional.of(false));
 
         RandomLetterResponseDTO before = service.getTodayRandomLetter(userId);
