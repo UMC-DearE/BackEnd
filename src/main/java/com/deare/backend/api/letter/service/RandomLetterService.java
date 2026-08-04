@@ -240,7 +240,10 @@ public class RandomLetterService {
     }
 
     private RandomLetterResponseDTO createAndCache(long userId, LocalDate today, String key) {
-        long count = letterRepository.countVisibleLettersByUser(userId);
+        // 오늘 만들어진 편지는 당일 추첨 후보에서 제외
+        LocalDateTime todayStart = today.atStartOfDay();
+
+        long count = letterRepository.countVisibleLettersByUser(userId, todayStart);
 
         // 편지가 없으면 캐시 저장 없이 바로 응답
         if (count == 0) {
@@ -258,7 +261,7 @@ public class RandomLetterService {
 
         // offset 기반으로 1개 조회
         Letter letter = letterRepository
-                .findRandomLetterByUser(userId, offset)
+                .findRandomLetterByUser(userId, offset, todayStart)
                 .orElseThrow(() -> new GeneralException(LetterErrorCode.LETTER_NOT_FOUND));
 
         // 편지 본문에서 랜덤 문구 추출
