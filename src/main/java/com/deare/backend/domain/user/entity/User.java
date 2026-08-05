@@ -2,7 +2,6 @@ package com.deare.backend.domain.user.entity;
 
 import com.deare.backend.domain.user.entity.enums.Provider;
 import com.deare.backend.domain.user.entity.enums.Role;
-import com.deare.backend.domain.user.entity.enums.Status;
 import com.deare.backend.global.common.entity.BaseEntity;
 import com.deare.backend.domain.image.entity.Image;
 import jakarta.persistence.*;
@@ -25,10 +24,6 @@ public class User extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false)
     private Role role = Role.ROLE_USER;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false)
-    private Status status = Status.ACTIVE;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "provider", nullable = false)
@@ -66,7 +61,7 @@ public class User extends BaseEntity {
         user.email = email;
         user.nickname = nickname;
 
-        // role, status -> Default Value
+        // role -> Default Value
         return user;
     }
 
@@ -80,26 +75,6 @@ public class User extends BaseEntity {
 
     public void setImage(Image image) {
         this.image = image;
-    }
-
-    /**
-     * 회원 탈퇴 (소프트 딜리트)
-     * - status를 INACTIVE로 변경
-     * - BaseEntity의 softDelete() 호출 (isDeleted=true, deletedAt=now)
-     */
-    public void deactivate() {
-        this.status = Status.INACTIVE;
-        this.softDelete();
-    }
-
-    /**
-     * 회원 복구 (삭제 중인 유저가 다시 로그인 시)
-     * - status를 ACTIVE로 변경
-     * - BaseEntity의 restore() 호출 (isDeleted=false, deletedAt=null)
-     */
-    public void reactivate() {
-        this.status = Status.ACTIVE;
-        this.restore();
     }
 
 }

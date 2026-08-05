@@ -4,8 +4,6 @@ import com.deare.backend.api.report.dto.response.EmotionDistributionDTO;
 import com.deare.backend.api.report.dto.response.ReportStatsResponseDTO;
 import com.deare.backend.api.report.dto.response.Top3FromDTO;
 import com.deare.backend.domain.report.exception.ReportErrorCode;
-import com.deare.backend.domain.user.entity.enums.Status;
-import com.deare.backend.domain.user.entity.User;
 import com.deare.backend.domain.user.repository.UserRepository;
 import com.deare.backend.global.common.exception.GeneralException;
 import lombok.RequiredArgsConstructor;
@@ -23,14 +21,10 @@ public class ReportStatsService {
 
     public ReportStatsResponseDTO getDummyStatics(Long userId){
 
-        User user=userRepository.findById(userId)
-                .orElseThrow(()->
+        userRepository.findById(userId)
+                .orElseThrow(() ->
                         new GeneralException(ReportErrorCode.REPORT_NOT_FOUND_USER)
                 );
-
-        if(user.getStatus().equals(Status.INACTIVE)){
-            throw new GeneralException(ReportErrorCode.REPORT_FORBIDDEN);
-        }
 
         return ReportStatsResponseDTO.builder()
                 .isDummy(true)
