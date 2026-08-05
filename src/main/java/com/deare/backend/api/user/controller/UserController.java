@@ -39,13 +39,13 @@ public class UserController {
     }
 
     @DeleteMapping("/me")
-    @Operation(summary = "회원 탈퇴", description = "회원 탈퇴를 처리합니다. 30일 후 완전 삭제되며, 기한 이전에 다시 로그인하면 계정이 복구됩니다.")
+    @Operation(summary = "회원 탈퇴", description = "회원 탈퇴를 처리합니다. 탈퇴 즉시 모든 데이터가 삭제됩니다.")
     public ResponseEntity<ApiResponse<Void>> deactivateUser() {
         Long userId = SecurityUtil.getCurrentUserId();
         userService.deactivateUser(userId);
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, cookieProvider.expireRefreshTokenCookie().toString())
-                .body(ApiResponse.success("회원 탈퇴가 완료되었습니다. 30일 후 계정이 완전히 삭제됩니다.", null));
+                .body(ApiResponse.success("회원 탈퇴가 완료되었습니다.", null));
     }
 }
