@@ -64,7 +64,33 @@ jobs:
           role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
           aws-region: ap-northeast-2
 
-      # 5) SSM으로 EC2에 배포 (pull + up -d, fallback to down)
+      # 5) repo의 docker-compose.yml을 EC2 서버로 동기화
+      - name: Sync docker-compose.yml to EC2 via SSM
+        run: |
+          ENCODED=$(base64 -w 0 docker-compose.yml)
+          COMMAND_ID=$(aws ssm send-command \
+            --instance-ids "${{ secrets.EC2_INSTANCE_ID }}" \
+            --document-name "AWS-RunShellScript" \
+            --region ap-northeast-2 \
+            --parameters "commands=[\"echo $ENCODED | base64 -d > /home/ubuntu/deare/docker-compose.yml\"]" \
+            --query "Command.CommandId" \
+            --output text)
+          for i in $(seq 1 10); do
+            STATUS=$(aws ssm get-command-invocation \
+              --command-id "$COMMAND_ID" \
+              --instance-id "${{ secrets.EC2_INSTANCE_ID }}" \
+              --query "Status" \
+              --output text 2>/dev/null || echo "Pending")
+            echo "[$i/10] Status: $STATUS"
+            if [[ "$STATUS" == "Success" || "$STATUS" == "Failed" || "$STATUS" == "Cancelled" || "$STATUS" == "TimedOut" ]]; then break; fi
+            sleep 2
+          done
+          if [[ "$STATUS" != "Success" ]]; then
+            echo "compose sync failed: $STATUS"
+            exit 1
+          fi
+
+      # 6) SSM으로 EC2에 배포 (pull + up -d, fallback to down)
       - name: Deploy on EC2 via SSM
         run: |
           COMMAND_ID=$(aws ssm send-command \
@@ -75,7 +101,7 @@ jobs:
               "set -e",
               "cd /home/ubuntu/deare",
               "ENV_FILE=/home/ubuntu/deare/.env.prod",
-              "COMPOSE_FILE=/home/ubuntu/deare/docker-compose-dev.yml",
+              "COMPOSE_FILE=/home/ubuntu/deare/docker-compose.yml",
               "docker-compose --env-file $ENV_FILE -f $COMPOSE_FILE pull app",
               "if docker-compose --env-file $ENV_FILE -f $COMPOSE_FILE up -d; then echo compose up succeeded without down; else docker-compose --env-file $ENV_FILE -f $COMPOSE_FILE down && docker-compose --env-file $ENV_FILE -f $COMPOSE_FILE up -d; fi",
               "docker-compose --env-file $ENV_FILE -f $COMPOSE_FILE ps",
