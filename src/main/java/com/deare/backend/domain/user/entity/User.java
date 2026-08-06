@@ -2,7 +2,7 @@ package com.deare.backend.domain.user.entity;
 
 import com.deare.backend.domain.user.entity.enums.Provider;
 import com.deare.backend.domain.user.entity.enums.Role;
-import com.deare.backend.global.common.entity.BaseEntity;
+import com.deare.backend.global.common.entity.BaseTimeEntity;
 import com.deare.backend.domain.image.entity.Image;
 import jakarta.persistence.*;
 import lombok.*;
@@ -11,7 +11,7 @@ import lombok.*;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "users")
-public class User extends BaseEntity {
+public class User extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
