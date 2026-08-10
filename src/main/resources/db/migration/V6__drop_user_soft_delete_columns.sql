@@ -3,6 +3,6 @@
 -- 하드딜리트 전환 완료로 is_deleted, deleted_at, status 불필요
 -- =============================================
 
-ALTER TABLE users DROP COLUMN IF EXISTS is_deleted;
-ALTER TABLE users DROP COLUMN IF EXISTS deleted_at;
-ALTER TABLE users DROP COLUMN IF EXISTS status;
+ALTER TABLE users DROP COLUMN is_deleted;
+ALTER TABLE users DROP COLUMN deleted_at;
+ALTER TABLE users DROP COLUMN status;
