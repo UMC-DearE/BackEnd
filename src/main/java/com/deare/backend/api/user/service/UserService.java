@@ -10,9 +10,5 @@ public interface UserService {
 
     ProfileUpdateResponseDTO updateMyProfile(Long userId, ProfileUpdateRequestDTO request);
 
-    /**
-     * 회원 탈퇴 (소프트 딜리트)
-     * - 30일 후 스케줄러에 의해 하드 딜리트
-     */
     void deactivateUser(Long userId);
 }

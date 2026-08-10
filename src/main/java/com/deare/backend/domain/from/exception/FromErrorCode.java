@@ -25,6 +25,12 @@ public enum FromErrorCode implements BaseErrorCode {
             "프롬 접근 권한이 없습니다."
     ),
 
+    FROM_40901(
+            HttpStatus.CONFLICT,
+            "FROM_40901",
+            "이미 존재하는 From 이름입니다."
+    ),
+
     FROM_40401(
             HttpStatus.NOT_FOUND,
             "FROM_40401",

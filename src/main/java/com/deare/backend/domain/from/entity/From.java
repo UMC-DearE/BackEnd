@@ -22,7 +22,7 @@ public class From extends BaseEntity {
     @Column(name="user_from_id")
     private Long id;
 
-    @Column(name="from_name", nullable = false, length = 7)
+    @Column(name="from_name", nullable = false, length = 10)
     private String name;
 
     @Column(name="from_bg_color", nullable = false, length = 16)
