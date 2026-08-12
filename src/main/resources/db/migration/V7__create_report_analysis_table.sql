@@ -1,8 +1,3 @@
--- =============================================
--- V7: report_analysis 테이블 생성
--- AI가 편지 3통 이상을 바탕으로 생성하는 유저 성향 분석(1인 1행, 재분석 시 덮어쓰기)
--- =============================================
-
 CREATE TABLE IF NOT EXISTS report_analysis (
     report_analysis_id   BIGINT       NOT NULL AUTO_INCREMENT,
     user_id               BIGINT       NOT NULL,
