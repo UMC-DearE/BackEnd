@@ -3,6 +3,7 @@ package com.deare.backend.domain.report.entity;
 import com.deare.backend.domain.user.entity.User;
 import com.deare.backend.global.common.entity.BaseEntity;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Min;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -37,6 +38,7 @@ public class ReportAnalysis extends BaseEntity {
     @Column(name = "hashtag2", nullable = false, length = 50)
     private String hashtag2;
 
+    @Min(0)
     @Column(name = "analyzed_letter_count", nullable = false)
     private int analyzedLetterCount;
 
@@ -71,6 +73,9 @@ public class ReportAnalysis extends BaseEntity {
             int analyzedLetterCount,
             LocalDateTime analyzedAt
     ) {
+        if(analyzedLetterCount<0){
+            throw new IllegalArgumentException("분석된 편지 개수는 음수일 수 없습니다.");
+        }
         this.description = description;
         this.hashtag1 = hashtag1;
         this.hashtag2 = hashtag2;

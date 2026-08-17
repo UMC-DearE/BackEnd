@@ -12,5 +12,6 @@ CREATE TABLE IF NOT EXISTS report_analysis (
     is_deleted             BOOLEAN      NOT NULL DEFAULT FALSE,
     PRIMARY KEY (report_analysis_id),
     UNIQUE KEY uq_report_analysis_user (user_id),
+    CONSTRAINT chk_report_analysis_analyzed_letter_count CHECK (analyzed_letter_count>=0),
     CONSTRAINT fk_report_analysis_user FOREIGN KEY (user_id) REFERENCES users (user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
