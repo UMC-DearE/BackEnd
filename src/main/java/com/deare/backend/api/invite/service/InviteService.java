@@ -63,7 +63,7 @@ public class InviteService {
     public void applySignupBenefit(String inviteCode, User invitee) {
         if (inviteCode == null || inviteCode.isBlank()
                 || inviteHistoryRepository.existsByInviteeId(invitee.getId())) return;
-        User inviter = inviteCodeRepository.findByInviteCode(inviteCode)
+        User inviter = inviteCodeRepository.findWithUserByInviteCode(inviteCode)
                 .map(UserInviteCode::getUser).orElse(null);
         if (inviter == null || inviter.getId().equals(invitee.getId())) return;
 
