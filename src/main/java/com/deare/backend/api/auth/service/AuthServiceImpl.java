@@ -7,9 +7,9 @@ import com.deare.backend.api.auth.dto.response.TermResponseDTO;
 import com.deare.backend.api.auth.dto.result.OAuthCallbackResult;
 import com.deare.backend.api.auth.dto.result.SignupResult;
 import com.deare.backend.api.auth.dto.result.TokenPair;
+import com.deare.backend.api.auth.event.SignupCompletedEvent;
 import com.deare.backend.api.auth.exception.AuthErrorCode;
 import com.deare.backend.api.term.service.UserTermService;
-import com.deare.backend.api.invite.service.InviteService;
 import com.deare.backend.domain.term.entity.Term;
 import com.deare.backend.domain.term.repository.TermRepository;
 import com.deare.backend.domain.user.entity.enums.Provider;
@@ -24,6 +24,7 @@ import com.deare.backend.global.auth.signupToken.SignupTokenService;
 import com.deare.backend.global.common.exception.GeneralException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -44,7 +45,7 @@ public class AuthServiceImpl implements AuthService {
     private final SignupTokenService signupTokenService;
     private final UserTermService userTermService;
     private final OAuthService oAuthService;
-    private final InviteService inviteService;
+    private final ApplicationEventPublisher eventPublisher;
 
     // === Public Methods ===
 
@@ -215,8 +216,6 @@ public class AuthServiceImpl implements AuthService {
         // 약관 동의 처리
         userTermService.createUserTerms(newUser, request.termIds());
 
-        inviteService.applySignupBenefit(inviteCode, newUser);
-
         // Redis 에서 signup-token 삭제 (1회성)
         signupTokenService.deleteSignupToken(provider, providerId, email);
 
@@ -226,6 +225,10 @@ public class AuthServiceImpl implements AuthService {
 
         // refresh-token 을 Redis에 저장
         jwtService.saveRefreshToken(newUser.getId(), refreshToken);
+
+        if (inviteCode != null && !inviteCode.isBlank()) {
+            eventPublisher.publishEvent(new SignupCompletedEvent(inviteCode, newUser.getId()));
+        }
 
         return new SignupResult(new TokenPair(accessToken, refreshToken), SignupResponseDTO.of());
     }
