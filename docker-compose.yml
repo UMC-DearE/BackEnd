@@ -63,6 +63,12 @@ services:
       REDIS_PORT: 6379
 
       SERVER_PORT: 8080
+    logging:
+      driver: awslogs
+      options:
+        awslogs-region: ap-northeast-2
+        awslogs-group: /deare/backend
+        awslogs-stream: app
     depends_on:
       mysql:
         condition: service_healthy
