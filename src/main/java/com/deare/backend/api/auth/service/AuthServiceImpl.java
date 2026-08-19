@@ -9,6 +9,7 @@ import com.deare.backend.api.auth.dto.result.SignupResult;
 import com.deare.backend.api.auth.dto.result.TokenPair;
 import com.deare.backend.api.auth.event.SignupCompletedEvent;
 import com.deare.backend.api.auth.exception.AuthErrorCode;
+import com.deare.backend.api.invite.service.SignupBenefitOutboxService;
 import com.deare.backend.api.term.service.UserTermService;
 import com.deare.backend.domain.term.entity.Term;
 import com.deare.backend.domain.term.repository.TermRepository;
@@ -46,6 +47,7 @@ public class AuthServiceImpl implements AuthService {
     private final UserTermService userTermService;
     private final OAuthService oAuthService;
     private final ApplicationEventPublisher eventPublisher;
+    private final SignupBenefitOutboxService signupBenefitOutboxService;
 
     // === Public Methods ===
 
@@ -216,6 +218,11 @@ public class AuthServiceImpl implements AuthService {
         // 약관 동의 처리
         userTermService.createUserTerms(newUser, request.termIds());
 
+        Long signupBenefitOutboxId = null;
+        if (inviteCode != null && !inviteCode.isBlank()) {
+            signupBenefitOutboxId = signupBenefitOutboxService.enqueue(inviteCode, newUser);
+        }
+
         // Redis 에서 signup-token 삭제 (1회성)
         signupTokenService.deleteSignupToken(provider, providerId, email);
 
@@ -226,8 +233,8 @@ public class AuthServiceImpl implements AuthService {
         // refresh-token 을 Redis에 저장
         jwtService.saveRefreshToken(newUser.getId(), refreshToken);
 
-        if (inviteCode != null && !inviteCode.isBlank()) {
-            eventPublisher.publishEvent(new SignupCompletedEvent(inviteCode, newUser.getId()));
+        if (signupBenefitOutboxId != null) {
+            eventPublisher.publishEvent(new SignupCompletedEvent(signupBenefitOutboxId));
         }
 
         return new SignupResult(new TokenPair(accessToken, refreshToken), SignupResponseDTO.of());
