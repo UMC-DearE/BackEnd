@@ -12,4 +12,6 @@ public interface UserInviteCodeRepository extends JpaRepository<UserInviteCode, 
     Optional<UserInviteCode> findByUserId(Long userId);
 
     Optional<UserInviteCode> findByInviteCode(String inviteCode);
+
+    boolean existsByInviteCode(String inviteCode);
 }
