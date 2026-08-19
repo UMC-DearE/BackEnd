@@ -9,6 +9,7 @@ import com.deare.backend.api.auth.dto.result.SignupResult;
 import com.deare.backend.api.auth.dto.result.TokenPair;
 import com.deare.backend.api.auth.exception.AuthErrorCode;
 import com.deare.backend.api.term.service.UserTermService;
+import com.deare.backend.api.invite.service.InviteService;
 import com.deare.backend.domain.term.entity.Term;
 import com.deare.backend.domain.term.repository.TermRepository;
 import com.deare.backend.domain.user.entity.enums.Provider;
@@ -43,6 +44,7 @@ public class AuthServiceImpl implements AuthService {
     private final SignupTokenService signupTokenService;
     private final UserTermService userTermService;
     private final OAuthService oAuthService;
+    private final InviteService inviteService;
 
     // === Public Methods ===
 
@@ -54,7 +56,7 @@ public class AuthServiceImpl implements AuthService {
      */
     @Transactional
     @Override
-    public OAuthCallbackResult handleOAuthCallback(String provider, String code) {
+    public OAuthCallbackResult handleOAuthCallback(String provider, String code, String inviteCode) {
 
         // Oauth 처리 (code -> token -> userInfo)
         OAuthCallbackUserInfoResponseDTO oauthInfo = oAuthService.handleCallback(provider, code);
@@ -75,7 +77,8 @@ public class AuthServiceImpl implements AuthService {
         String signupToken = signupTokenProvider.generateSignupToken(
                 oauthInfo.provider(),
                 oauthInfo.providerUserId(),
-                oauthInfo.email()
+                oauthInfo.email(),
+                inviteCode
         );
 
         // Redis 저장 (1회용)
@@ -188,6 +191,7 @@ public class AuthServiceImpl implements AuthService {
         String provider = tokenInfo.get("provider");
         String providerId = tokenInfo.get("providerId");
         String email = tokenInfo.get("email");
+        String inviteCode = tokenInfo.get("inviteCode");
 
         // Redis에서 signup-token 검증 (1회성)
         if (!signupTokenService.validateSignupToken(provider, providerId, signupToken)) {
@@ -210,6 +214,8 @@ public class AuthServiceImpl implements AuthService {
 
         // 약관 동의 처리
         userTermService.createUserTerms(newUser, request.termIds());
+
+        inviteService.applySignupBenefit(inviteCode, newUser);
 
         // Redis 에서 signup-token 삭제 (1회성)
         signupTokenService.deleteSignupToken(provider, providerId, email);

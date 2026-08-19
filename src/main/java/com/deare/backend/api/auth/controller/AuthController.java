@@ -9,6 +9,7 @@ import com.deare.backend.api.auth.dto.result.SignupResult;
 import com.deare.backend.api.auth.dto.result.TokenPair;
 import com.deare.backend.api.auth.exception.AuthErrorCode;
 import com.deare.backend.api.auth.service.AuthService;
+import com.deare.backend.api.invite.service.InviteService;
 import com.deare.backend.global.auth.cookie.CookieProvider;
 import com.deare.backend.global.auth.oauth.dto.oauth.OAuthAuthorizeResponseDTO;
 import com.deare.backend.global.auth.oauth.service.OAuthService;
@@ -33,6 +34,7 @@ public class AuthController {
     private final OAuthService oauthService;
     private final AuthService authService;
     private final CookieProvider cookieProvider;
+    private final InviteService inviteService;
 
     @Operation(
             summary = "OAuth 인증 URL 생성",
@@ -41,10 +43,17 @@ public class AuthController {
     @GetMapping("/oauth2/{provider}")
     public ResponseEntity<ApiResponse<OAuthAuthorizeResponseDTO>> authorize(
             @Parameter(description = "OAuth 제공자 (kakao, google)", example = "kakao")
-            @PathVariable String provider
+            @PathVariable String provider,
+            @RequestParam(name = "inviteCode", required = false) String inviteCode
     ) {
-        OAuthAuthorizeResponseDTO data = oauthService.buildAuthorizeUrl(provider);
-        return ResponseEntity.ok(ApiResponse.success(data));
+        if (inviteCode != null && !inviteCode.isBlank()) {
+            inviteService.validate(inviteCode);
+        }
+        OAuthAuthorizeResponseDTO data = oauthService.buildAuthorizeUrl(provider, inviteCode);
+        return ResponseEntity.ok(ApiResponse.success(
+                "OK",
+                "OAuth 인증 코드 발급에 성공하였습니다.",
+                data));
     }
 
     @Operation(
@@ -61,9 +70,9 @@ public class AuthController {
             @RequestParam("state") String state
     ) {
         // State 검증 (CSRF 방지)
-        oauthService.validateState(state);
+        String inviteCode = oauthService.validateState(state);
 
-        OAuthCallbackResult result = authService.handleOAuthCallback(provider, code);
+        OAuthCallbackResult result = authService.handleOAuthCallback(provider, code, inviteCode);
 
         if (result.isRegistered()) {
             // 기존 회원 -> JWT 발급 (at/rt)

@@ -23,6 +23,10 @@ public class SignupTokenProvider {
      * provider + providerId + email을 토큰에 담음
      */
     public String generateSignupToken(String provider, String providerId, String email) {
+        return generateSignupToken(provider, providerId, email, null);
+    }
+
+    public String generateSignupToken(String provider, String providerId, String email, String inviteCode) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + signupTokenProperties.getExpiration());
         
@@ -31,6 +35,7 @@ public class SignupTokenProvider {
                 .claim("provider", provider)
                 .claim("providerId", providerId)
                 .claim("email", email)
+                .claim("inviteCode", inviteCode)
                 .issuedAt(now)
                 .expiration(expiryDate)
                 .signWith(getSigningKey())
@@ -66,6 +71,7 @@ public class SignupTokenProvider {
         result.put("provider", claims.get("provider", String.class));
         result.put("providerId", claims.get("providerId", String.class));
         result.put("email", claims.get("email", String.class));
+        result.put("inviteCode", claims.get("inviteCode", String.class));
         
         return result;
     }

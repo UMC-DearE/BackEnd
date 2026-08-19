@@ -8,7 +8,7 @@ import com.deare.backend.api.auth.dto.result.TokenPair;
 
 public interface AuthService {
 
-    OAuthCallbackResult handleOAuthCallback(String provider, String code);
+    OAuthCallbackResult handleOAuthCallback(String provider, String code, String inviteCode);
 
     TokenPair refresh(String refreshToken);
 
