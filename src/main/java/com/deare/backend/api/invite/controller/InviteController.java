@@ -24,7 +24,6 @@ public class InviteController {
     @GetMapping("/code")
     public ApiResponse<InviteCodeResponseDTO> issueCode() {
         return ApiResponse.success(
-                "OK",
                 "초대 링크 조회에 성공했습니다.",
                 inviteService.issueCode(SecurityUtil.getCurrentUserId()));
     }
@@ -34,7 +33,6 @@ public class InviteController {
     public ApiResponse<InviteValidationResponseDTO> validate(
             @PathVariable String inviteCode) {
         return ApiResponse.success(
-                "OK",
                 "유효한 초대 링크입니다.",
                 inviteService.validate(inviteCode));
     }

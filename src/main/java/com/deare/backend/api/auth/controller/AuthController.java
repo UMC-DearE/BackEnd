@@ -51,7 +51,6 @@ public class AuthController {
         }
         OAuthAuthorizeResponseDTO data = oauthService.buildAuthorizeUrl(provider, inviteCode);
         return ResponseEntity.ok(ApiResponse.success(
-                "OK",
                 "OAuth 인증 코드 발급에 성공하였습니다.",
                 data));
     }

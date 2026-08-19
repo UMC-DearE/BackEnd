@@ -26,16 +26,7 @@ public class ApiResponse<T> {
     public static <T> ApiResponse<T> success(String message, T data) {
         return ApiResponse.<T>builder()
                 .success(true)
-                .code("200")
-                .message(message)
-                .data(data)
-                .build();
-    }
-
-    public static <T> ApiResponse<T> success(String code, String message, T data) {
-        return ApiResponse.<T>builder()
-                .success(true)
-                .code(code)
+                .code("OK")
                 .message(message)
                 .data(data)
                 .build();
