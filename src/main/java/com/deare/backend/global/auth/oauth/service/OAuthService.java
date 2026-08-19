@@ -33,9 +33,13 @@ public class OAuthService {
      * OAuth 인증 URL 생성
      * - state 파라미터 포함 (CSRF 방지)
      */
-    public OAuthAuthorizeResponseDTO buildAuthorizeUrl(String provider) {
+    public OAuthAuthorizeResponseDTO buildAuthorizeUrl(String provider, String inviteCode) {
+        if (!"kakao".equals(provider) && !"google".equals(provider)) {
+            throw new GeneralException(AuthErrorCode.INVALID_PROVIDER);
+        }
+
         // State 생성 및 Redis 저장
-        String state = oAuthStateService.generateState();
+        String state = oAuthStateService.generateState(inviteCode);
 
         String url = switch (provider) {
             case "kakao" -> UriComponentsBuilder
@@ -68,10 +72,8 @@ public class OAuthService {
     /**
      * State 검증
      */
-    public void validateState(String state) {
-        if (!oAuthStateService.validateAndDeleteState(state)) {
-            throw new GeneralException(AuthErrorCode.INVALID_STATE);
-        }
+    public String validateState(String state) {
+        return oAuthStateService.validateAndDeleteState(state);
     }
 
     /**
