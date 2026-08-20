@@ -17,6 +17,15 @@ public interface LetterRepositoryCustom {
             Pageable pageable
     );
 
+    Page<Letter> findAvailableLetters(
+            Long userId,
+            Long excludedFolderId,
+            Long fromId,
+            Boolean isLiked,
+            String keyword,
+            Pageable pageable
+    );
+
     Optional<Letter> findLetterDetailById(Long userId, Long letterId);
 
     Optional<Letter> findRandomLetterByUser(Long userId, long offset, LocalDateTime createdBefore);

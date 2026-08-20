@@ -6,7 +6,13 @@ import com.deare.backend.api.folder.dto.request.FolderUpdateRequestDTO;
 import com.deare.backend.api.folder.dto.response.FolderCreateResponseDTO;
 import com.deare.backend.api.folder.dto.response.FolderListResponseDTO;
 import com.deare.backend.api.folder.dto.response.FolderOrderResponseDTO;
+import com.deare.backend.api.folder.dto.request.FolderLettersRequestDTO;
+import com.deare.backend.api.folder.dto.response.FolderLettersResponseDTO;
 import com.deare.backend.api.folder.dto.result.FolderItemDTO;
+import com.deare.backend.api.letter.dto.response.LetterListResponseDTO;
+import com.deare.backend.api.letter.dto.result.LetterFromDTO;
+import com.deare.backend.api.letter.dto.result.LetterItemDTO;
+import com.deare.backend.api.letter.util.ExcerptUtil;
 import com.deare.backend.domain.folder.entity.Folder;
 import com.deare.backend.domain.folder.exception.FolderErrorCode;
 import com.deare.backend.domain.folder.repository.FolderRepository;
@@ -22,15 +28,20 @@ import com.deare.backend.global.common.exception.GeneralException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
 public class FolderServiceImpl implements FolderService {
 
     private static final int MAX_FOLDERS = 3;
+    private static final int EXCERPT_MAX_CHARS = 100;
 
     private final FolderRepository folderRepository;
     private final ImageRepository imageRepository;
@@ -118,6 +129,47 @@ public class FolderServiceImpl implements FolderService {
 
     @Override
     @Transactional
+    public FolderLettersResponseDTO addLettersToFolder(Long userId, Long folderId, FolderLettersRequestDTO reqDTO) {
+        Folder folder = getOwnedActiveFolder(userId, folderId);
+        Set<Long> distinctIds = new LinkedHashSet<>(reqDTO.letterIds());
+        List<Letter> letters = letterRepository.findAllById(distinctIds);
+
+        if (letters.size() != distinctIds.size() || letters.stream().anyMatch(Letter::isDeleted)) {
+            throw new GeneralException(LetterErrorCode.LETTER_NOT_FOUND);
+        }
+        if (letters.stream().anyMatch(letter -> !letter.isOwnedBy(userId))) {
+            throw new GeneralException(LetterErrorCode.FORBIDDEN);
+        }
+
+        letters.forEach(letter -> letter.changeFolder(folder));
+        return new FolderLettersResponseDTO(folderId, distinctIds.size());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public LetterListResponseDTO getAvailableLetters(
+            Pageable pageable,
+            Long userId,
+            Long folderId,
+            Long fromId,
+            Boolean isLiked,
+            String keyword
+    ) {
+        getOwnedActiveFolder(userId, folderId);
+        Page<Letter> page = letterRepository.findAvailableLetters(userId, folderId, fromId, isLiked, keyword, pageable);
+        List<LetterItemDTO> items = page.getContent().stream().map(this::toLetterItemDTO).toList();
+
+        return new LetterListResponseDTO(
+                page.getTotalElements(),
+                page.getTotalPages(),
+                page.getSize(),
+                page.getNumber(),
+                items
+        );
+    }
+
+    @Override
+    @Transactional
     public void removeLetterFromFolder(Long userId, Long folderId, Long letterId) {
         folderRepository.findByIdAndUser_IdAndIsDeletedFalse(folderId, userId)
                 .orElseThrow(() -> new GeneralException(FolderErrorCode.FOLDER_NOT_FOUND));
@@ -199,6 +251,34 @@ public class FolderServiceImpl implements FolderService {
 
             case DELETE -> folder.changeImage(null);
         }
+    }
+
+    private Folder getOwnedActiveFolder(Long userId, Long folderId) {
+        Folder folder = folderRepository.findById(folderId)
+                .filter(found -> !found.isDeleted())
+                .orElseThrow(() -> new GeneralException(FolderErrorCode.FOLDER_NOT_FOUND));
+
+        if (!folder.getUser().getId().equals(userId)) {
+            throw new GeneralException(FolderErrorCode.FORBIDDEN);
+        }
+        return folder;
+    }
+
+    private LetterItemDTO toLetterItemDTO(Letter letter) {
+        return new LetterItemDTO(
+                letter.getId(),
+                ExcerptUtil.excerptByChars(letter.getContent(), EXCERPT_MAX_CHARS),
+                letter.isLiked(),
+                letter.getReceivedAt(),
+                letter.getCreatedAt(),
+                new LetterFromDTO(
+                        letter.getFrom().getId(),
+                        letter.getFrom().getName(),
+                        letter.getFrom().getBackgroundColor(),
+                        letter.getFrom().getFontColor()
+                ),
+                letter.getFolder() != null ? letter.getFolder().getId() : null
+        );
     }
 
 }

@@ -6,6 +6,9 @@ import com.deare.backend.api.folder.dto.response.FolderListResponseDTO;
 import com.deare.backend.api.folder.dto.request.FolderOrderRequestDTO;
 import com.deare.backend.api.folder.dto.request.FolderUpdateRequestDTO;
 import com.deare.backend.api.folder.dto.response.FolderOrderResponseDTO;
+import com.deare.backend.api.folder.dto.request.FolderLettersRequestDTO;
+import com.deare.backend.api.folder.dto.response.FolderLettersResponseDTO;
+import com.deare.backend.api.letter.dto.response.LetterListResponseDTO;
 import com.deare.backend.api.folder.service.FolderService;
 import com.deare.backend.global.auth.util.SecurityUtil;
 import com.deare.backend.global.common.response.ApiResponse;
@@ -13,6 +16,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.data.domain.Pageable;
 
 @RestController
 @RequestMapping("/folders")
@@ -84,6 +88,26 @@ public class FolderController {
         Long userId = SecurityUtil.getCurrentUserId();
         folderService.addLetterToFolder(userId, folderId, letterId);
         return ApiResponse.success(null);
+    }
+
+    @PostMapping("/{folderId}/letters")
+    public ApiResponse<FolderLettersResponseDTO> addLettersToFolder(@PathVariable Long folderId, @Valid @RequestBody FolderLettersRequestDTO reqDTO) {
+        Long userId = SecurityUtil.getCurrentUserId();
+        FolderLettersResponseDTO data = folderService.addLettersToFolder(userId, folderId, reqDTO);
+        return ApiResponse.success("COMMON200", "편지가 폴더에 추가되었습니다.", data);
+    }
+
+    @GetMapping("/{folderId}/letters/available")
+    public ApiResponse<LetterListResponseDTO> getAvailableLetters(
+            @PathVariable Long folderId,
+            Pageable pageable,
+            @RequestParam(required = false) Long fromId,
+            @RequestParam(required = false) Boolean isLiked,
+            @RequestParam(required = false) String keyword
+    ) {
+        Long userId = SecurityUtil.getCurrentUserId();
+        LetterListResponseDTO data = folderService.getAvailableLetters(pageable, userId, folderId, fromId, isLiked, keyword);
+        return ApiResponse.success("COMMON200", "추가 가능한 편지 목록 조회에 성공했습니다.", data);
     }
 
     @DeleteMapping("/{folderId}/letters/{letterId}")
