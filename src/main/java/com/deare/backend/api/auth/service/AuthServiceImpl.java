@@ -7,7 +7,9 @@ import com.deare.backend.api.auth.dto.response.TermResponseDTO;
 import com.deare.backend.api.auth.dto.result.OAuthCallbackResult;
 import com.deare.backend.api.auth.dto.result.SignupResult;
 import com.deare.backend.api.auth.dto.result.TokenPair;
+import com.deare.backend.api.auth.event.SignupCompletedEvent;
 import com.deare.backend.api.auth.exception.AuthErrorCode;
+import com.deare.backend.api.invite.service.SignupBenefitOutboxService;
 import com.deare.backend.api.term.service.UserTermService;
 import com.deare.backend.domain.term.entity.Term;
 import com.deare.backend.domain.term.repository.TermRepository;
@@ -23,6 +25,7 @@ import com.deare.backend.global.auth.signupToken.SignupTokenService;
 import com.deare.backend.global.common.exception.GeneralException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,6 +46,8 @@ public class AuthServiceImpl implements AuthService {
     private final SignupTokenService signupTokenService;
     private final UserTermService userTermService;
     private final OAuthService oAuthService;
+    private final ApplicationEventPublisher eventPublisher;
+    private final SignupBenefitOutboxService signupBenefitOutboxService;
 
     // === Public Methods ===
 
@@ -54,7 +59,7 @@ public class AuthServiceImpl implements AuthService {
      */
     @Transactional
     @Override
-    public OAuthCallbackResult handleOAuthCallback(String provider, String code) {
+    public OAuthCallbackResult handleOAuthCallback(String provider, String code, String inviteCode) {
 
         // Oauth 처리 (code -> token -> userInfo)
         OAuthCallbackUserInfoResponseDTO oauthInfo = oAuthService.handleCallback(provider, code);
@@ -75,7 +80,8 @@ public class AuthServiceImpl implements AuthService {
         String signupToken = signupTokenProvider.generateSignupToken(
                 oauthInfo.provider(),
                 oauthInfo.providerUserId(),
-                oauthInfo.email()
+                oauthInfo.email(),
+                inviteCode
         );
 
         // Redis 저장 (1회용)
@@ -188,6 +194,7 @@ public class AuthServiceImpl implements AuthService {
         String provider = tokenInfo.get("provider");
         String providerId = tokenInfo.get("providerId");
         String email = tokenInfo.get("email");
+        String inviteCode = tokenInfo.get("inviteCode");
 
         // Redis에서 signup-token 검증 (1회성)
         if (!signupTokenService.validateSignupToken(provider, providerId, signupToken)) {
@@ -211,6 +218,11 @@ public class AuthServiceImpl implements AuthService {
         // 약관 동의 처리
         userTermService.createUserTerms(newUser, request.termIds());
 
+        Long signupBenefitOutboxId = null;
+        if (inviteCode != null && !inviteCode.isBlank()) {
+            signupBenefitOutboxId = signupBenefitOutboxService.enqueue(inviteCode, newUser);
+        }
+
         // Redis 에서 signup-token 삭제 (1회성)
         signupTokenService.deleteSignupToken(provider, providerId, email);
 
@@ -220,6 +232,10 @@ public class AuthServiceImpl implements AuthService {
 
         // refresh-token 을 Redis에 저장
         jwtService.saveRefreshToken(newUser.getId(), refreshToken);
+
+        if (signupBenefitOutboxId != null) {
+            eventPublisher.publishEvent(new SignupCompletedEvent(signupBenefitOutboxId));
+        }
 
         return new SignupResult(new TokenPair(accessToken, refreshToken), SignupResponseDTO.of());
     }

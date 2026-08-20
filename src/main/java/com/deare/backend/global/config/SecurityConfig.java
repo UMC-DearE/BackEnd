@@ -64,6 +64,7 @@ public class SecurityConfig {
 
                                 // 인증 관련 엔드포인트
                                 "/api/v1/auth/**",
+                                "/api/v1/invites/*/validate",
 
                                 // OAuth2
                                 "/oauth2/**"

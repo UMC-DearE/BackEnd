@@ -1,5 +1,7 @@
 package com.deare.backend.global.auth.oauth.service;
 
+import com.deare.backend.api.auth.exception.AuthErrorCode;
+import com.deare.backend.global.common.exception.GeneralException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -26,11 +28,11 @@ public class OAuthStateService {
      * State 생성 및 Redis 저장
      * @return 생성된 state 문자열
      */
-    public String generateState() {
+    public String generateState(String inviteCode) {
         String state = UUID.randomUUID().toString();
         String key = STATE_PREFIX + state;
 
-        redisTemplate.opsForValue().set(key, "valid", STATE_TTL_MINUTES, TimeUnit.MINUTES);
+        redisTemplate.opsForValue().set(key, inviteCode == null ? "" : inviteCode, STATE_TTL_MINUTES, TimeUnit.MINUTES);
 
         log.debug("OAuth State 생성 - State: {}", state);
         return state;
@@ -39,23 +41,22 @@ public class OAuthStateService {
     /**
      * State 검증 및 삭제 (1회성)
      * @param state 검증용
-     * @return 유효하면 true, 아니면 false
+     * @return state에 연결된 초대 코드, 초대 코드가 없으면 null
      */
-    public boolean validateAndDeleteState(String state) {
+    public String validateAndDeleteState(String state) {
         if (state == null || state.isBlank()) {
             log.warn("OAuth State 검증 실패 - State가 null 또는 빈 문자열");
-            return false;
+            throw new GeneralException(AuthErrorCode.INVALID_STATE);
         }
 
         String key = STATE_PREFIX + state;
-        Boolean deleted = redisTemplate.delete(key);
-
-        if (Boolean.TRUE.equals(deleted)) {
+        String inviteCode = redisTemplate.opsForValue().getAndDelete(key);
+        if (inviteCode != null) {
             log.debug("OAuth State 검증 성공 - State: {}", state);
-            return true;
+            return inviteCode.isBlank() ? null : inviteCode;
         }
 
         log.warn("OAuth State 검증 실패 - State가 Redis에 존재하지 않음: {}", state);
-        return false;
+        throw new GeneralException(AuthErrorCode.INVALID_STATE);
     }
 }
