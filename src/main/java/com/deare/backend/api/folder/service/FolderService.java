@@ -6,6 +6,10 @@ import com.deare.backend.api.folder.dto.response.FolderListResponseDTO;
 import com.deare.backend.api.folder.dto.response.FolderOrderResponseDTO;
 import com.deare.backend.api.folder.dto.request.FolderOrderRequestDTO;
 import com.deare.backend.api.folder.dto.request.FolderUpdateRequestDTO;
+import com.deare.backend.api.folder.dto.request.FolderLettersRequestDTO;
+import com.deare.backend.api.folder.dto.response.FolderLettersResponseDTO;
+import com.deare.backend.api.letter.dto.response.LetterListResponseDTO;
+import org.springframework.data.domain.Pageable;
 
 public interface FolderService {
 
@@ -14,6 +18,8 @@ public interface FolderService {
             Long userId, FolderCreateRequestDTO req);
     void deleteFolder(Long userId, Long folderId);
     void addLetterToFolder(Long userId, Long folderId, Long letterId);
+    FolderLettersResponseDTO addLettersToFolder(Long userId, Long folderId, FolderLettersRequestDTO reqDTO);
+    LetterListResponseDTO getAvailableLetters(Pageable pageable, Long userId, Long folderId, Long fromId, Boolean isLiked, String keyword);
     void removeLetterFromFolder(Long userId, Long folderId, Long letterId);
     FolderOrderResponseDTO updateOrders(Long userId, FolderOrderRequestDTO reqDTO);
     void updateFolder(Long userId, Long folderId, FolderUpdateRequestDTO reqDTO);
