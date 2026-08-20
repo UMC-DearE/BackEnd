@@ -10,9 +10,8 @@ import com.deare.backend.api.folder.dto.request.FolderLettersRequestDTO;
 import com.deare.backend.api.folder.dto.response.FolderLettersResponseDTO;
 import com.deare.backend.api.folder.dto.result.FolderItemDTO;
 import com.deare.backend.api.letter.dto.response.LetterListResponseDTO;
-import com.deare.backend.api.letter.dto.result.LetterFromDTO;
 import com.deare.backend.api.letter.dto.result.LetterItemDTO;
-import com.deare.backend.api.letter.util.ExcerptUtil;
+import com.deare.backend.api.letter.mapper.LetterItemMapper;
 import com.deare.backend.domain.folder.entity.Folder;
 import com.deare.backend.domain.folder.exception.FolderErrorCode;
 import com.deare.backend.domain.folder.repository.FolderRepository;
@@ -41,8 +40,6 @@ import java.util.Set;
 public class FolderServiceImpl implements FolderService {
 
     private static final int MAX_FOLDERS = 3;
-    private static final int EXCERPT_MAX_CHARS = 100;
-
     private final FolderRepository folderRepository;
     private final ImageRepository imageRepository;
     private final UserRepository userRepository;
@@ -157,7 +154,7 @@ public class FolderServiceImpl implements FolderService {
     ) {
         getOwnedActiveFolder(userId, folderId);
         Page<Letter> page = letterRepository.findAvailableLetters(userId, folderId, fromId, isLiked, keyword, pageable);
-        List<LetterItemDTO> items = page.getContent().stream().map(this::toLetterItemDTO).toList();
+        List<LetterItemDTO> items = page.getContent().stream().map(LetterItemMapper::toItemDTO).toList();
 
         return new LetterListResponseDTO(
                 page.getTotalElements(),
@@ -262,23 +259,6 @@ public class FolderServiceImpl implements FolderService {
             throw new GeneralException(FolderErrorCode.FORBIDDEN);
         }
         return folder;
-    }
-
-    private LetterItemDTO toLetterItemDTO(Letter letter) {
-        return new LetterItemDTO(
-                letter.getId(),
-                ExcerptUtil.excerptByChars(letter.getContent(), EXCERPT_MAX_CHARS),
-                letter.isLiked(),
-                letter.getReceivedAt(),
-                letter.getCreatedAt(),
-                new LetterFromDTO(
-                        letter.getFrom().getId(),
-                        letter.getFrom().getName(),
-                        letter.getFrom().getBackgroundColor(),
-                        letter.getFrom().getFontColor()
-                ),
-                letter.getFolder() != null ? letter.getFolder().getId() : null
-        );
     }
 
 }
