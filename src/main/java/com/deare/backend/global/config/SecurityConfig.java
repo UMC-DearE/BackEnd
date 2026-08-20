@@ -52,9 +52,9 @@ public class SecurityConfig {
                                 "/actuator/health/**",
                                 "/actuator/prometheus",
 
-                                // 스웨거 (비활성화)
-                                // "/swagger-ui/**",
-                                // "/v3/api-docs/**",
+                                // 스웨거
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**",
 
                                 // 테스트 API
                                 "/api/v1/test/**",
