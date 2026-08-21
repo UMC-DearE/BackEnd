@@ -1,5 +1,6 @@
 package com.deare.backend.api.report.controller;
 
+import com.deare.backend.api.report.dto.response.ReportReanalyzeResponseDTO;
 import com.deare.backend.api.report.dto.response.ReportResponseDTO;
 import com.deare.backend.api.report.service.ReportService;
 import com.deare.backend.global.auth.util.SecurityUtil;
@@ -7,6 +8,7 @@ import com.deare.backend.global.common.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -27,4 +29,15 @@ public class ReportController {
         return ApiResponse.success(reportService.getReport(userId));
     }
 
+
+    @Operation(
+            summary = "다시 분석하기",
+            description = "AI 성향 분석을 재실행합니다."
+    )
+    @PostMapping("/reanalyze")
+    public ApiResponse<ReportReanalyzeResponseDTO> reanalyze() {
+        Long userId = SecurityUtil.getCurrentUserId();
+        ReportReanalyzeResponseDTO result = reportService.reanalyze(userId);
+        return ApiResponse.success("AI 성향 분석에 성공하였습니다.", result);
+    }
 }
