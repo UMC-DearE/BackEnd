@@ -10,7 +10,7 @@ import com.deare.backend.domain.image.entity.Image;
 import com.deare.backend.domain.image.repository.ImageRepository;
 import com.deare.backend.domain.letter.entity.Letter;
 import com.deare.backend.domain.letter.repository.LetterRepository;
-import com.deare.backend.domain.report.repository.ReportRepository;
+import com.deare.backend.domain.report.repository.ReportAnalysisRepository;
 import com.deare.backend.domain.setting.entity.enums.MembershipPlan;
 import com.deare.backend.domain.setting.entity.UserSetting;
 import com.deare.backend.domain.setting.repository.UserSettingRepository;
@@ -44,7 +44,7 @@ public class UserServiceImpl implements UserService {
     private final FolderRepository folderRepository;
     private final UserTermRepository userTermRepository;
     private final UserStickerRepository userStickerRepository;
-    private final ReportRepository reportRepository;
+    private final ReportAnalysisRepository reportRepository;
 
     @Override
     @Transactional(readOnly = true)
