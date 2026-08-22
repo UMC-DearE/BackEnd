@@ -226,4 +226,39 @@ public class LetterRepositoryImpl implements LetterRepositoryCustom {
         return Optional.ofNullable(result);
     }
 
+    @Override
+    public long countVisibleLettersByUserSince(Long userId, LocalDateTime since) {
+        QLetter letter = QLetter.letter;
+
+        Long count = queryFactory
+                .select(letter.count())
+                .from(letter)
+                .where(
+                        letter.user.id.eq(userId),
+                        letter.isDeleted.eq(false),
+                        letter.isHidden.eq(false),
+                        letter.createdAt.goe(since)
+                )
+                .fetchOne();
+
+        return count == null ? 0L : count;
+    }
+
+    @Override
+    public List<String> findAiSummariesByUser(Long userId, int limit) {
+        QLetter letter = QLetter.letter;
+
+        return queryFactory
+                .select(letter.aiSummary)
+                .from(letter)
+                .where(
+                        letter.user.id.eq(userId),
+                        letter.isDeleted.eq(false),
+                        letter.isHidden.eq(false)
+                )
+                .orderBy(letter.createdAt.desc())
+                .limit(limit)
+                .fetch();
+    }
+
 }
