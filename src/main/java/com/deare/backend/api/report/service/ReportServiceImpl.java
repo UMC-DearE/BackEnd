@@ -50,6 +50,7 @@ public class ReportServiceImpl implements ReportService {
 
         if (totalLetterCount == 0) {
             return build(
+                    totalLetterCount,
                     fromRanking,
                     Analysis.noLetter(),
                     Reanalyze.reanalyzedDisabled(null, null)
@@ -58,6 +59,7 @@ public class ReportServiceImpl implements ReportService {
 
         if (totalLetterCount < MIN_LETTER_COUNT) {
             return build(
+                    totalLetterCount,
                     fromRanking,
                     Analysis.noEnoughLetters(),
                     Reanalyze.reanalyzedDisabled(null, null)
@@ -73,6 +75,7 @@ public class ReportServiceImpl implements ReportService {
         );
 
         return build(
+                totalLetterCount,
                 fromRanking,
                 Analysis.of(user, analysis),
                 reanalyze
@@ -291,11 +294,13 @@ public class ReportServiceImpl implements ReportService {
     }
 
     private ReportResponseDTO build(
+            long totalLetterCount,
             List<FromRanking> fromRanking,
             Analysis analysis,
             Reanalyze reanalyze
     ) {
         return ReportResponseDTO.builder()
+                .totalLetterCount(totalLetterCount)
                 .fromRanking(fromRanking)
                 .analysis(analysis)
                 .reanalyze(reanalyze)

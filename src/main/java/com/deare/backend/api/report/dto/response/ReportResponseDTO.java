@@ -11,6 +11,7 @@ import java.util.List;
 @Getter
 @Builder
 public class ReportResponseDTO {
+    private long totalLetterCount;
     private List<FromRanking> fromRanking;
     private Analysis analysis;
     private Reanalyze reanalyze;
