@@ -31,6 +31,18 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.fail(ec.getCode(), ec.getMessage()));
     }
 
+    @ExceptionHandler(GeneralMessageException.class)
+    public ResponseEntity<ApiResponse<Void>> handleGeneralMessage(GeneralMessageException e) {
+        BaseErrorCode ec = e.getErrorCode();
+        String message = e.getCustomMessage();
+
+        log.warn("[GeneralMessageException] Code: {}, Message: {}", ec.getCode(), message);
+
+        return ResponseEntity
+                .status(ec.getStatus())
+                .body(ApiResponse.fail(ec.getCode(), message));
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse<Void>> handleMethodArgumentNotValid(
             MethodArgumentNotValidException e
