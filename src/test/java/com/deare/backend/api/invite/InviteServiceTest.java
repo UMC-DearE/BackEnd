@@ -41,7 +41,7 @@ class InviteServiceTest {
         var second = inviteService.issueCode(user.getId());
 
         assertThat(second.inviteCode()).isEqualTo(first.inviteCode());
-        assertThat(second.inviteUrl()).endsWith("/invite/" + first.inviteCode());
+        assertThat(second.inviteUrl()).endsWith("/login?inviteCode=" + first.inviteCode());
         assertThat(inviteService.validate(first.inviteCode()).inviteCode())
                 .isEqualTo(first.inviteCode());
         assertThatThrownBy(() -> inviteService.validate("missing"))

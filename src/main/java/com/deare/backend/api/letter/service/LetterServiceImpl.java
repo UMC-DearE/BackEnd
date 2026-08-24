@@ -8,8 +8,8 @@ import com.deare.backend.api.letter.dto.request.LetterPinRequestDTO;
 import com.deare.backend.api.letter.dto.request.LetterReplyUpsertRequestDTO;
 import com.deare.backend.api.letter.dto.request.LetterUpdateRequestDTO;
 import com.deare.backend.api.letter.dto.response.*;
+import com.deare.backend.api.letter.mapper.LetterItemMapper;
 import com.deare.backend.api.letter.dto.result.*;
-import com.deare.backend.api.letter.util.ExcerptUtil;
 import com.deare.backend.domain.emotion.entity.Emotion;
 import com.deare.backend.domain.emotion.entity.LetterEmotion;
 import com.deare.backend.domain.emotion.repository.EmotionRepository;
@@ -47,8 +47,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class LetterServiceImpl implements LetterService {
 
-    private static final int EXCERPT_MAX_CHARS = 100;
-
     private final LetterRepository letterRepository;
     private final LetterEmotionQueryRepository letterEmotionQueryRepository;
     private final FromRepository fromRepository;
@@ -80,7 +78,7 @@ public class LetterServiceImpl implements LetterService {
         );
 
         List<LetterItemDTO> items = page.getContent().stream()
-                .map(this::toItemDTO)
+                .map(LetterItemMapper::toItemDTO)
                 .toList();
 
         return new LetterListResponseDTO(
@@ -342,23 +340,6 @@ public class LetterServiceImpl implements LetterService {
         }
 
         return letter;
-    }
-
-    private LetterItemDTO toItemDTO(Letter letter) {
-        return new LetterItemDTO(
-                letter.getId(),
-                ExcerptUtil.excerptByChars(letter.getContent(), EXCERPT_MAX_CHARS),
-                letter.isLiked(),
-                letter.getReceivedAt(),
-                letter.getCreatedAt(),
-                new LetterFromDTO(
-                        letter.getFrom().getId(),
-                        letter.getFrom().getName(),
-                        letter.getFrom().getBackgroundColor(),
-                        letter.getFrom().getFontColor()
-                ),
-                letter.getFolder() != null ? letter.getFolder().getId() : null
-        );
     }
 
     @Override
