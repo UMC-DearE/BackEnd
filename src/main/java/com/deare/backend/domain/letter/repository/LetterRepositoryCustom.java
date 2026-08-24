@@ -5,12 +5,22 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 public interface LetterRepositoryCustom {
     Page<Letter> findLettersForList(
             Long userId,
             Long folderId,
+            Long fromId,
+            Boolean isLiked,
+            String keyword,
+            Pageable pageable
+    );
+
+    Page<Letter> findAvailableLetters(
+            Long userId,
+            Long excludedFolderId,
             Long fromId,
             Boolean isLiked,
             String keyword,
@@ -24,4 +34,8 @@ public interface LetterRepositoryCustom {
     long countVisibleLettersByUser(Long userId, LocalDateTime createdBefore);
 
     Optional<Letter> findPinnedLetterByUser(Long userId);
+
+    long countVisibleLettersByUserSince(Long userId, LocalDateTime since);
+
+    List<String> findAiSummariesByUser(Long userId, int limit);
 }

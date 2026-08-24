@@ -79,6 +79,17 @@ public enum ExternalApiErrorCode implements BaseErrorCode {
             HttpStatus.GATEWAY_TIMEOUT,
             "AI_50401",
             "AI 응답 시간이 초과되었습니다."
+    ),
+    AI_PERSONA_LENGTH_INVALID(
+            HttpStatus.BAD_GATEWAY,
+            "AI_50208",
+            "AI 분석 문장 길이가 올바르지 않습니다."
+    ),
+
+    AI_PERSONA_HASHTAG_INVALID(
+            HttpStatus.BAD_GATEWAY,
+            "AI_50209",
+            "AI 해시태그 형식이 올바르지 않습니다."
     );
 
 

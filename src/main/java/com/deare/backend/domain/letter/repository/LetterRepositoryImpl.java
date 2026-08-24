@@ -88,6 +88,60 @@ public class LetterRepositoryImpl implements LetterRepositoryCustom {
     }
 
     @Override
+    public Page<Letter> findAvailableLetters(
+            Long userId,
+            Long excludedFolderId,
+            Long fromId,
+            Boolean isLiked,
+            String keyword,
+            Pageable pageable
+    ) {
+        QLetter letter = QLetter.letter;
+        QFrom from = QFrom.from;
+        QFolder folder = QFolder.folder;
+
+        JPAQuery<Letter> contentQuery = queryFactory
+                .selectFrom(letter)
+                .join(letter.from, from).fetchJoin()
+                .leftJoin(letter.folder, folder).fetchJoin()
+                .where(
+                        letter.isDeleted.isFalse(),
+                        ownedBy(letter, userId),
+                        letter.folder.isNull().or(letter.folder.id.ne(excludedFolderId)),
+                        fromIdEq(letter, fromId),
+                        isLikedEq(letter, isLiked),
+                        keywordLike(letter, keyword)
+                )
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize());
+
+        List<OrderSpecifier<?>> orderSpecifiers = toOrderSpecifiers(pageable.getSort(), letter);
+        if (orderSpecifiers.isEmpty()) {
+            contentQuery.orderBy(letter.id.desc());
+        } else {
+            contentQuery.orderBy(orderSpecifiers.toArray(OrderSpecifier[]::new));
+        }
+
+        List<Letter> contents = contentQuery.fetch();
+        JPAQuery<Long> countQuery = queryFactory
+                .select(letter.count())
+                .from(letter)
+                .where(
+                        letter.isDeleted.isFalse(),
+                        ownedBy(letter, userId),
+                        letter.folder.isNull().or(letter.folder.id.ne(excludedFolderId)),
+                        fromIdEq(letter, fromId),
+                        isLikedEq(letter, isLiked),
+                        keywordLike(letter, keyword)
+                );
+
+        return PageableExecutionUtils.getPage(contents, pageable, () -> {
+            Long count = countQuery.fetchOne();
+            return count == null ? 0L : count;
+        });
+    }
+
+    @Override
     public Optional<Letter> findLetterDetailById(Long userId, Long letterId) {
         QLetter letter = QLetter.letter;
         QFrom from = QFrom.from;
@@ -224,6 +278,42 @@ public class LetterRepositoryImpl implements LetterRepositoryCustom {
                 .fetchOne();
 
         return Optional.ofNullable(result);
+    }
+
+    @Override
+    public long countVisibleLettersByUserSince(Long userId, LocalDateTime since) {
+        QLetter letter = QLetter.letter;
+
+        Long count = queryFactory
+                .select(letter.count())
+                .from(letter)
+                .where(
+                        letter.user.id.eq(userId),
+                        letter.isDeleted.eq(false),
+                        letter.isHidden.eq(false),
+                        letter.createdAt.goe(since)
+                )
+                .fetchOne();
+
+        return count == null ? 0L : count;
+    }
+
+    @Override
+    public List<String> findAiSummariesByUser(Long userId, int limit) {
+        QLetter letter = QLetter.letter;
+
+        return queryFactory
+                .select(letter.aiSummary)
+                .from(letter)
+                .where(
+                        letter.user.id.eq(userId),
+                        letter.isDeleted.eq(false),
+                        letter.isHidden.eq(false),
+                        letter.aiSummary.isNotNull()
+                )
+                .orderBy(letter.createdAt.desc())
+                .limit(limit)
+                .fetch();
     }
 
 }

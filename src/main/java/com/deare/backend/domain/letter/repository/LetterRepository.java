@@ -1,6 +1,7 @@
 package com.deare.backend.domain.letter.repository;
 
 import com.deare.backend.domain.letter.entity.Letter;
+import com.deare.backend.domain.letter.repository.query.dto.FromLetterRankingProjection;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -66,4 +67,23 @@ public interface LetterRepository extends JpaRepository<Letter, Long>, LetterRep
     """)
     Optional<Letter> findTopPinnedByUserId(@Param("userId") Long userId);
 
+    @Query(value = """
+        select
+            f.user_from_id     as fromId,
+            f.from_name        as name,
+            f.from_bg_color    as bgColor,
+            f.from_font_color  as fontColor,
+            count(l.letter_id) as letterCount
+        from user_from f
+        join letter l
+            on l.user_from_id = f.user_from_id
+            and l.is_deleted = false
+            and l.is_hidden = false
+        where f.user_id = :userId
+            and f.is_deleted = false
+        group by f.user_from_id, f.from_name, f.from_bg_color, f.from_font_color
+        order by letterCount desc, f.user_from_id asc
+        limit 3
+    """, nativeQuery = true)
+    List<FromLetterRankingProjection> findTopFromsByLetterCount(@Param("userId") Long userId);
 }
