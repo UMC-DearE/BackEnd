@@ -42,6 +42,7 @@ public class ReportServiceImpl implements ReportService {
     private final ReportAnalyzedAdapter reportAnalyzedAdapter;
 
     @Override
+    @Transactional
     public ReportResponseDTO getReport(Long userId) {
         User user = getUser(userId);
 
@@ -67,7 +68,7 @@ public class ReportServiceImpl implements ReportService {
         }
 
         ReportAnalysis analysis = findAnalysis(userId)
-                .orElseGet(() -> createAnalysis(user, totalLetterCount));
+                .orElseGet(() -> createAnalysisSafely(userId, totalLetterCount));
 
         Reanalyze reanalyze = evaluateReanalyze(
                 userId,
@@ -85,7 +86,8 @@ public class ReportServiceImpl implements ReportService {
     @Override
     @Transactional
     public ReportReanalyzeResponseDTO reanalyze(Long userId) {
-        User user = getUser(userId);
+        // 동일 사용자에 대한 재분석 요청을 직렬화해 중복 호출/덮어쓰기를 방지
+        User user = getUserForUpdate(userId);
 
         long totalLetterCount = countVisibleLetters(userId);
 
@@ -108,6 +110,16 @@ public class ReportServiceImpl implements ReportService {
         );
 
         return ReportReanalyzeResponseDTO.of(user, saved);
+    }
+
+    private ReportAnalysis createAnalysisSafely(
+            Long userId,
+            long totalLetterCount
+    ) {
+        User lockedUser = getUserForUpdate(userId);
+
+        return findAnalysis(userId)
+                .orElseGet(() -> createAnalysis(lockedUser, totalLetterCount));
     }
 
     private ReportAnalysis createAnalysis(
@@ -265,6 +277,15 @@ public class ReportServiceImpl implements ReportService {
 
     private User getUser(Long userId) {
         return userRepository.findById(userId)
+                .orElseThrow(() ->
+                        new GeneralException(
+                                ReportErrorCode.REPORT_NOT_FOUND_USER
+                        )
+                );
+    }
+
+    private User getUserForUpdate(Long userId) {
+        return userRepository.findByIdForUpdate(userId)
                 .orElseThrow(() ->
                         new GeneralException(
                                 ReportErrorCode.REPORT_NOT_FOUND_USER
