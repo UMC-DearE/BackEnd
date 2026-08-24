@@ -117,6 +117,49 @@ class InviteServiceTest {
     }
 
     /**
+     * 기존 초대 이력이 있는 사용자의 잘못된 코드 검증
+     * (1) 초대 이력이 있어도 존재하지 않는 코드는 INVALID_INVITE_CODE로 거부되는가?
+     * (2) 기존 초대 이력이 한 건으로 유지되는가?
+     */
+    @Test
+    void invalidCodeIsRejectedEvenWhenInviteHistoryExists() {
+        User inviter = saveUser("inviter");
+        User invitee = saveUser("invitee");
+        inviteCodeRepository.save(UserInviteCode.create(inviter, "valid-code"));
+        inviteService.applySignupBenefit("valid-code", invitee);
+
+        assertThatThrownBy(() -> inviteService.applySignupBenefit("missing", invitee))
+                .isInstanceOf(GeneralException.class)
+                .satisfies(error -> assertThat(
+                        ((GeneralException) error).getErrorCode())
+                        .isEqualTo(InviteErrorCode.INVALID_INVITE_CODE));
+
+        assertThat(inviteHistoryRepository.findAll()).hasSize(1);
+    }
+
+    /**
+     * 기존 초대 이력이 있는 사용자의 자기 초대 검증
+     * (1) 초대 이력이 있어도 자신의 코드는 INVALID_INVITE_CODE로 거부되는가?
+     * (2) 기존 초대 이력이 한 건으로 유지되는가?
+     */
+    @Test
+    void selfInviteIsRejectedEvenWhenInviteHistoryExists() {
+        User inviter = saveUser("inviter");
+        User invitee = saveUser("invitee");
+        inviteCodeRepository.save(UserInviteCode.create(inviter, "valid-code"));
+        inviteService.applySignupBenefit("valid-code", invitee);
+        inviteCodeRepository.save(UserInviteCode.create(invitee, "self-code"));
+
+        assertThatThrownBy(() -> inviteService.applySignupBenefit("self-code", invitee))
+                .isInstanceOf(GeneralException.class)
+                .satisfies(error -> assertThat(
+                        ((GeneralException) error).getErrorCode())
+                        .isEqualTo(InviteErrorCode.INVALID_INVITE_CODE));
+
+        assertThat(inviteHistoryRepository.findAll()).hasSize(1);
+    }
+
+    /**
      * 이미 PLUS인 초대자의 정상 초대 검증
      * (1) 초대자가 이미 PLUS여도 초대 이력이 생성되는가?
      * (2) 초대받은 사용자에게 PLUS 혜택이 적용되는가?

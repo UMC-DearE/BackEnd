@@ -70,14 +70,13 @@ public class InviteServiceImpl implements InviteService {
         if (inviteCode == null || inviteCode.isBlank()) {
             throw new GeneralException(InviteErrorCode.INVALID_INVITE_CODE);
         }
-        if (inviteHistoryRepository.existsByInviteeId(invitee.getId())) return;
-
         User inviter = inviteCodeRepository.findWithUserByInviteCode(inviteCode)
                 .map(UserInviteCode::getUser)
                 .orElseThrow(() -> new GeneralException(InviteErrorCode.INVALID_INVITE_CODE));
         if (inviter.getId().equals(invitee.getId())) {
             throw new GeneralException(InviteErrorCode.INVALID_INVITE_CODE);
         }
+        if (inviteHistoryRepository.existsByInviteeId(invitee.getId())) return;
 
         inviteHistoryRepository.saveAndFlush(UserInviteHistory.create(inviter, invitee));
         upgradeToPlus(inviter);
