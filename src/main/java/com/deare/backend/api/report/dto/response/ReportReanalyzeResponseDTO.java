@@ -2,8 +2,6 @@ package com.deare.backend.api.report.dto.response;
 
 import com.deare.backend.domain.report.entity.ReportAnalysis;
 import com.deare.backend.domain.user.entity.User;
-import lombok.Builder;
-import lombok.Getter;
 
 import java.time.LocalDateTime;
 import java.util.List;
