@@ -126,11 +126,6 @@ public class ReportAnalyzedAdapterImpl implements ReportAnalyzedAdapter {
             throw e;
 
         } catch (Exception e) {
-            log.warn(
-                    "[ReportAnalyze] AI 응답 JSON 파싱 실패 - raw={}",
-                    raw
-            );
-
             throw new ExternalApiException(
                     ExternalApiErrorCode.AI_RESPONSE_PARSE_ERROR
             );
