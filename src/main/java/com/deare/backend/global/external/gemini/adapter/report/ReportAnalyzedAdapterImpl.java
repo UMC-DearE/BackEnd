@@ -22,6 +22,9 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ReportAnalyzedAdapterImpl implements ReportAnalyzedAdapter {
 
+    private static final int DESCRIPTION_MIN_LENGTH = 100;
+    private static final int DESCRIPTION_MAX_LENGTH = 170;
+
     private final GeminiFeignClient feignClient;
     private final ObjectMapper om;
 
@@ -161,8 +164,8 @@ public class ReportAnalyzedAdapterImpl implements ReportAnalyzedAdapter {
         String description = result.getDescription();
 
         if (description == null
-                || description.length() < 130
-                || description.length() > 170) {
+                || description.length() < DESCRIPTION_MIN_LENGTH
+                || description.length() > DESCRIPTION_MAX_LENGTH) {
 
             log.warn(
                     "[ReportAnalyze] description 길이 검증 실패 - length={}, description={}",
