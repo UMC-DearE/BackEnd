@@ -23,7 +23,7 @@ import java.util.List;
 public class ReportAnalyzedAdapterImpl implements ReportAnalyzedAdapter {
 
     private static final int DESCRIPTION_MIN_LENGTH = 100;
-    private static final int DESCRIPTION_MAX_LENGTH = 170;
+    private static final int DESCRIPTION_MAX_LENGTH = 200;
 
     private final GeminiFeignClient feignClient;
     private final ObjectMapper om;
