@@ -9,16 +9,6 @@ import org.springframework.http.HttpStatus;
 @RequiredArgsConstructor
 public enum MembershipErrorCode implements BaseErrorCode {
 
-    MEMBERSHIP_UNAUTHORIZED(
-            HttpStatus.UNAUTHORIZED,
-            "MEMBERSHIP_40101",
-            "로그인이 필요한 요청입니다."
-    ),
-    MEMBERSHIP_CONFLICT(
-            HttpStatus.CONFLICT,
-            "MEMBERSHIP_40901",
-            "이미 PLUS 회원입니다."
-    ),
     MEMBERSHIP_INTERNAL_SERVER_ERROR(
             HttpStatus.INTERNAL_SERVER_ERROR,
             "MEMBERSHIP_50001",
