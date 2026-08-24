@@ -14,6 +14,7 @@ import com.deare.backend.domain.report.repository.ReportAnalysisRepository;
 import com.deare.backend.domain.user.entity.User;
 import com.deare.backend.domain.user.repository.UserRepository;
 import com.deare.backend.global.common.exception.GeneralException;
+import com.deare.backend.global.common.exception.GeneralMessageException;
 import com.deare.backend.global.external.gemini.adapter.report.ReportAnalyzedAdapter;
 import com.deare.backend.global.external.gemini.dto.response.report.ReportAnalyzeResponseDTO;
 import lombok.RequiredArgsConstructor;
@@ -180,7 +181,7 @@ public class ReportServiceImpl implements ReportService {
 
     private void validateMinimumLetterCount(long totalLetterCount) {
         if (totalLetterCount < MIN_LETTER_COUNT) {
-            throw new GeneralException(
+            throw new GeneralMessageException(
                     ReportErrorCode.REPORT_ANALYSIS_NOT_ENOUGH_LETTERS,
                     "분석하려면 편지 %d통이 필요해요.".formatted(MIN_LETTER_COUNT)
             );
@@ -197,7 +198,7 @@ public class ReportServiceImpl implements ReportService {
                 countNewLettersSince(userId, lastAnalyzedAt);
 
         if (newLetterCount < MIN_NEW_LETTER_COUNT) {
-            throw new GeneralException(
+            throw new GeneralMessageException(
                     ReportErrorCode.REPORT_ANALYSIS_NOT_ENOUGH_NEW_LETTERS,
                     "새 편지 %d통이 필요해요.".formatted(remainingNewLetterCount(newLetterCount))
             );
