@@ -48,7 +48,8 @@ public class InviteServiceImpl implements InviteService {
         UserInviteCode code = inviteCodeRepository.findByUserId(userId)
                 .orElseGet(() -> createUniqueCode(user));
         String link = UriComponentsBuilder.fromUriString(frontendBaseUrl)
-                .pathSegment("invite", code.getInviteCode())
+                .pathSegment("login")
+                .queryParam("inviteCode", code.getInviteCode())
                 .build().toUriString();
         return new InviteCodeResponseDTO(code.getInviteCode(), link);
     }
