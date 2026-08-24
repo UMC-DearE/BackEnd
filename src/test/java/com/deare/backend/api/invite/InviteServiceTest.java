@@ -33,6 +33,12 @@ class InviteServiceTest {
     @Autowired private UserInviteHistoryRepository inviteHistoryRepository;
     @Autowired private UserSettingRepository userSettingRepository;
 
+    /**
+     * 초대 코드의 영구성과 재사용 검증
+     * (1) 같은 사용자가 다시 요청해도 동일한 초대 코드를 반환하는가?
+     * (2) 로그인 링크에 초대 코드가 쿼리 파라미터로 포함되는가?
+     * (3) 발급된 코드는 유효하고 존재하지 않는 코드는 거부되는가?
+     */
     @Test
     void issueCodeIsPermanentAndReusable() {
         User user = saveUser("owner");
@@ -51,6 +57,11 @@ class InviteServiceTest {
                         .isEqualTo(InviteErrorCode.INVALID_INVITE_CODE));
     }
 
+    /**
+     * 정상 초대와 중복 처리 검증
+     * (1) 초대자와 초대받은 사용자 모두 PLUS 혜택을 받는가?
+     * (2) 같은 초대를 다시 처리해도 초대 이력이 한 건만 유지되는가?
+     */
     @Test
     void successfulInviteUpgradesBothUsersAndStoresHistoryOnce() {
         User inviter = saveUser("inviter");
@@ -65,16 +76,51 @@ class InviteServiceTest {
         assertThat(userSettingRepository.findByUser_Id(invitee.getId()).orElseThrow().isPlus()).isTrue();
     }
 
+    /**
+     * 잘못된 초대 코드 처리 검증
+     * (1) GeneralException이 발생하는가?
+     * (2) 오류 코드가 InviteErrorCode.INVALID_INVITE_CODE인가?
+     * (3) 초대 이력과 사용자 혜택이 생성되지 않는가?
+     */
     @Test
     void invalidCodeDoesNotCreateBenefit() {
         User invitee = saveUser("invitee");
 
-        inviteService.applySignupBenefit("missing", invitee);
+        assertThatThrownBy(() -> inviteService.applySignupBenefit("missing", invitee))
+                .isInstanceOf(GeneralException.class)
+                .satisfies(error -> assertThat(
+                        ((GeneralException) error).getErrorCode())
+                        .isEqualTo(InviteErrorCode.INVALID_INVITE_CODE));
 
         assertThat(inviteHistoryRepository.findAll()).isEmpty();
         assertThat(userSettingRepository.findByUser_Id(invitee.getId())).isEmpty();
     }
 
+    /**
+     * 자기 초대 방지 검증
+     * (1) 자신의 초대 코드를 사용하면 INVALID_INVITE_CODE 예외가 발생하는가?
+     * (2) 초대 이력과 사용자 혜택이 생성되지 않는가?
+     */
+    @Test
+    void selfInviteDoesNotCreateBenefit() {
+        User user = saveUser("self");
+        inviteCodeRepository.save(UserInviteCode.create(user, "self-code"));
+
+        assertThatThrownBy(() -> inviteService.applySignupBenefit("self-code", user))
+                .isInstanceOf(GeneralException.class)
+                .satisfies(error -> assertThat(
+                        ((GeneralException) error).getErrorCode())
+                        .isEqualTo(InviteErrorCode.INVALID_INVITE_CODE));
+
+        assertThat(inviteHistoryRepository.findAll()).isEmpty();
+        assertThat(userSettingRepository.findByUser_Id(user.getId())).isEmpty();
+    }
+
+    /**
+     * 이미 PLUS인 초대자의 정상 초대 검증
+     * (1) 초대자가 이미 PLUS여도 초대 이력이 생성되는가?
+     * (2) 초대받은 사용자에게 PLUS 혜택이 적용되는가?
+     */
     @Test
     void alreadyPlusInviterStillAllowsInviteeBenefit() {
         User inviter = saveUser("inviter");

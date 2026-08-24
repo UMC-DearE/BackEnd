@@ -67,11 +67,17 @@ public class InviteServiceImpl implements InviteService {
     @Override
     @Transactional
     public void applySignupBenefit(String inviteCode, User invitee) {
-        if (inviteCode == null || inviteCode.isBlank()
-                || inviteHistoryRepository.existsByInviteeId(invitee.getId())) return;
+        if (inviteCode == null || inviteCode.isBlank()) {
+            throw new GeneralException(InviteErrorCode.INVALID_INVITE_CODE);
+        }
+        if (inviteHistoryRepository.existsByInviteeId(invitee.getId())) return;
+
         User inviter = inviteCodeRepository.findWithUserByInviteCode(inviteCode)
-                .map(UserInviteCode::getUser).orElse(null);
-        if (inviter == null || inviter.getId().equals(invitee.getId())) return;
+                .map(UserInviteCode::getUser)
+                .orElseThrow(() -> new GeneralException(InviteErrorCode.INVALID_INVITE_CODE));
+        if (inviter.getId().equals(invitee.getId())) {
+            throw new GeneralException(InviteErrorCode.INVALID_INVITE_CODE);
+        }
 
         inviteHistoryRepository.saveAndFlush(UserInviteHistory.create(inviter, invitee));
         upgradeToPlus(inviter);
