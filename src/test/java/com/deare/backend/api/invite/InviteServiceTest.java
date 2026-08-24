@@ -2,6 +2,7 @@ package com.deare.backend.api.invite;
 
 import com.deare.backend.api.invite.service.InviteService;
 import com.deare.backend.api.invite.service.InviteServiceImpl;
+import com.deare.backend.api.setting.service.SettingWriteServiceImpl;
 import com.deare.backend.api.invite.exception.InviteErrorCode;
 import com.deare.backend.domain.invite.entity.UserInviteCode;
 import com.deare.backend.domain.invite.repository.UserInviteCodeRepository;
@@ -23,7 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DataJpaTest
-@Import({QuerydslConfig.class, InviteServiceImpl.class})
+@Import({QuerydslConfig.class, InviteServiceImpl.class, SettingWriteServiceImpl.class})
 @ActiveProfiles("test")
 class InviteServiceTest {
 

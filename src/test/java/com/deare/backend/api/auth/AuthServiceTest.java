@@ -9,6 +9,7 @@ import com.deare.backend.domain.term.entity.Term;
 import com.deare.backend.domain.term.entity.enums.TermType;
 import com.deare.backend.domain.term.repository.TermRepository;
 import com.deare.backend.domain.term.repository.UserTermRepository;
+import com.deare.backend.domain.setting.repository.UserSettingRepository;
 import com.deare.backend.domain.user.entity.enums.Provider;
 import com.deare.backend.domain.user.entity.User;
 import com.deare.backend.domain.user.repository.UserRepository;
@@ -36,6 +37,7 @@ class AuthServiceTest {
     @Autowired private UserRepository userRepository;
     @Autowired private TermRepository termRepository;
     @Autowired private UserTermRepository userTermRepository;
+    @Autowired private UserSettingRepository userSettingRepository;
     @Autowired private JwtProvider jwtProvider;
     @Autowired private JwtService jwtService;
     @Autowired private SignupTokenProvider signupTokenProvider;
@@ -45,6 +47,7 @@ class AuthServiceTest {
     @BeforeEach
     void setUp() {
         userTermRepository.deleteAll();
+        userSettingRepository.deleteAll();
         userRepository.deleteAll();
         termRepository.deleteAll();
         clearRedis();
@@ -96,6 +99,8 @@ class AuthServiceTest {
         assertThat(result.tokenPair().accessToken()).isNotBlank();
         assertThat(result.tokenPair().refreshToken()).isNotBlank();
         assertThat(userRepository.findByProviderAndProviderId(Provider.KAKAO, "newuser1")).isPresent();
+        User user = userRepository.findByProviderAndProviderId(Provider.KAKAO, "newuser1").orElseThrow();
+        assertThat(userSettingRepository.findByUser_Id(user.getId())).isPresent();
     }
 
     @Test
