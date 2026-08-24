@@ -39,11 +39,4 @@ public class SettingController {
         return ApiResponse.success(settingService.getMembership(userId));
     }
 
-    @PostMapping("/membership")
-    @Operation(summary = "멤버십 결제(임시) - PLUS 전환", description = "PG 연동 전 임시 플로우: 결제 성공으로 간주하고 즉시 PLUS로 전환합니다.")
-    public ApiResponse<UpgradeMembershipResponseDTO> upgradeMembership() {
-        Long userId = SecurityUtil.getCurrentUserId();
-        return ApiResponse.success(settingService.upgradeMembership(userId));
-    }
-
 }
