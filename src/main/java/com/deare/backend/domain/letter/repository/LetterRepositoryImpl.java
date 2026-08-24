@@ -254,7 +254,8 @@ public class LetterRepositoryImpl implements LetterRepositoryCustom {
                 .where(
                         letter.user.id.eq(userId),
                         letter.isDeleted.eq(false),
-                        letter.isHidden.eq(false)
+                        letter.isHidden.eq(false),
+                        letter.aiSummary.isNotNull()
                 )
                 .orderBy(letter.createdAt.desc())
                 .limit(limit)
