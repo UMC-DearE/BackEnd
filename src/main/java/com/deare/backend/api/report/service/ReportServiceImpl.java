@@ -320,11 +320,11 @@ public class ReportServiceImpl implements ReportService {
             Analysis analysis,
             Reanalyze reanalyze
     ) {
-        return ReportResponseDTO.builder()
-                .totalLetterCount(totalLetterCount)
-                .fromRanking(fromRanking)
-                .analysis(analysis)
-                .reanalyze(reanalyze)
-                .build();
+        return ReportResponseDTO.of(
+                totalLetterCount,
+                fromRanking,
+                analysis,
+                reanalyze
+        );
     }
 }
