@@ -9,5 +9,5 @@ public interface HomeService {
 
     void editHome(Long userId, HomeEditRequestDTO request);
 
-    void completeInviteBenefitGuide(Long userId);
+    void completeInviteGuide(Long userId);
 }

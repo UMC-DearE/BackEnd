@@ -62,6 +62,7 @@ class InviteServiceTest {
      * 정상 초대와 중복 처리 검증
      * (1) 초대자와 초대받은 사용자 모두 PLUS 혜택을 받는가?
      * (2) 같은 초대를 다시 처리해도 초대 이력이 한 건만 유지되는가?
+     * (3) 초대자는 기능 화면용, 초대받은 사용자는 홈 화면용 안내 상태로 구분되는가?
      */
     @Test
     void successfulInviteUpgradesBothUsersAndStoresHistoryOnce() {
@@ -75,10 +76,12 @@ class InviteServiceTest {
         assertThat(inviteHistoryRepository.findAll()).hasSize(1);
         assertThat(userSettingRepository.findByUser_Id(inviter.getId()).orElseThrow().isPlus()).isTrue();
         assertThat(userSettingRepository.findByUser_Id(invitee.getId()).orElseThrow().isPlus()).isTrue();
-        assertThat(userSettingRepository.findByUser_Id(inviter.getId())
-                .orElseThrow().shouldShowInviteBenefitGuide()).isTrue();
-        assertThat(userSettingRepository.findByUser_Id(invitee.getId())
-                .orElseThrow().shouldShowInviteBenefitGuide()).isTrue();
+        UserSetting inviterSetting = userSettingRepository.findByUser_Id(inviter.getId()).orElseThrow();
+        UserSetting inviteeSetting = userSettingRepository.findByUser_Id(invitee.getId()).orElseThrow();
+        assertThat(inviterSetting.shouldShowInviterFeatureGuide()).isTrue();
+        assertThat(inviterSetting.shouldShowInviteeHomeGuide()).isFalse();
+        assertThat(inviteeSetting.shouldShowInviteeHomeGuide()).isTrue();
+        assertThat(inviteeSetting.shouldShowInviterFeatureGuide()).isFalse();
     }
 
     /**
@@ -188,6 +191,7 @@ class InviteServiceTest {
      * 안내 완료 후 추가 초대 혜택의 재노출 방지 검증
      * (1) 안내 완료 상태인 초대자는 다른 친구가 가입해도 다시 노출 대기가 되지 않는가?
      * (2) 새로 가입한 초대받은 사용자는 노출 대기 상태가 되는가?
+     * (3) 반복 초대에도 초대 이력이 정상적으로 누적되는가?
      */
     @Test
     void completedGuideIsNotReopenedByLaterInviteBenefit() {
@@ -198,13 +202,13 @@ class InviteServiceTest {
 
         inviteService.applySignupBenefit("shared-code", firstInvitee);
         UserSetting inviterSetting = userSettingRepository.findByUser_Id(inviter.getId()).orElseThrow();
-        inviterSetting.completeInviteBenefitGuide();
+        inviterSetting.completeDecorationUnlockGuide();
 
         inviteService.applySignupBenefit("shared-code", secondInvitee);
 
-        assertThat(inviterSetting.shouldShowInviteBenefitGuide()).isFalse();
+        assertThat(inviterSetting.shouldShowDecorationUnlockGuide()).isFalse();
         assertThat(userSettingRepository.findByUser_Id(secondInvitee.getId())
-                .orElseThrow().shouldShowInviteBenefitGuide()).isTrue();
+                .orElseThrow().shouldShowInviteeHomeGuide()).isTrue();
         assertThat(inviteHistoryRepository.findAll()).hasSize(2);
     }
 

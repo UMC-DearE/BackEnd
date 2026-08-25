@@ -7,5 +7,5 @@ import lombok.Getter;
 @AllArgsConstructor
 public class HomeSettingDto {
     private String homeColor;
-    private boolean showInviteBenefitGuide;
+    private boolean showDecorationUnlockGuide;
 }

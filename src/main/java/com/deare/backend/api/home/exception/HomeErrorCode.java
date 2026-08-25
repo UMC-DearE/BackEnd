@@ -11,12 +11,6 @@ public enum HomeErrorCode implements BaseErrorCode {
             "사용자를 찾을 수 없습니다."
     ),
 
-    USER_SETTING_NOT_FOUND(
-            HttpStatus.NOT_FOUND,
-            "HOME_40402",
-            "사용자 설정 정보를 찾을 수 없습니다."
-    ),
-
     HOME_INTERNAL_ERROR(
             HttpStatus.INTERNAL_SERVER_ERROR,
             "HOME_50001",

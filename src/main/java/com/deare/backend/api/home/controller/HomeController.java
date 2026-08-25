@@ -39,14 +39,14 @@ public class HomeController {
         return ApiResponse.success(null);
     }
 
-    @PatchMapping("/invite-benefit-guide/complete")
+    @PatchMapping("/invite-guide")
     @Operation(
-            summary = "친구 초대 혜택 안내 노출 완료",
-            description = "친구 초대 혜택 안내 바텀시트를 실제로 닫은 뒤 노출 완료 상태로 변경하는 API입니다."
+            summary = "초대 가입 환영 안내 노출 완료",
+            description = "초대 가입 환영 바텀시트를 실제로 닫은 뒤 최초 노출 완료 상태로 변경합니다."
     )
-    public ApiResponse<Void> completeInviteBenefitGuide() {
+    public ApiResponse<Void> completeInviteGuide() {
         Long userId = SecurityUtil.getCurrentUserId();
-        homeService.completeInviteBenefitGuide(userId);
+        homeService.completeInviteGuide(userId);
         return ApiResponse.success(null);
     }
 

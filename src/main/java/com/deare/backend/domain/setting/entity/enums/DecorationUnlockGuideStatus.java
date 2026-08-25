@@ -1,7 +1,8 @@
 package com.deare.backend.domain.setting.entity.enums;
 
-public enum InviteBenefitGuideStatus {
+public enum DecorationUnlockGuideStatus {
     NOT_ELIGIBLE,
-    PENDING,
+    INVITEE_HOME,
+    INVITER_FEATURE,
     COMPLETED
 }

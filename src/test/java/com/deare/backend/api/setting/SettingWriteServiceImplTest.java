@@ -38,6 +38,7 @@ class SettingWriteServiceImplTest {
      * 동일 사용자 설정의 동시 생성 방지 검증
      * (1) 두 트랜잭션이 동시에 생성을 요청해도 모두 정상 종료되는가?
      * (2) 사용자 설정이 한 건만 생성되는가?
+     * (3) 새로 생성된 설정은 해금 안내 미대상 상태인가?
      */
     @Test
     void concurrentEnsureCreatesSingleSetting() throws Exception {
@@ -68,7 +69,7 @@ class SettingWriteServiceImplTest {
 
         assertThat(userSettingRepository.findByUser_Id(user.getId()))
                 .get()
-                .matches(setting -> !setting.shouldShowInviteBenefitGuide());
+                .matches(setting -> !setting.shouldShowDecorationUnlockGuide());
         assertThat(userSettingRepository.count()).isEqualTo(1);
     }
 
