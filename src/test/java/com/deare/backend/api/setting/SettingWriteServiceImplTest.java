@@ -66,7 +66,9 @@ class SettingWriteServiceImplTest {
             executor.shutdownNow();
         }
 
-        assertThat(userSettingRepository.findByUser_Id(user.getId())).isPresent();
+        assertThat(userSettingRepository.findByUser_Id(user.getId()))
+                .get()
+                .matches(setting -> !setting.shouldShowInviteBenefitGuide());
         assertThat(userSettingRepository.count()).isEqualTo(1);
     }
 

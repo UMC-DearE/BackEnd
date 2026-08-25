@@ -75,6 +75,10 @@ class InviteServiceTest {
         assertThat(inviteHistoryRepository.findAll()).hasSize(1);
         assertThat(userSettingRepository.findByUser_Id(inviter.getId()).orElseThrow().isPlus()).isTrue();
         assertThat(userSettingRepository.findByUser_Id(invitee.getId()).orElseThrow().isPlus()).isTrue();
+        assertThat(userSettingRepository.findByUser_Id(inviter.getId())
+                .orElseThrow().shouldShowInviteBenefitGuide()).isTrue();
+        assertThat(userSettingRepository.findByUser_Id(invitee.getId())
+                .orElseThrow().shouldShowInviteBenefitGuide()).isTrue();
     }
 
     /**
@@ -178,6 +182,30 @@ class InviteServiceTest {
 
         assertThat(inviteHistoryRepository.findAll()).hasSize(1);
         assertThat(userSettingRepository.findByUser_Id(invitee.getId()).orElseThrow().isPlus()).isTrue();
+    }
+
+    /**
+     * 안내 완료 후 추가 초대 혜택의 재노출 방지 검증
+     * (1) 안내 완료 상태인 초대자는 다른 친구가 가입해도 다시 노출 대기가 되지 않는가?
+     * (2) 새로 가입한 초대받은 사용자는 노출 대기 상태가 되는가?
+     */
+    @Test
+    void completedGuideIsNotReopenedByLaterInviteBenefit() {
+        User inviter = saveUser("inviter");
+        User firstInvitee = saveUser("first-invitee");
+        User secondInvitee = saveUser("second-invitee");
+        inviteCodeRepository.save(UserInviteCode.create(inviter, "shared-code"));
+
+        inviteService.applySignupBenefit("shared-code", firstInvitee);
+        UserSetting inviterSetting = userSettingRepository.findByUser_Id(inviter.getId()).orElseThrow();
+        inviterSetting.completeInviteBenefitGuide();
+
+        inviteService.applySignupBenefit("shared-code", secondInvitee);
+
+        assertThat(inviterSetting.shouldShowInviteBenefitGuide()).isFalse();
+        assertThat(userSettingRepository.findByUser_Id(secondInvitee.getId())
+                .orElseThrow().shouldShowInviteBenefitGuide()).isTrue();
+        assertThat(inviteHistoryRepository.findAll()).hasSize(2);
     }
 
     private User saveUser(String providerId) {

@@ -20,7 +20,7 @@ public class HomeController {
     @GetMapping
     @Operation(
             summary = "홈 대시보드 조회",
-            description = "사용자의 홈 대시보드(유저 정보, 배경색, 스티커 목록)를 조회하는 API입니다."
+            description = "사용자의 홈 대시보드와 친구 초대 혜택 안내 바텀시트 노출 여부를 조회하는 API입니다."
     )
     public ApiResponse<HomeDashboardResponse> getHome() {
         Long userId = SecurityUtil.getCurrentUserId();
@@ -36,6 +36,17 @@ public class HomeController {
     public ApiResponse<Void> editHome(@Valid @RequestBody HomeEditRequestDTO request){
         Long userId = SecurityUtil.getCurrentUserId();
         homeService.editHome(userId, request);
+        return ApiResponse.success(null);
+    }
+
+    @PatchMapping("/invite-benefit-guide/complete")
+    @Operation(
+            summary = "친구 초대 혜택 안내 노출 완료",
+            description = "친구 초대 혜택 안내 바텀시트를 실제로 닫은 뒤 노출 완료 상태로 변경하는 API입니다."
+    )
+    public ApiResponse<Void> completeInviteBenefitGuide() {
+        Long userId = SecurityUtil.getCurrentUserId();
+        homeService.completeInviteBenefitGuide(userId);
         return ApiResponse.success(null);
     }
 

@@ -61,7 +61,10 @@ public class HomeServiceImpl implements HomeService {
                 ? userSetting.getHomeColor()
                 : "#F7F7F7F7";
 
-        HomeSettingDto settingDto = new HomeSettingDto(homeColor);
+        HomeSettingDto settingDto = new HomeSettingDto(
+                homeColor,
+                userSetting != null && userSetting.shouldShowInviteBenefitGuide()
+        );
 
         List<HomeStickerDto> stickerDtos = stickerRepository
                 .findAllByUser_IdOrderByPosZAsc(userId)
@@ -118,6 +121,14 @@ public class HomeServiceImpl implements HomeService {
                 .toList();
 
         stickerRepository.saveAll(newStickers);
+    }
+
+    @Override
+    @Transactional
+    public void completeInviteBenefitGuide(Long userId) {
+        UserSetting userSetting = userSettingRepository.findByUser_Id(userId)
+                .orElseThrow(() -> new GeneralException(HomeErrorCode.USER_SETTING_NOT_FOUND));
+        userSetting.completeInviteBenefitGuide();
     }
 
     private HomeStickerDto toStickerDto(UserSticker sticker) {

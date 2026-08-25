@@ -80,8 +80,8 @@ public class InviteServiceImpl implements InviteService {
         if (inviteHistoryRepository.existsByInviteeId(invitee.getId())) return;
 
         inviteHistoryRepository.saveAndFlush(UserInviteHistory.create(inviter, invitee));
-        upgradeToPlus(inviter);
-        upgradeToPlus(invitee);
+        applyInviteBenefit(inviter);
+        applyInviteBenefit(invitee);
     }
 
     private UserInviteCode createUniqueCode(User user) {
@@ -106,10 +106,11 @@ public class InviteServiceImpl implements InviteService {
         return code.toString();
     }
 
-    private void upgradeToPlus(User user) {
+    private void applyInviteBenefit(User user) {
         settingWriteService.ensureSettingExists(user.getId());
         UserSetting setting = userSettingRepository.findByUser_Id(user.getId())
                 .orElseThrow(() -> new GeneralException(InviteErrorCode.LINK_PROCESSING_FAILED));
         if (!setting.isPlus()) setting.upgradeToPlus();
+        setting.requestInviteBenefitGuide();
     }
 }

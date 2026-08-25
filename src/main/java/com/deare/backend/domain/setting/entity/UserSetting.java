@@ -1,6 +1,7 @@
 package com.deare.backend.domain.setting.entity;
 
 import com.deare.backend.domain.setting.entity.enums.Font;
+import com.deare.backend.domain.setting.entity.enums.InviteBenefitGuideStatus;
 import com.deare.backend.domain.setting.entity.enums.MembershipPlan;
 import com.deare.backend.domain.setting.entity.enums.Theme;
 import com.deare.backend.domain.user.entity.User;
@@ -34,6 +35,11 @@ public class UserSetting extends BaseEntity {
     @Column(name = "membership_plan", nullable = false)
     private MembershipPlan membershipPlan = MembershipPlan.FREE;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "invite_benefit_guide_status", nullable = false, length = 20)
+    private InviteBenefitGuideStatus inviteBenefitGuideStatus =
+            InviteBenefitGuideStatus.NOT_ELIGIBLE;
+
     @OneToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false, unique = true)
     private User user;
@@ -49,6 +55,23 @@ public class UserSetting extends BaseEntity {
     public void upgradeToPlus() {
         this.membershipPlan = MembershipPlan.PLUS;
     }
+
+    public void requestInviteBenefitGuide() {
+        if (inviteBenefitGuideStatus == InviteBenefitGuideStatus.NOT_ELIGIBLE) {
+            inviteBenefitGuideStatus = InviteBenefitGuideStatus.PENDING;
+        }
+    }
+
+    public void completeInviteBenefitGuide() {
+        if (inviteBenefitGuideStatus == InviteBenefitGuideStatus.PENDING) {
+            inviteBenefitGuideStatus = InviteBenefitGuideStatus.COMPLETED;
+        }
+    }
+
+    public boolean shouldShowInviteBenefitGuide() {
+        return inviteBenefitGuideStatus == InviteBenefitGuideStatus.PENDING;
+    }
+
     public static UserSetting createDefault(User user, String homeColor) {
         UserSetting us = new UserSetting();
         us.user = user;
