@@ -14,6 +14,7 @@ import com.deare.backend.domain.report.repository.ReportAnalysisRepository;
 import com.deare.backend.domain.user.entity.User;
 import com.deare.backend.domain.user.repository.UserRepository;
 import com.deare.backend.global.common.exception.GeneralException;
+import com.deare.backend.global.common.exception.GeneralMessageException;
 import com.deare.backend.global.external.gemini.adapter.report.ReportAnalyzedAdapter;
 import com.deare.backend.global.external.gemini.dto.response.report.ReportAnalyzeResponseDTO;
 import lombok.RequiredArgsConstructor;
@@ -180,8 +181,9 @@ public class ReportServiceImpl implements ReportService {
 
     private void validateMinimumLetterCount(long totalLetterCount) {
         if (totalLetterCount < MIN_LETTER_COUNT) {
-            throw new GeneralException(
-                    ReportErrorCode.REPORT_ANALYSIS_NOT_ENOUGH_LETTERS
+            throw new GeneralMessageException(
+                    ReportErrorCode.REPORT_ANALYSIS_NOT_ENOUGH_LETTERS,
+                    "분석하려면 편지 %d통이 필요해요.".formatted(MIN_LETTER_COUNT)
             );
         }
     }
@@ -196,8 +198,9 @@ public class ReportServiceImpl implements ReportService {
                 countNewLettersSince(userId, lastAnalyzedAt);
 
         if (newLetterCount < MIN_NEW_LETTER_COUNT) {
-            throw new GeneralException(
-                    ReportErrorCode.REPORT_ANALYSIS_NOT_ENOUGH_NEW_LETTERS
+            throw new GeneralMessageException(
+                    ReportErrorCode.REPORT_ANALYSIS_NOT_ENOUGH_NEW_LETTERS,
+                    "새 편지 %d통이 필요해요.".formatted(remainingNewLetterCount(newLetterCount))
             );
         }
 
@@ -235,21 +238,25 @@ public class ReportServiceImpl implements ReportService {
         boolean hasEnoughNewLetters =
                 newLetterCount >= MIN_NEW_LETTER_COUNT;
 
-        if (isAnalyzedThisWeek(lastAnalyzedAt)) {
-            return Reanalyze.reanalyzedDisabled(
-                    ReanalyzeReason.WEEKLY_LIMIT,
-                    "다시 분석은 매주 월요일에 초기화돼요"
-            );
-        }
-
         if (!hasEnoughNewLetters) {
             return Reanalyze.reanalyzedDisabled(
                     ReanalyzeReason.NOT_ENOUGH_NEW_LETTERS,
-                    "새로운 편지가 3통 더 필요해요"
+                    "새 편지 %d통이 필요해요.".formatted(remainingNewLetterCount(newLetterCount))
+            );
+        }
+
+        if (isAnalyzedThisWeek(lastAnalyzedAt)) {
+            return Reanalyze.reanalyzedDisabled(
+                    ReanalyzeReason.WEEKLY_LIMIT,
+                    "매주 월요일 분석이 초기화돼요."
             );
         }
 
         return Reanalyze.reanalyzedEnabled();
+    }
+
+    private long remainingNewLetterCount(long newLetterCount) {
+        return MIN_NEW_LETTER_COUNT - newLetterCount;
     }
 
     private List<FromRanking> getTopFromRanking(Long userId) {

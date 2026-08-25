@@ -16,11 +16,25 @@ public record Analysis(
         LocalDateTime analyzedAt
 ){
     public static Analysis noLetter() {
-        return new Analysis(AnalysisStatus.NO_LETTER, null, null, null, null, null);
+        return new Analysis(
+                AnalysisStatus.NO_LETTER,
+                null,
+                null,
+                "받은 편지가 없어서 분석이 어려워요.",
+                null,
+                null
+        );
     }
 
     public static Analysis noEnoughLetters() {
-        return new Analysis(AnalysisStatus.NOT_ENOUGH_LETTER, null, null, null, null, null);
+        return new Analysis(
+                AnalysisStatus.NOT_ENOUGH_LETTER,
+                null,
+                null,
+                "분석하려면 편지 3통이 필요해요.",
+                null,
+                null
+        );
     }
 
     public static Analysis of(User user, ReportAnalysis analysis) {

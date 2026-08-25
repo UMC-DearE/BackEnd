@@ -4,6 +4,7 @@ import com.deare.backend.api.auth.exception.AuthErrorCode;
 import com.deare.backend.api.invite.dto.response.InviteCodeResponseDTO;
 import com.deare.backend.api.invite.dto.response.InviteValidationResponseDTO;
 import com.deare.backend.api.invite.exception.InviteErrorCode;
+import com.deare.backend.api.setting.service.SettingWriteService;
 import com.deare.backend.domain.invite.entity.UserInviteCode;
 import com.deare.backend.domain.invite.entity.UserInviteHistory;
 import com.deare.backend.domain.invite.repository.UserInviteCodeRepository;
@@ -29,13 +30,13 @@ public class InviteServiceImpl implements InviteService {
     private static final String ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
     private static final int CODE_LENGTH = 12;
     private static final int MAX_GENERATION_ATTEMPTS = 5;
-    private static final String DEFAULT_HOME_COLOR = "#FFFFFF";
     private static final SecureRandom RANDOM = new SecureRandom();
 
     private final UserRepository userRepository;
     private final UserInviteCodeRepository inviteCodeRepository;
     private final UserInviteHistoryRepository inviteHistoryRepository;
     private final UserSettingRepository userSettingRepository;
+    private final SettingWriteService settingWriteService;
 
     @Value("${app.frontend-base-url:https://www.deare.kr}")
     private String frontendBaseUrl;
@@ -67,11 +68,16 @@ public class InviteServiceImpl implements InviteService {
     @Override
     @Transactional
     public void applySignupBenefit(String inviteCode, User invitee) {
-        if (inviteCode == null || inviteCode.isBlank()
-                || inviteHistoryRepository.existsByInviteeId(invitee.getId())) return;
+        if (inviteCode == null || inviteCode.isBlank()) {
+            throw new GeneralException(InviteErrorCode.INVALID_INVITE_CODE);
+        }
         User inviter = inviteCodeRepository.findWithUserByInviteCode(inviteCode)
-                .map(UserInviteCode::getUser).orElse(null);
-        if (inviter == null || inviter.getId().equals(invitee.getId())) return;
+                .map(UserInviteCode::getUser)
+                .orElseThrow(() -> new GeneralException(InviteErrorCode.INVALID_INVITE_CODE));
+        if (inviter.getId().equals(invitee.getId())) {
+            throw new GeneralException(InviteErrorCode.INVALID_INVITE_CODE);
+        }
+        if (inviteHistoryRepository.existsByInviteeId(invitee.getId())) return;
 
         inviteHistoryRepository.saveAndFlush(UserInviteHistory.create(inviter, invitee));
         upgradeToPlus(inviter);
@@ -101,9 +107,9 @@ public class InviteServiceImpl implements InviteService {
     }
 
     private void upgradeToPlus(User user) {
+        settingWriteService.ensureSettingExists(user.getId());
         UserSetting setting = userSettingRepository.findByUser_Id(user.getId())
-                .orElseGet(() -> userSettingRepository.save(
-                        UserSetting.createDefault(user, DEFAULT_HOME_COLOR)));
+                .orElseThrow(() -> new GeneralException(InviteErrorCode.LINK_PROCESSING_FAILED));
         if (!setting.isPlus()) setting.upgradeToPlus();
     }
 }

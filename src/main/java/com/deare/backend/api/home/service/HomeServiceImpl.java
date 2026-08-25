@@ -7,6 +7,7 @@ import com.deare.backend.api.home.dto.result.HomeSettingDto;
 import com.deare.backend.api.home.dto.result.HomeStickerDto;
 import com.deare.backend.api.home.dto.result.HomeUserDto;
 import com.deare.backend.api.home.exception.HomeErrorCode;
+import com.deare.backend.api.setting.service.SettingWriteService;
 import com.deare.backend.domain.image.entity.Image;
 import com.deare.backend.domain.image.exception.ImageErrorCode;
 import com.deare.backend.domain.image.repository.ImageRepository;
@@ -33,6 +34,7 @@ public class HomeServiceImpl implements HomeService {
     private final UserSettingRepository userSettingRepository;
     private final UserStickerRepository stickerRepository;
     private final ImageRepository imageRepository;
+    private final SettingWriteService settingWriteService;
 
     @Override
     @Transactional(readOnly=true)
@@ -81,12 +83,10 @@ public class HomeServiceImpl implements HomeService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new GeneralException(HomeErrorCode.USER_NOT_FOUND));
 
-        UserSetting userSetting = userSettingRepository.findByUser_Id(userId).orElse(null);
-        if (userSetting != null) {
-            userSetting.updateHomeColor(request.homeColor());
-        } else {
-            userSettingRepository.save(UserSetting.createDefault(user, request.homeColor()));
-        }
+        settingWriteService.ensureSettingExists(userId);
+        UserSetting userSetting = userSettingRepository.findByUser_Id(userId)
+                .orElseThrow(() -> new GeneralException(HomeErrorCode.HOME_INTERNAL_ERROR));
+        userSetting.updateHomeColor(request.homeColor());
 
         stickerRepository.deleteAllByUserId(userId);
 

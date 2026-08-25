@@ -5,6 +5,7 @@ import com.deare.backend.domain.term.entity.Term;
 import com.deare.backend.domain.term.entity.enums.TermType;
 import com.deare.backend.domain.term.repository.TermRepository;
 import com.deare.backend.domain.term.repository.UserTermRepository;
+import com.deare.backend.domain.setting.repository.UserSettingRepository;
 import com.deare.backend.domain.user.entity.enums.Provider;
 import com.deare.backend.domain.user.repository.UserRepository;
 import com.deare.backend.global.auth.signupToken.SignupTokenProvider;
@@ -17,6 +18,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.MediaType;
+import org.springframework.http.HttpHeaders;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -38,6 +40,7 @@ class AuthControllerTest {
     @Autowired private UserRepository userRepository;
     @Autowired private TermRepository termRepository;
     @Autowired private UserTermRepository userTermRepository;
+    @Autowired private UserSettingRepository userSettingRepository;
     @Autowired private SignupTokenProvider signupTokenProvider;
     @Autowired private SignupTokenService signupTokenService;
     @Autowired private RedisTemplate<String, String> redisTemplate;
@@ -45,6 +48,7 @@ class AuthControllerTest {
     @BeforeEach
     void setUp() {
         userTermRepository.deleteAll();
+        userSettingRepository.deleteAll();
         userRepository.deleteAll();
         termRepository.deleteAll();
         clearRedis();
@@ -116,7 +120,13 @@ class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(new SignupRequestDTO("유저", List.of(term.getId())))))
                 .andExpect(status().isOk())
-                .andExpect(header().exists("Authorization"));
+                .andExpect(header().string(HttpHeaders.AUTHORIZATION, containsString("Bearer ")))
+                .andExpect(result -> assertThat(
+                        result.getResponse().getHeaders(HttpHeaders.SET_COOKIE)
+                ).anySatisfy(cookie -> assertThat(cookie).startsWith("refresh_token=")))
+                .andExpect(result -> assertThat(
+                        result.getResponse().getHeaders(HttpHeaders.SET_COOKIE)
+                ).anySatisfy(cookie -> assertThat(cookie).startsWith("signup_token=")));
 
         assertThat(userRepository.findByProviderAndProviderId(Provider.KAKAO, "signup1")).isPresent();
     }
