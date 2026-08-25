@@ -7,9 +7,7 @@ import com.deare.backend.domain.user.exception.UserErrorCode;
 import com.deare.backend.domain.user.repository.UserRepository;
 import com.deare.backend.global.common.exception.GeneralException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
@@ -22,18 +20,11 @@ public class SettingWriteServiceImpl implements SettingWriteService {
     private final UserRepository userRepository;
 
     @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Transactional
     public void ensureSettingExists(Long userId) {
-        if (userSettingRepository.findByUser_Id(userId).isPresent()) {
-            return;
-        }
-
-        User user = userRepository.findById(userId)
+        User user = userRepository.findByIdForUpdate(userId)
                 .orElseThrow(() -> new GeneralException(UserErrorCode.INTERNAL_ERROR));
-
-        try {
-            userSettingRepository.save(UserSetting.createDefault(user, DEFAULT_HOME_COLOR));
-        } catch (DataIntegrityViolationException e) {
-        }
+        if (userSettingRepository.findByUser_Id(userId).isPresent()) return;
+        userSettingRepository.save(UserSetting.createDefault(user, DEFAULT_HOME_COLOR));
     }
 }

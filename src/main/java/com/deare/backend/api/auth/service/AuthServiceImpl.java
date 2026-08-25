@@ -10,6 +10,7 @@ import com.deare.backend.api.auth.dto.result.TokenPair;
 import com.deare.backend.api.auth.event.SignupCompletedEvent;
 import com.deare.backend.api.auth.exception.AuthErrorCode;
 import com.deare.backend.api.invite.service.SignupBenefitOutboxService;
+import com.deare.backend.api.setting.service.SettingWriteService;
 import com.deare.backend.api.term.service.UserTermService;
 import com.deare.backend.domain.term.entity.Term;
 import com.deare.backend.domain.term.repository.TermRepository;
@@ -48,6 +49,7 @@ public class AuthServiceImpl implements AuthService {
     private final OAuthService oAuthService;
     private final ApplicationEventPublisher eventPublisher;
     private final SignupBenefitOutboxService signupBenefitOutboxService;
+    private final SettingWriteService settingWriteService;
 
     // === Public Methods ===
 
@@ -211,6 +213,7 @@ public class AuthServiceImpl implements AuthService {
         // user 생성
         User newUser = User.signUpUser(providerEnum, providerId, email, request.nickname());
         userRepository.save(newUser);
+        settingWriteService.ensureSettingExists(newUser.getId());
 
         log.info("회원가입 완료 - User ID: {}, Provider: {}, Email: {}",
                 newUser.getId(), provider, maskEmail(email));
