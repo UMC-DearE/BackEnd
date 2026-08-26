@@ -36,7 +36,11 @@ public class SettingServiceImpl implements SettingService {
         UserSetting setting = userSettingRepository.findByUser_Id(userId)
                 .orElseThrow(() -> new GeneralException(MembershipErrorCode.MEMBERSHIP_INTERNAL_SERVER_ERROR));
 
-        return new MembershipResponseDTO(setting.getMembershipPlan(), setting.isPlus());
+        return new MembershipResponseDTO(
+                setting.getMembershipPlan(),
+                setting.isPlus(),
+                setting.shouldShowInviterFeatureGuide()
+        );
     }
 
     @Override
@@ -48,7 +52,7 @@ public class SettingServiceImpl implements SettingService {
                 .orElseThrow(() -> new GeneralException(ThemeErrorCode.THEME_INTERNAL_SERVER_ERROR));
 
         if (!setting.isPlus()) {
-            throw new GeneralException(ThemeErrorCode.THEME_FORBIDDEN);
+            throw new GeneralException(MembershipErrorCode.PLUS_REQUIRED);
         }
 
         Font font = parseFontOrThrow422(request.font());
