@@ -12,6 +12,7 @@ import com.deare.backend.domain.image.entity.Image;
 import com.deare.backend.domain.image.exception.ImageErrorCode;
 import com.deare.backend.domain.image.repository.ImageRepository;
 import com.deare.backend.domain.setting.entity.UserSetting;
+import com.deare.backend.domain.setting.exception.MembershipErrorCode;
 import com.deare.backend.domain.setting.repository.UserSettingRepository;
 import com.deare.backend.domain.sticker.entity.UserSticker;
 import com.deare.backend.domain.sticker.repository.UserStickerRepository;
@@ -61,7 +62,10 @@ public class HomeServiceImpl implements HomeService {
                 ? userSetting.getHomeColor()
                 : "#F7F7F7F7";
 
-        HomeSettingDto settingDto = new HomeSettingDto(homeColor);
+        HomeSettingDto settingDto = new HomeSettingDto(
+                homeColor,
+                userSetting != null && userSetting.shouldShowInviteeHomeGuide()
+        );
 
         List<HomeStickerDto> stickerDtos = stickerRepository
                 .findAllByUser_IdOrderByPosZAsc(userId)
@@ -86,6 +90,9 @@ public class HomeServiceImpl implements HomeService {
         settingWriteService.ensureSettingExists(userId);
         UserSetting userSetting = userSettingRepository.findByUser_Id(userId)
                 .orElseThrow(() -> new GeneralException(HomeErrorCode.HOME_INTERNAL_ERROR));
+        if (!userSetting.isPlus()) {
+            throw new GeneralException(MembershipErrorCode.PLUS_REQUIRED);
+        }
         userSetting.updateHomeColor(request.homeColor());
 
         stickerRepository.deleteAllByUserId(userId);
@@ -118,6 +125,15 @@ public class HomeServiceImpl implements HomeService {
                 .toList();
 
         stickerRepository.saveAll(newStickers);
+    }
+
+    @Override
+    @Transactional
+    public void completeInviteGuide(Long userId) {
+        settingWriteService.ensureSettingExists(userId);
+        UserSetting userSetting = userSettingRepository.findByUser_Id(userId)
+                .orElseThrow(() -> new GeneralException(HomeErrorCode.HOME_INTERNAL_ERROR));
+        userSetting.completeDecorationUnlockGuide();
     }
 
     private HomeStickerDto toStickerDto(UserSticker sticker) {
