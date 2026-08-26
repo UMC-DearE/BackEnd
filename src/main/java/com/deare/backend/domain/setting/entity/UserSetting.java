@@ -1,6 +1,7 @@
 package com.deare.backend.domain.setting.entity;
 
 import com.deare.backend.domain.setting.entity.enums.Font;
+import com.deare.backend.domain.setting.entity.enums.DecorationUnlockGuideStatus;
 import com.deare.backend.domain.setting.entity.enums.MembershipPlan;
 import com.deare.backend.domain.setting.entity.enums.Theme;
 import com.deare.backend.domain.user.entity.User;
@@ -34,6 +35,11 @@ public class UserSetting extends BaseEntity {
     @Column(name = "membership_plan", nullable = false)
     private MembershipPlan membershipPlan = MembershipPlan.FREE;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "decoration_unlock_guide_status", nullable = false, length = 20)
+    private DecorationUnlockGuideStatus decorationUnlockGuideStatus =
+            DecorationUnlockGuideStatus.NOT_ELIGIBLE;
+
     @OneToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false, unique = true)
     private User user;
@@ -49,6 +55,37 @@ public class UserSetting extends BaseEntity {
     public void upgradeToPlus() {
         this.membershipPlan = MembershipPlan.PLUS;
     }
+
+    public void requestInviteeHomeGuide() {
+        if (decorationUnlockGuideStatus == DecorationUnlockGuideStatus.NOT_ELIGIBLE) {
+            decorationUnlockGuideStatus = DecorationUnlockGuideStatus.INVITEE_HOME;
+        }
+    }
+
+    public void requestInviterFeatureGuide() {
+        if (decorationUnlockGuideStatus == DecorationUnlockGuideStatus.NOT_ELIGIBLE) {
+            decorationUnlockGuideStatus = DecorationUnlockGuideStatus.INVITER_FEATURE;
+        }
+    }
+
+    public void completeDecorationUnlockGuide() {
+        if (shouldShowDecorationUnlockGuide()) {
+            decorationUnlockGuideStatus = DecorationUnlockGuideStatus.COMPLETED;
+        }
+    }
+
+    public boolean shouldShowInviteeHomeGuide() {
+        return decorationUnlockGuideStatus == DecorationUnlockGuideStatus.INVITEE_HOME;
+    }
+
+    public boolean shouldShowInviterFeatureGuide() {
+        return decorationUnlockGuideStatus == DecorationUnlockGuideStatus.INVITER_FEATURE;
+    }
+
+    public boolean shouldShowDecorationUnlockGuide() {
+        return shouldShowInviteeHomeGuide() || shouldShowInviterFeatureGuide();
+    }
+
     public static UserSetting createDefault(User user, String homeColor) {
         UserSetting us = new UserSetting();
         us.user = user;

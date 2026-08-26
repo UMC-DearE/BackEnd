@@ -8,4 +8,6 @@ public interface HomeService {
     HomeDashboardResponse getHome(Long userId);
 
     void editHome(Long userId, HomeEditRequestDTO request);
+
+    void completeInviteGuide(Long userId);
 }

@@ -9,6 +9,12 @@ import org.springframework.http.HttpStatus;
 @RequiredArgsConstructor
 public enum MembershipErrorCode implements BaseErrorCode {
 
+    PLUS_REQUIRED(
+            HttpStatus.FORBIDDEN,
+            "MEMBERSHIP_40301",
+            "PLUS 회원만 사용할 수 있습니다."
+    ),
+
     MEMBERSHIP_INTERNAL_SERVER_ERROR(
             HttpStatus.INTERNAL_SERVER_ERROR,
             "MEMBERSHIP_50001",
