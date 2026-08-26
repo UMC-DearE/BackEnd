@@ -153,7 +153,7 @@ public class FolderServiceImpl implements FolderService {
             String keyword
     ) {
         getOwnedActiveFolder(userId, folderId);
-        Page<Letter> page = letterRepository.findAvailableLetters(userId, folderId, fromId, isLiked, keyword, pageable);
+        Page<Letter> page = letterRepository.findAvailableLetters(userId, fromId, isLiked, keyword, pageable);
         List<LetterItemDTO> items = page.getContent().stream().map(LetterItemMapper::toItemDTO).toList();
 
         return new LetterListResponseDTO(
