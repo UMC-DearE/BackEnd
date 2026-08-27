@@ -5,5 +5,10 @@ import java.util.Set;
 
 public interface LetterSearchTokenRepositoryCustom {
 
-    List<Long> findCandidateLetterIds(Long userId, int indexKeyVersion, Set<String> tokens);
+    List<Long> findCandidateLetterIds(
+            Long userId,
+            int indexKeyVersion,
+            Set<String> tokens,
+            int limit
+    );
 }

@@ -5,6 +5,7 @@ import com.deare.backend.domain.folder.repository.FolderRepository;
 import com.deare.backend.domain.from.entity.From;
 import com.deare.backend.domain.from.repository.FromRepository;
 import com.deare.backend.domain.letter.entity.Letter;
+import com.deare.backend.domain.letter.entity.LetterSearchToken;
 import com.deare.backend.domain.user.entity.User;
 import com.deare.backend.domain.user.entity.enums.Provider;
 import com.deare.backend.domain.user.repository.UserRepository;
@@ -29,6 +30,7 @@ class LetterRepositoryTest {
     @Autowired private FromRepository fromRepository;
     @Autowired private FolderRepository folderRepository;
     @Autowired private LetterRepository letterRepository;
+    @Autowired private LetterSearchTokenRepository searchTokenRepository;
 
     @Test
     void findAvailableLettersReturnsOnlyLettersWithoutFolder() {
@@ -43,7 +45,7 @@ class LetterRepositoryTest {
         letterRepository.save(createLetter("second-folder", user, from, secondFolder));
 
         Page<Letter> result = letterRepository.findAvailableLetters(
-                user.getId(), null, null, null, PageRequest.of(0, 10));
+                user.getId(), null, null, null, null, PageRequest.of(0, 10));
 
         assertThat(result.getContent()).extracting(Letter::getId)
                 .containsExactly(unassignedLetter.getId());
@@ -69,6 +71,32 @@ class LetterRepositoryTest {
                 .contains(letter);
         assertThat(letterRepository.findByIdAndUser_IdAndIsDeletedFalse(letter.getId(), owner.getId()))
                 .isEmpty();
+    }
+
+    @Test
+    void candidateFilterKeepsUnindexedLettersAndVerifiesPlaintextMatch() {
+        User user = saveUser("candidate-owner");
+        From from = fromRepository.save(new From("sender", "#FFFFFF", "#000000", user));
+        Letter candidate = letterRepository.save(createLetter("needle candidate", user, from, null));
+        Letter indexedButExcluded = letterRepository.save(createLetter("needle excluded", user, from, null));
+        Letter unindexed = letterRepository.save(createLetter("needle legacy", user, from, null));
+        Letter falsePositive = letterRepository.save(createLetter("different content", user, from, null));
+        searchTokenRepository.save(LetterSearchToken.create(candidate, 1, "A".repeat(43)));
+        searchTokenRepository.save(LetterSearchToken.create(indexedButExcluded, 1, "B".repeat(43)));
+        searchTokenRepository.save(LetterSearchToken.create(falsePositive, 1, "C".repeat(43)));
+
+        Page<Letter> result = letterRepository.findAvailableLetters(
+                user.getId(),
+                null,
+                null,
+                "needle",
+                java.util.Set.of(candidate.getId(), falsePositive.getId()),
+                PageRequest.of(0, 10)
+        );
+
+        assertThat(result.getContent()).extracting(Letter::getId)
+                .containsExactlyInAnyOrder(candidate.getId(), unindexed.getId());
+        assertThat(result.getTotalElements()).isEqualTo(2);
     }
 
     @Test

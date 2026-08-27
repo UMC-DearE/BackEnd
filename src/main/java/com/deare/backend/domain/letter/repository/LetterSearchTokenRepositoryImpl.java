@@ -16,8 +16,13 @@ public class LetterSearchTokenRepositoryImpl implements LetterSearchTokenReposit
     }
 
     @Override
-    public List<Long> findCandidateLetterIds(Long userId, int indexKeyVersion, Set<String> tokens) {
-        if (userId == null || indexKeyVersion <= 0 || tokens == null || tokens.isEmpty()) {
+    public List<Long> findCandidateLetterIds(
+            Long userId,
+            int indexKeyVersion,
+            Set<String> tokens,
+            int limit
+    ) {
+        if (userId == null || indexKeyVersion <= 0 || tokens == null || tokens.isEmpty() || limit <= 0) {
             return List.of();
         }
 
@@ -36,6 +41,7 @@ public class LetterSearchTokenRepositoryImpl implements LetterSearchTokenReposit
                 )
                 .groupBy(searchToken.letter.id)
                 .having(searchToken.token.countDistinct().eq((long) tokens.size()))
+                .limit(limit)
                 .fetch();
     }
 }

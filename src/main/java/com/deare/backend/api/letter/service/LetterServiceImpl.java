@@ -41,6 +41,7 @@ import org.springframework.util.StringUtils;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -57,6 +58,7 @@ public class LetterServiceImpl implements LetterService {
     private final LetterImageRepository letterImageRepository;
     private final LetterAnalyzeService letterAnalyzeService;
     private final LetterSearchTokenSynchronizer searchTokenSynchronizer;
+    private final LetterSearchCandidateResolver searchCandidateResolver;
 
     @Override
     @Transactional(readOnly = true)
@@ -69,12 +71,15 @@ public class LetterServiceImpl implements LetterService {
             String keyword
     ) {
 
+        Set<Long> indexedCandidateIds = searchCandidateResolver.resolve(userId, keyword)
+                .orElse(null);
         Page<Letter> page = letterRepository.findLettersForList(
                 userId,
                 folderId,
                 fromId,
                 isLiked,
                 keyword,
+                indexedCandidateIds,
                 pageable
         );
 

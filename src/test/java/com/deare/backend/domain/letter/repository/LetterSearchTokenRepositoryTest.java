@@ -49,7 +49,7 @@ class LetterSearchTokenRepositoryTest {
         saveTokens(otherUsers, 1, TOKEN_A, TOKEN_B);
 
         assertThat(searchTokenRepository.findCandidateLetterIds(
-                owner.getId(), 1, Set.of(TOKEN_A, TOKEN_B)
+                owner.getId(), 1, Set.of(TOKEN_A, TOKEN_B), 100
         )).containsExactly(exact.getId());
     }
 
@@ -62,15 +62,16 @@ class LetterSearchTokenRepositoryTest {
         saveTokens(currentVersion, 2, TOKEN_A, TOKEN_B);
 
         assertThat(searchTokenRepository.findCandidateLetterIds(
-                owner.getId(), 2, Set.of(TOKEN_A, TOKEN_B)
+                owner.getId(), 2, Set.of(TOKEN_A, TOKEN_B), 100
         )).containsExactly(currentVersion.getId());
     }
 
     @Test
     void returnsEmptyForInvalidSearchBoundary() {
-        assertThat(searchTokenRepository.findCandidateLetterIds(1L, 1, Set.of())).isEmpty();
-        assertThat(searchTokenRepository.findCandidateLetterIds(null, 1, Set.of(TOKEN_A))).isEmpty();
-        assertThat(searchTokenRepository.findCandidateLetterIds(1L, 0, Set.of(TOKEN_A))).isEmpty();
+        assertThat(searchTokenRepository.findCandidateLetterIds(1L, 1, Set.of(), 100)).isEmpty();
+        assertThat(searchTokenRepository.findCandidateLetterIds(null, 1, Set.of(TOKEN_A), 100)).isEmpty();
+        assertThat(searchTokenRepository.findCandidateLetterIds(1L, 0, Set.of(TOKEN_A), 100)).isEmpty();
+        assertThat(searchTokenRepository.findCandidateLetterIds(1L, 1, Set.of(TOKEN_A), 0)).isEmpty();
     }
 
     @Test

@@ -21,10 +21,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -51,7 +54,28 @@ class LetterServiceOwnershipTest {
     @Mock private LetterImageRepository letterImageRepository;
     @Mock private LetterAnalyzeService letterAnalyzeService;
     @Mock private LetterSearchTokenSynchronizer searchTokenSynchronizer;
+    @Mock private LetterSearchCandidateResolver searchCandidateResolver;
     @InjectMocks private LetterServiceImpl letterService;
+
+    @Test
+    void forwardsBlindIndexCandidatesResolvedForAuthenticatedUser() {
+        PageRequest pageable = PageRequest.of(0, 10);
+        Set<Long> candidateIds = Set.of(11L, 12L);
+        when(searchCandidateResolver.resolve(USER_ID, "keyword"))
+                .thenReturn(Optional.of(candidateIds));
+        when(letterRepository.findLettersForList(
+                USER_ID, null, null, null, "keyword", candidateIds, pageable
+        )).thenReturn(Page.empty(pageable));
+
+        letterService.getLetterList(
+                pageable, USER_ID, null, null, null, "keyword"
+        );
+
+        verify(searchCandidateResolver).resolve(USER_ID, "keyword");
+        verify(letterRepository).findLettersForList(
+                USER_ID, null, null, null, "keyword", candidateIds, pageable
+        );
+    }
 
     @Test
     void rejectsLetterNotOwnedByCurrentUser() {

@@ -7,6 +7,7 @@ import org.springframework.data.domain.Pageable;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 public interface LetterRepositoryCustom {
     Page<Letter> findLettersForList(
@@ -15,6 +16,7 @@ public interface LetterRepositoryCustom {
             Long fromId,
             Boolean isLiked,
             String keyword,
+            Set<Long> indexedCandidateIds,
             Pageable pageable
     );
 
@@ -23,6 +25,7 @@ public interface LetterRepositoryCustom {
             Long fromId,
             Boolean isLiked,
             String keyword,
+            Set<Long> indexedCandidateIds,
             Pageable pageable
     );
 
