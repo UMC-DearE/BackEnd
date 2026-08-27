@@ -84,6 +84,23 @@ class LetterSearchTokenRepositoryTest {
         )).isInstanceOf(DataIntegrityViolationException.class);
     }
 
+    @Test
+    void deletesEveryKeyVersionForLetter() {
+        User owner = saveUser("delete-owner");
+        Letter target = saveLetter(owner, "delete-target");
+        Letter untouched = saveLetter(owner, "delete-untouched");
+        saveTokens(target, 1, TOKEN_A);
+        saveTokens(target, 2, TOKEN_B);
+        saveTokens(untouched, 1, TOKEN_C);
+
+        searchTokenRepository.deleteAllByLetterId(target.getId());
+        searchTokenRepository.flush();
+
+        assertThat(searchTokenRepository.findAll())
+                .extracting(token -> token.getLetter().getId())
+                .containsExactly(untouched.getId());
+    }
+
     private User saveUser(String suffix) {
         return userRepository.saveAndFlush(User.signUpUser(
                 Provider.GOOGLE,

@@ -50,6 +50,7 @@ class LetterServiceOwnershipTest {
     @Mock private ImageRepository imageRepository;
     @Mock private LetterImageRepository letterImageRepository;
     @Mock private LetterAnalyzeService letterAnalyzeService;
+    @Mock private LetterSearchTokenSynchronizer searchTokenSynchronizer;
     @InjectMocks private LetterServiceImpl letterService;
 
     @Test
@@ -83,6 +84,7 @@ class LetterServiceOwnershipTest {
         letterService.deleteLetter(USER_ID, LETTER_ID);
 
         verify(letter).softDelete();
+        verify(searchTokenSynchronizer).deleteTokens(letter);
     }
 
     @Test

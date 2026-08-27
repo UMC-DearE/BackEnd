@@ -56,6 +56,7 @@ public class LetterServiceImpl implements LetterService {
     private final ImageRepository imageRepository;
     private final LetterImageRepository letterImageRepository;
     private final LetterAnalyzeService letterAnalyzeService;
+    private final LetterSearchTokenSynchronizer searchTokenSynchronizer;
 
     @Override
     @Transactional(readOnly = true)
@@ -209,6 +210,7 @@ public class LetterServiceImpl implements LetterService {
                 .toList();
 
         letterEmotionRepository.saveAll(mappings);
+        searchTokenSynchronizer.indexCreatedLetter(saved, userId, content);
 
         return new LetterCreateResponseDTO(saved.getId(), saved.getCreatedAt());
     }
@@ -242,8 +244,8 @@ public class LetterServiceImpl implements LetterService {
         }
 
         if (StringUtils.hasText(req.getContent())) {
+            String normalizedContent = req.getContent().trim();
             try {
-                String normalizedContent = req.getContent().trim();
                 String newHash = DigestUtils.sha256Hex(normalizedContent);
 
                 if (newHash.equals(letter.getContentHash())) {
@@ -274,6 +276,7 @@ public class LetterServiceImpl implements LetterService {
             } catch (Exception e) {
                 throw new GeneralException(LetterErrorCode.SUMMARY_INTERNAL_ERROR);
             }
+            searchTokenSynchronizer.replaceTokens(letter, userId, normalizedContent);
         }
     }
 
@@ -282,6 +285,7 @@ public class LetterServiceImpl implements LetterService {
     public void deleteLetter(Long userId, Long letterId) {
         Letter letter = getOwnedActiveLetter(userId, letterId);
         letter.softDelete();
+        searchTokenSynchronizer.deleteTokens(letter);
     }
 
     @Override
