@@ -86,3 +86,9 @@ jwt:
 signup-token:
   secret-key: ${SIGNUP_SECRET_KEY}
   expiration: ${SIGNUP_TOKEN_EXPIRATION}
+
+blind-index:
+  keys:
+    enabled: ${BLIND_INDEX_ENABLED:false}
+    secret-id: ${BLIND_INDEX_SECRET_ID:}
+    region: ${AWS_REGION}

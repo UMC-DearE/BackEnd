@@ -35,6 +35,7 @@ dependencies {
 
 	implementation platform("software.amazon.awssdk:bom:2.25.59")
 	implementation "software.amazon.awssdk:s3"
+	implementation "software.amazon.awssdk:secretsmanager"
 
     // QueryDSL (Spring Boot 3.x = jakarta)
     implementation "com.querydsl:querydsl-jpa:5.1.0:jakarta"
