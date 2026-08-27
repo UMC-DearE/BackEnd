@@ -2,7 +2,10 @@ package com.deare.backend.domain.letter.repository;
 
 import com.deare.backend.domain.letter.entity.Letter;
 import com.deare.backend.domain.letter.repository.query.dto.FromLetterRankingProjection;
+import jakarta.persistence.LockModeType;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -13,6 +16,35 @@ import java.util.Optional;
 
 @Repository
 public interface LetterRepository extends JpaRepository<Letter, Long>, LetterRepositoryCustom {
+
+    @Query("""
+        select l.id
+          from Letter l
+         where l.isDeleted = false
+           and l.id > :afterId
+           and not exists (
+               select 1
+                 from LetterSearchToken token
+                where token.letter = l
+                  and token.indexKeyVersion = :indexKeyVersion
+           )
+         order by l.id
+    """)
+    List<Long> findActiveIdsMissingSearchTokenVersion(
+            @Param("afterId") long afterId,
+            @Param("indexKeyVersion") int indexKeyVersion,
+            Pageable pageable
+    );
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+        select l
+          from Letter l
+          join fetch l.user
+         where l.id = :letterId
+           and l.isDeleted = false
+    """)
+    Optional<Letter> findActiveByIdForSearchTokenBackfill(@Param("letterId") Long letterId);
 
     Optional<Letter> findByIdAndUser_IdAndIsDeletedFalse(Long id, Long userId);
 

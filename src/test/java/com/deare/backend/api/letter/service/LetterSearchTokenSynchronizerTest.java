@@ -83,6 +83,20 @@ class LetterSearchTokenSynchronizerTest {
         verify(repository).deleteAllByLetterId(10L);
     }
 
+    @Test
+    void storesCompletionMarkerForContentWithoutBigrams() {
+        LetterSearchTokenSynchronizer synchronizer = enabledSynchronizer();
+        when(keyProvider.currentKey(1L)).thenReturn(versionedKey(2));
+
+        synchronizer.indexCreatedLetter(letter, 1L, "a");
+
+        verify(repository).saveAll(org.mockito.ArgumentMatchers.argThat(tokens -> {
+            List<LetterSearchToken> savedTokens = (List<LetterSearchToken>) tokens;
+            return savedTokens.size() == 1
+                    && savedTokens.get(0).getToken().length() == 43;
+        }));
+    }
+
     private LetterSearchTokenSynchronizer enabledSynchronizer() {
         return new LetterSearchTokenSynchronizer(repository, Optional.of(keyProvider));
     }

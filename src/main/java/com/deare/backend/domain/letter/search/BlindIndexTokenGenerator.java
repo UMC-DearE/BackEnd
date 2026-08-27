@@ -13,6 +13,8 @@ public final class BlindIndexTokenGenerator {
 
     private static final String HMAC_ALGORITHM = "HmacSHA256";
     private static final byte[] TOKEN_CONTEXT = "letter-search:v1\0".getBytes(StandardCharsets.UTF_8);
+    private static final byte[] EMPTY_INDEX_MARKER =
+            "letter-search:empty-index:v1".getBytes(StandardCharsets.UTF_8);
 
     private final SecretKey blindIndexKey;
 
@@ -25,6 +27,18 @@ public final class BlindIndexTokenGenerator {
         return LetterSearchBigramGenerator.generateUnique(text).stream()
                 .map(this::generateToken)
                 .toList();
+    }
+
+    public List<String> generateForIndex(String text) {
+        List<String> tokens = generateUnique(text);
+        if (!tokens.isEmpty()) {
+            return tokens;
+        }
+
+        Mac mac = createMac();
+        return List.of(Base64.getUrlEncoder().withoutPadding().encodeToString(
+                mac.doFinal(EMPTY_INDEX_MARKER)
+        ));
     }
 
     private String generateToken(String bigram) {

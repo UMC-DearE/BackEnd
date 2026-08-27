@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.time.LocalDate;
@@ -100,6 +101,25 @@ class LetterSearchTokenRepositoryTest {
         assertThat(searchTokenRepository.findAll())
                 .extracting(token -> token.getLetter().getId())
                 .containsExactly(untouched.getId());
+    }
+
+    @Test
+    void findsOnlyActiveLettersMissingRequestedKeyVersion() {
+        User owner = saveUser("backfill-owner");
+        Letter missing = saveLetter(owner, "missing");
+        Letter current = saveLetter(owner, "current");
+        Letter oldOnly = saveLetter(owner, "old-only");
+        Letter deleted = saveLetter(owner, "deleted");
+        saveTokens(current, 2, TOKEN_A);
+        saveTokens(oldOnly, 1, TOKEN_B);
+        deleted.softDelete();
+        letterRepository.flush();
+
+        assertThat(letterRepository.findActiveIdsMissingSearchTokenVersion(
+                0,
+                2,
+                PageRequest.of(0, 10)
+        )).containsExactly(missing.getId(), oldOnly.getId());
     }
 
     private User saveUser(String suffix) {

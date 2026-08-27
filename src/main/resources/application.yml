@@ -92,3 +92,8 @@ blind-index:
     enabled: ${BLIND_INDEX_ENABLED:false}
     secret-id: ${BLIND_INDEX_SECRET_ID:}
     region: ${AWS_REGION}
+  backfill:
+    enabled: ${BLIND_INDEX_BACKFILL_ENABLED:false}
+    batch-size: ${BLIND_INDEX_BACKFILL_BATCH_SIZE:50}
+    fixed-delay-ms: ${BLIND_INDEX_BACKFILL_DELAY_MS:60000}
+    initial-delay-ms: ${BLIND_INDEX_BACKFILL_INITIAL_DELAY_MS:30000}

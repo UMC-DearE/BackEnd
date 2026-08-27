@@ -46,7 +46,7 @@ public class LetterSearchTokenSynchronizer {
     ) {
         VersionedBlindIndexKey currentKey = provider.currentKey(userId);
         BlindIndexTokenGenerator tokenGenerator = new BlindIndexTokenGenerator(currentKey.key());
-        List<LetterSearchToken> tokens = tokenGenerator.generateUnique(content).stream()
+        List<LetterSearchToken> tokens = tokenGenerator.generateForIndex(content).stream()
                 .map(token -> LetterSearchToken.create(
                         letter,
                         currentKey.version().value(),

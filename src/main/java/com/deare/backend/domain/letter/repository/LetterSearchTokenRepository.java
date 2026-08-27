@@ -11,6 +11,8 @@ import org.springframework.stereotype.Repository;
 public interface LetterSearchTokenRepository
         extends JpaRepository<LetterSearchToken, Long>, LetterSearchTokenRepositoryCustom {
 
+    boolean existsByLetter_IdAndIndexKeyVersion(Long letterId, int indexKeyVersion);
+
     @Modifying(flushAutomatically = true)
     @Query("delete from LetterSearchToken token where token.letter.id = :letterId")
     void deleteAllByLetterId(@Param("letterId") Long letterId);
