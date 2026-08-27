@@ -14,6 +14,8 @@ public interface FromRepository extends JpaRepository<From, Long> {
 
     Optional<From> findByIdAndIsDeletedFalse(Long fromId);
 
+    Optional<From> findByIdAndUser_IdAndIsDeletedFalse(Long fromId, Long userId);
+
     boolean existsByUser_IdAndNameAndIsDeletedFalse(Long userId, String name);
 
     /**

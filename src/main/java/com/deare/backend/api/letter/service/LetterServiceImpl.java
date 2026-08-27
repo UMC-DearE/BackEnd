@@ -151,7 +151,7 @@ public class LetterServiceImpl implements LetterService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new GeneralException(LetterErrorCode.UNAUTHORIZED));
 
-        From from = fromRepository.findById(req.fromId())
+        From from = fromRepository.findByIdAndUser_IdAndIsDeletedFalse(req.fromId(), userId)
                 .orElseThrow(() -> new GeneralException(LetterErrorCode.FROM_NOT_FOUND));
 
         String content = req.content().trim();
@@ -231,7 +231,7 @@ public class LetterServiceImpl implements LetterService {
         Letter letter = getOwnedActiveLetter(userId, letterId);
 
         if (req.getFromId() != null) {
-            From from = fromRepository.findById(req.getFromId())
+            From from = fromRepository.findByIdAndUser_IdAndIsDeletedFalse(req.getFromId(), userId)
                     .orElseThrow(() -> new GeneralException(FromErrorCode.FROM_40401));
 
             letter.changeFrom(from);
@@ -332,7 +332,7 @@ public class LetterServiceImpl implements LetterService {
             throw new GeneralException(LetterErrorCode.INVALID_REQUEST);
         }
 
-        Letter letter = letterRepository.findById(letterId)
+        Letter letter = letterRepository.findByIdAndUser_Id(letterId, userId)
                 .orElseThrow(() -> new GeneralException(LetterErrorCode.LETTER_NOT_FOUND));
 
         if (letter.isDeleted()) {

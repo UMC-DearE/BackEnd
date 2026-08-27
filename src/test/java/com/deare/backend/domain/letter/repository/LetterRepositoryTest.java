@@ -50,6 +50,54 @@ class LetterRepositoryTest {
         assertThat(result.getTotalElements()).isEqualTo(1);
     }
 
+    @Test
+    void findLetterByIdAndOwnerRejectsOtherUserAndKeepsDeletedStateForOwner() {
+        User owner = saveUser("letter-owner");
+        User other = saveUser("letter-other");
+        From from = fromRepository.save(new From("sender", "#FFFFFF", "#000000", owner));
+        Letter letter = letterRepository.saveAndFlush(createLetter("owned-letter", owner, from, null));
+
+        assertThat(letterRepository.findByIdAndUser_Id(letter.getId(), owner.getId()))
+                .contains(letter);
+        assertThat(letterRepository.findByIdAndUser_Id(letter.getId(), other.getId()))
+                .isEmpty();
+
+        letter.softDelete();
+        letterRepository.flush();
+
+        assertThat(letterRepository.findByIdAndUser_Id(letter.getId(), owner.getId()))
+                .contains(letter);
+        assertThat(letterRepository.findByIdAndUser_IdAndIsDeletedFalse(letter.getId(), owner.getId()))
+                .isEmpty();
+    }
+
+    @Test
+    void findActiveFromByIdAndOwnerRejectsOtherUserAndDeletedFrom() {
+        User owner = saveUser("from-owner");
+        User other = saveUser("from-other");
+        From from = fromRepository.saveAndFlush(new From("sender", "#FFFFFF", "#000000", owner));
+
+        assertThat(fromRepository.findByIdAndUser_IdAndIsDeletedFalse(from.getId(), owner.getId()))
+                .contains(from);
+        assertThat(fromRepository.findByIdAndUser_IdAndIsDeletedFalse(from.getId(), other.getId()))
+                .isEmpty();
+
+        from.softDelete();
+        fromRepository.flush();
+
+        assertThat(fromRepository.findByIdAndUser_IdAndIsDeletedFalse(from.getId(), owner.getId()))
+                .isEmpty();
+    }
+
+    private User saveUser(String suffix) {
+        return userRepository.save(User.signUpUser(
+                Provider.GOOGLE,
+                "provider-" + suffix,
+                suffix + "@example.com",
+                suffix
+        ));
+    }
+
     private Letter createLetter(String content, User user, From from, Folder folder) {
         return new Letter(
                 content,

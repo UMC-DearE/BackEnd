@@ -16,6 +16,8 @@ public interface LetterRepository extends JpaRepository<Letter, Long>, LetterRep
 
     Optional<Letter> findByIdAndUser_IdAndIsDeletedFalse(Long id, Long userId);
 
+    Optional<Letter> findByIdAndUser_Id(Long id, Long userId);
+
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
         update Letter l
