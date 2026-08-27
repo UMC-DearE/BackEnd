@@ -8,9 +8,9 @@ import com.deare.backend.api.folder.dto.response.FolderListResponseDTO;
 import com.deare.backend.api.folder.dto.response.FolderOrderResponseDTO;
 import com.deare.backend.api.folder.dto.request.FolderLettersRequestDTO;
 import com.deare.backend.api.folder.dto.response.FolderLettersResponseDTO;
+import com.deare.backend.api.folder.dto.response.UnassignedLetterListResponseDTO;
 import com.deare.backend.api.folder.dto.result.FolderItemDTO;
-import com.deare.backend.api.letter.dto.response.LetterListResponseDTO;
-import com.deare.backend.api.letter.dto.result.LetterItemDTO;
+import com.deare.backend.api.folder.dto.result.UnassignedLetterItemDTO;
 import com.deare.backend.api.letter.mapper.LetterItemMapper;
 import com.deare.backend.domain.folder.entity.Folder;
 import com.deare.backend.domain.folder.exception.FolderErrorCode;
@@ -144,19 +144,20 @@ public class FolderServiceImpl implements FolderService {
 
     @Override
     @Transactional(readOnly = true)
-    public LetterListResponseDTO getAvailableLetters(
+    public UnassignedLetterListResponseDTO getUnassignedLetters(
             Pageable pageable,
             Long userId,
-            Long folderId,
             Long fromId,
             Boolean isLiked,
-            String keyword
+        String keyword
     ) {
-        getOwnedActiveFolder(userId, folderId);
-        Page<Letter> page = letterRepository.findAvailableLetters(userId, folderId, fromId, isLiked, keyword, pageable);
-        List<LetterItemDTO> items = page.getContent().stream().map(LetterItemMapper::toItemDTO).toList();
+        Page<Letter> page = letterRepository.findAvailableLetters(userId, fromId, isLiked, keyword, pageable);
+        List<UnassignedLetterItemDTO> items = page.getContent().stream()
+                .map(LetterItemMapper::toItemDTO)
+                .map(UnassignedLetterItemDTO::from)
+                .toList();
 
-        return new LetterListResponseDTO(
+        return new UnassignedLetterListResponseDTO(
                 page.getTotalElements(),
                 page.getTotalPages(),
                 page.getSize(),

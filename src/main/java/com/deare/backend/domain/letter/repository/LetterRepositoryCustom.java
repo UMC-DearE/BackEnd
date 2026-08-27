@@ -20,7 +20,6 @@ public interface LetterRepositoryCustom {
 
     Page<Letter> findAvailableLetters(
             Long userId,
-            Long excludedFolderId,
             Long fromId,
             Boolean isLiked,
             String keyword,
