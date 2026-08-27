@@ -90,7 +90,6 @@ public class LetterRepositoryImpl implements LetterRepositoryCustom {
     @Override
     public Page<Letter> findAvailableLetters(
             Long userId,
-            Long excludedFolderId,
             Long fromId,
             Boolean isLiked,
             String keyword,
@@ -107,7 +106,7 @@ public class LetterRepositoryImpl implements LetterRepositoryCustom {
                 .where(
                         letter.isDeleted.isFalse(),
                         ownedBy(letter, userId),
-                        letter.folder.isNull().or(letter.folder.id.ne(excludedFolderId)),
+                        letter.folder.isNull(),
                         fromIdEq(letter, fromId),
                         isLikedEq(letter, isLiked),
                         keywordLike(letter, keyword)
@@ -129,7 +128,7 @@ public class LetterRepositoryImpl implements LetterRepositoryCustom {
                 .where(
                         letter.isDeleted.isFalse(),
                         ownedBy(letter, userId),
-                        letter.folder.isNull().or(letter.folder.id.ne(excludedFolderId)),
+                        letter.folder.isNull(),
                         fromIdEq(letter, fromId),
                         isLikedEq(letter, isLiked),
                         keywordLike(letter, keyword)

@@ -8,7 +8,7 @@ import com.deare.backend.api.folder.dto.request.FolderUpdateRequestDTO;
 import com.deare.backend.api.folder.dto.response.FolderOrderResponseDTO;
 import com.deare.backend.api.folder.dto.request.FolderLettersRequestDTO;
 import com.deare.backend.api.folder.dto.response.FolderLettersResponseDTO;
-import com.deare.backend.api.letter.dto.response.LetterListResponseDTO;
+import com.deare.backend.api.folder.dto.response.UnassignedLetterListResponseDTO;
 import com.deare.backend.api.folder.service.FolderService;
 import com.deare.backend.global.auth.util.SecurityUtil;
 import com.deare.backend.global.common.response.ApiResponse;
@@ -49,7 +49,8 @@ public class FolderController {
 
     @DeleteMapping("/{folderId}")
     @Operation(
-            summary = "폴더 삭제"
+            summary = "폴더 삭제",
+            description = "지정한 폴더를 삭제합니다. 폴더에 포함된 편지는 삭제되지 않습니다."
     )
     public ApiResponse<Void> deleteFolder(@PathVariable("folderId") Long folderId) {
         Long userId = SecurityUtil.getCurrentUserId();
@@ -58,7 +59,10 @@ public class FolderController {
     }
 
     @PatchMapping("/orders")
-    @Operation(summary = "폴더 순서 변경")
+    @Operation(
+            summary = "폴더 순서 변경",
+            description = "사용자가 지정한 순서대로 폴더의 표시 순서를 일괄 변경합니다."
+    )
     public ApiResponse<FolderOrderResponseDTO> updateOrders(
             @Valid @RequestBody FolderOrderRequestDTO reqDTO
     ) {
@@ -68,7 +72,10 @@ public class FolderController {
     }
 
     @PatchMapping("/{folderId}")
-    @Operation(summary = "폴더 수정")
+    @Operation(
+            summary = "폴더 수정",
+            description = "지정한 폴더의 이름을 수정합니다. 폴더명은 1자 이상, 6자 이하여야 합니다."
+    )
     public ApiResponse<Void> updateFolder(
             @PathVariable("folderId") Long folderId,
             @Valid @RequestBody FolderUpdateRequestDTO reqDTO
@@ -80,7 +87,8 @@ public class FolderController {
 
     @PostMapping("/{folderId}/letters/{letterId}")
     @Operation(
-            summary = "폴더에 편지 추가"
+            summary = "폴더에 편지 추가",
+            description = "지정한 편지 한 개를 폴더에 추가합니다."
     )
     public ApiResponse<Void> addLetterToFolder(
             @PathVariable("folderId") Long folderId,
@@ -91,28 +99,36 @@ public class FolderController {
     }
 
     @PostMapping("/{folderId}/letters")
+    @Operation(
+            summary = "폴더에 편지 일괄 추가",
+            description = "선택한 여러 편지를 지정한 폴더에 한 번에 추가합니다."
+    )
     public ApiResponse<FolderLettersResponseDTO> addLettersToFolder(@PathVariable Long folderId, @Valid @RequestBody FolderLettersRequestDTO reqDTO) {
         Long userId = SecurityUtil.getCurrentUserId();
         FolderLettersResponseDTO data = folderService.addLettersToFolder(userId, folderId, reqDTO);
         return ApiResponse.success("편지가 폴더에 추가되었습니다.", data);
     }
 
-    @GetMapping("/{folderId}/letters/available")
-    public ApiResponse<LetterListResponseDTO> getAvailableLetters(
-            @PathVariable Long folderId,
+    @GetMapping("/letters/unassigned")
+    @Operation(
+            summary = "미분류 편지 목록 조회",
+            description = "어떤 폴더에도 소속되지 않은 편지를 조회합니다. 보낸 사람, 즐겨찾기 여부, 검색어로 필터링할 수 있습니다."
+    )
+    public ApiResponse<UnassignedLetterListResponseDTO> getUnassignedLetters(
             Pageable pageable,
             @RequestParam(required = false) Long fromId,
             @RequestParam(required = false) Boolean isLiked,
             @RequestParam(required = false) String keyword
     ) {
         Long userId = SecurityUtil.getCurrentUserId();
-        LetterListResponseDTO data = folderService.getAvailableLetters(pageable, userId, folderId, fromId, isLiked, keyword);
-        return ApiResponse.success("추가 가능한 편지 목록 조회에 성공했습니다.", data);
+        UnassignedLetterListResponseDTO data = folderService.getUnassignedLetters(pageable, userId, fromId, isLiked, keyword);
+        return ApiResponse.success("미분류 편지 목록 조회에 성공했습니다.", data);
     }
 
     @DeleteMapping("/{folderId}/letters/{letterId}")
     @Operation(
-            summary = "폴더에서 편지 삭제"
+            summary = "폴더에서 편지 삭제",
+            description = "지정한 편지를 폴더에서 제거합니다. 편지 자체는 삭제되지 않습니다."
     )
     public ApiResponse<Void> deleteLetterFromFolder(
             @PathVariable("folderId") Long folderId,
