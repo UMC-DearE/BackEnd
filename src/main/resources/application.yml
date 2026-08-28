@@ -95,6 +95,7 @@ blind-index:
   backfill:
     enabled: ${BLIND_INDEX_BACKFILL_ENABLED:false}
     batch-size: ${BLIND_INDEX_BACKFILL_BATCH_SIZE:50}
+    max-retry-passes: ${BLIND_INDEX_BACKFILL_MAX_RETRY_PASSES:3}
     fixed-delay-ms: ${BLIND_INDEX_BACKFILL_DELAY_MS:60000}
     initial-delay-ms: ${BLIND_INDEX_BACKFILL_INITIAL_DELAY_MS:30000}
 

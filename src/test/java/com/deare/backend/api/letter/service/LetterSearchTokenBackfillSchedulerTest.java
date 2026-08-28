@@ -89,12 +89,34 @@ class LetterSearchTokenBackfillSchedulerTest {
         order.verify(service).backfillNextBatch(0, 50);
     }
 
+    @Test
+    void stopsAfterRetryPassLimitWhenFailurePersists() {
+        LetterSearchTokenBackfillService service = mock(LetterSearchTokenBackfillService.class);
+        LetterSearchTokenBackfillScheduler scheduler = scheduler(service);
+        ReflectionTestUtils.setField(scheduler, "maxRetryPasses", 2);
+        when(service.backfillNextBatch(anyLong(), eq(50))).thenReturn(
+                batch(1, 0, 1, 10),
+                batch(0, 0, 0, 10),
+                batch(1, 0, 1, 10),
+                batch(0, 0, 0, 10),
+                batch(1, 0, 1, 10),
+                batch(0, 0, 0, 10)
+        );
+
+        for (int attempt = 0; attempt < 7; attempt++) {
+            scheduler.backfill();
+        }
+
+        verify(service, times(6)).backfillNextBatch(anyLong(), eq(50));
+    }
+
     private LetterSearchTokenBackfillScheduler scheduler(
             LetterSearchTokenBackfillService service
     ) {
         LetterSearchTokenBackfillScheduler scheduler =
                 new LetterSearchTokenBackfillScheduler(service);
         ReflectionTestUtils.setField(scheduler, "batchSize", 50);
+        ReflectionTestUtils.setField(scheduler, "maxRetryPasses", 3);
         return scheduler;
     }
 
