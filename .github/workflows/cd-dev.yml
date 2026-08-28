@@ -1,0 +1,140 @@
+name: CD-dev - build/push image & deploy to dev EC2 on develop push
+
+on:
+  push:
+    branches: ["develop"]
+
+env:
+  IMAGE_NAME: deare-backend
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17 (Temurin) + Gradle cache
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "17"
+          cache: "gradle"
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build JAR (skip tests)
+        run: ./gradlew clean bootJar -x test
+
+      - name: Prepare app.jar for Docker build context
+        run: |
+          rm -f app.jar
+          cp build/libs/*.jar app.jar
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:dev-latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:dev-${{ github.sha }}
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.DEV_AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ap-northeast-2
+
+      - name: Sync docker-compose.yml to EC2 via SSM
+        run: |
+          ENCODED=$(base64 -w 0 docker-compose.yml)
+          COMMAND_ID=$(aws ssm send-command \
+            --instance-ids "${{ secrets.DEV_EC2_INSTANCE_ID }}" \
+            --document-name "AWS-RunShellScript" \
+            --region ap-northeast-2 \
+            --parameters "commands=[\"echo $ENCODED | base64 -d > /home/ubuntu/deare/docker-compose.yml\"]" \
+            --query "Command.CommandId" \
+            --output text)
+          for i in $(seq 1 10); do
+            STATUS=$(aws ssm get-command-invocation \
+              --command-id "$COMMAND_ID" \
+              --instance-id "${{ secrets.DEV_EC2_INSTANCE_ID }}" \
+              --query "Status" \
+              --output text 2>/dev/null || echo "Pending")
+            echo "[$i/10] Status: $STATUS"
+            if [[ "$STATUS" == "Success" || "$STATUS" == "Failed" || "$STATUS" == "Cancelled" || "$STATUS" == "TimedOut" ]]; then break; fi
+            sleep 2
+          done
+          if [[ "$STATUS" != "Success" ]]; then
+            echo "compose sync failed: $STATUS"
+            exit 1
+          fi
+
+      - name: Deploy on EC2 via SSM
+        run: |
+          COMMAND_ID=$(aws ssm send-command \
+            --instance-ids "${{ secrets.DEV_EC2_INSTANCE_ID }}" \
+            --document-name "AWS-RunShellScript" \
+            --timeout-seconds 600 \
+            --parameters 'commands=[
+              "set -e",
+              "cd /home/ubuntu/deare",
+              "export APP_IMAGE=${{ secrets.DOCKERHUB_USERNAME }}/deare-backend:dev-latest",
+              "ENV_FILE=/home/ubuntu/deare/.env.prod",
+              "COMPOSE_FILE=/home/ubuntu/deare/docker-compose.yml",
+              "docker-compose --env-file $ENV_FILE -f $COMPOSE_FILE pull app",
+              "if docker-compose --env-file $ENV_FILE -f $COMPOSE_FILE up -d; then echo compose up succeeded without down; else docker-compose --env-file $ENV_FILE -f $COMPOSE_FILE down && docker-compose --env-file $ENV_FILE -f $COMPOSE_FILE up -d; fi",
+              "docker-compose --env-file $ENV_FILE -f $COMPOSE_FILE ps",
+              "docker image prune -f"
+            ]' \
+            --query "Command.CommandId" \
+            --output text)
+
+          for i in $(seq 1 60); do
+            STATUS=$(aws ssm get-command-invocation \
+              --command-id "$COMMAND_ID" \
+              --instance-id "${{ secrets.DEV_EC2_INSTANCE_ID }}" \
+              --query "Status" \
+              --output text 2>/dev/null || echo "Pending")
+
+            echo "[$i/60] Status: $STATUS"
+
+            if [[ "$STATUS" == "Success" || "$STATUS" == "Failed" || "$STATUS" == "Cancelled" || "$STATUS" == "TimedOut" ]]; then
+              break
+            fi
+
+            sleep 10
+          done
+
+          echo "=== stdout ==="
+          aws ssm get-command-invocation \
+            --command-id "$COMMAND_ID" \
+            --instance-id "${{ secrets.DEV_EC2_INSTANCE_ID }}" \
+            --query "StandardOutputContent" \
+            --output text
+
+          echo "=== stderr ==="
+          aws ssm get-command-invocation \
+            --command-id "$COMMAND_ID" \
+            --instance-id "${{ secrets.DEV_EC2_INSTANCE_ID }}" \
+            --query "StandardErrorContent" \
+            --output text
+
+          if [[ "$STATUS" != "Success" ]]; then
+            echo "Deploy failed with status: $STATUS"
+            exit 1
+          fi
