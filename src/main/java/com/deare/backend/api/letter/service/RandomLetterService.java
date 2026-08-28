@@ -31,6 +31,7 @@ public class RandomLetterService {
     private final RedisTemplate<String, String> redisTemplate;
     private final ObjectMapper objectMapper;
     private final LetterRepository letterRepository;
+    private final LetterContentReader contentReader;
 
     public RandomLetterResponseDTO getTodayRandomLetter(long userId) {
         LocalDate today = LocalDate.now(ZONE);
@@ -111,7 +112,7 @@ public class RandomLetterService {
             }
 
             // 캐시가 없거나 무효한 경우 -> 새로 문구 생성 후 저장
-            String phrase = extractRandomPhrase(pinnedLetter.getContent());
+            String phrase = extractRandomPhrase(contentReader.read(pinnedLetter));
             RandomLetterCacheValue createdPinned = new RandomLetterCacheValue(pinnedLetter.getId(), phrase);
 
             redisTemplate.opsForValue().set(pinnedKey, toJson(createdPinned));
@@ -265,7 +266,7 @@ public class RandomLetterService {
                 .orElseThrow(() -> new GeneralException(LetterErrorCode.LETTER_NOT_FOUND));
 
         // 편지 본문에서 랜덤 문구 추출
-        String phrase = extractRandomPhrase(letter.getContent());
+        String phrase = extractRandomPhrase(contentReader.read(letter));
         RandomLetterCacheValue created = new RandomLetterCacheValue(letter.getId(), phrase);
 
         Duration ttl = ttlUntilNextMidnight();

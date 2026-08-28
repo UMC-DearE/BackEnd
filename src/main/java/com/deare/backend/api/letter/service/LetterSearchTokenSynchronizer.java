@@ -30,11 +30,13 @@ public class LetterSearchTokenSynchronizer {
     }
 
     public void replaceTokens(Letter letter, long userId, String content) {
+        // Bulk delete의 영속성 컨텍스트 초기화 이후 Letter 변경 금지
         searchTokenRepository.deleteAllByLetterId(letter.getId());
         indexCreatedLetter(letter, userId, content);
     }
 
     public void deleteTokens(Letter letter) {
+        // Bulk delete의 영속성 컨텍스트 초기화 이후 Letter 변경 금지
         searchTokenRepository.deleteAllByLetterId(letter.getId());
     }
 

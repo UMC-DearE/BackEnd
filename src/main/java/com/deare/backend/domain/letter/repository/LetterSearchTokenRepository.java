@@ -13,7 +13,7 @@ public interface LetterSearchTokenRepository
 
     boolean existsByLetter_IdAndIndexKeyVersion(Long letterId, int indexKeyVersion);
 
-    @Modifying(flushAutomatically = true)
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query("delete from LetterSearchToken token where token.letter.id = :letterId")
     void deleteAllByLetterId(@Param("letterId") Long letterId);
 }

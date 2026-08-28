@@ -57,7 +57,7 @@ public class LetterSearchTokenBackfillService {
         }
 
         long lastScannedId = targetIds.isEmpty()
-                ? 0
+                ? afterId
                 : targetIds.get(targetIds.size() - 1);
         return new BackfillBatchResult(targetIds.size(), indexed, failed, lastScannedId);
     }

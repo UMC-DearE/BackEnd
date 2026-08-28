@@ -23,6 +23,7 @@ public class LetterSearchTokenBackfillProcessor {
     private final LetterSearchTokenRepository searchTokenRepository;
     private final BlindIndexKeyProvider keyProvider;
     private final LetterSearchTokenSynchronizer searchTokenSynchronizer;
+    private final LetterContentReader contentReader;
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public boolean indexIfMissing(Long letterId, int expectedKeyVersion) {
@@ -40,7 +41,7 @@ public class LetterSearchTokenBackfillProcessor {
         searchTokenSynchronizer.indexCreatedLetter(
                 letter,
                 letter.getUser().getId(),
-                letter.getContent()
+                contentReader.read(letter)
         );
         return true;
     }

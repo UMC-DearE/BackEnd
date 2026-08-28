@@ -60,6 +60,7 @@ public class LetterServiceImpl implements LetterService {
     private final LetterSearchTokenSynchronizer searchTokenSynchronizer;
     private final LetterSearchCandidateResolver searchCandidateResolver;
     private final LetterContentEncryptionSynchronizer contentEncryptionSynchronizer;
+    private final LetterContentReader contentReader;
 
     @Override
     @Transactional(readOnly = true)
@@ -85,7 +86,7 @@ public class LetterServiceImpl implements LetterService {
         );
 
         List<LetterItemDTO> items = page.getContent().stream()
-                .map(LetterItemMapper::toItemDTO)
+                .map(letter -> LetterItemMapper.toItemDTO(letter, contentReader.read(letter)))
                 .toList();
 
         return new LetterListResponseDTO(
@@ -128,7 +129,7 @@ public class LetterServiceImpl implements LetterService {
                 .toList();
 
         return new LetterDetailResponseDTO(
-                letter.getContent(),
+                contentReader.read(letter),
                 letter.getReceivedAt(),
                 letter.getAiSummary(),
                 letter.isLiked(),

@@ -24,12 +24,14 @@ class LetterSearchTokenBackfillProcessorTest {
     private final BlindIndexKeyProvider keyProvider = mock(BlindIndexKeyProvider.class);
     private final LetterSearchTokenSynchronizer synchronizer =
             mock(LetterSearchTokenSynchronizer.class);
+    private final LetterContentReader contentReader = mock(LetterContentReader.class);
     private final LetterSearchTokenBackfillProcessor processor =
             new LetterSearchTokenBackfillProcessor(
                     letterRepository,
                     searchTokenRepository,
                     keyProvider,
-                    synchronizer
+                    synchronizer,
+                    contentReader
             );
 
     @Test
@@ -40,7 +42,7 @@ class LetterSearchTokenBackfillProcessorTest {
                 .thenReturn(Optional.of(letter));
         when(letter.getUser()).thenReturn(user);
         when(user.getId()).thenReturn(7L);
-        when(letter.getContent()).thenReturn("content");
+        when(contentReader.read(letter)).thenReturn("content");
         when(keyProvider.currentVersion()).thenReturn(new BlindIndexKeyVersion(2));
 
         assertThat(processor.indexIfMissing(10L, 2)).isTrue();

@@ -7,6 +7,7 @@ import com.deare.backend.domain.folder.entity.QFolder;
 import com.deare.backend.domain.from.entity.QFrom;
 import com.deare.backend.domain.letter.entity.QLetterImage;
 import com.deare.backend.domain.letter.entity.QLetterSearchToken;
+import com.deare.backend.domain.user.entity.QUser;
 import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.BooleanExpression;
@@ -48,9 +49,11 @@ public class LetterRepositoryImpl implements LetterRepositoryCustom {
         QLetter letter = QLetter.letter;
         QFrom from = QFrom.from;
         QFolder folder = QFolder.folder;
+        QUser user = QUser.user;
 
         JPAQuery<Letter> contentQuery = queryFactory
                 .selectFrom(letter)
+                .join(letter.user, user).fetchJoin()
                 .join(letter.from, from).fetchJoin()
                 .leftJoin(letter.folder, folder).fetchJoin()
                 .where(
@@ -105,9 +108,11 @@ public class LetterRepositoryImpl implements LetterRepositoryCustom {
         QLetter letter = QLetter.letter;
         QFrom from = QFrom.from;
         QFolder folder = QFolder.folder;
+        QUser user = QUser.user;
 
         JPAQuery<Letter> contentQuery = queryFactory
                 .selectFrom(letter)
+                .join(letter.user, user).fetchJoin()
                 .join(letter.from, from).fetchJoin()
                 .leftJoin(letter.folder, folder).fetchJoin()
                 .where(
@@ -254,9 +259,11 @@ public class LetterRepositoryImpl implements LetterRepositoryCustom {
     @Override
     public Optional<Letter> findRandomLetterByUser(Long userId, long offset, LocalDateTime createdBefore) {
         QLetter letter = QLetter.letter;
+        QUser user = QUser.user;
 
         Letter result = queryFactory
                 .selectFrom(letter)
+                .join(letter.user, user).fetchJoin()
                 .where(
                         letter.user.id.eq(userId),
                         letter.isDeleted.eq(false),
@@ -292,9 +299,11 @@ public class LetterRepositoryImpl implements LetterRepositoryCustom {
     @Override
     public Optional<Letter> findPinnedLetterByUser(Long userId) {
         QLetter letter = QLetter.letter;
+        QUser user = QUser.user;
 
         Letter result = queryFactory
                 .selectFrom(letter)
+                .join(letter.user, user).fetchJoin()
                 .where(
                         letter.user.id.eq(userId),
                         letter.isPinned.isTrue(),
