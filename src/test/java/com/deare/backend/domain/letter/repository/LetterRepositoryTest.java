@@ -176,6 +176,32 @@ class LetterRepositoryTest {
         assertThat(Hibernate.isInitialized(unassignedResult.getUser())).isTrue();
     }
 
+    @Test
+    void findsAllRowsMissingEncryptedContentAndLocksTargetWithUser() {
+        User owner = saveUser("backfill-owner");
+        From from = fromRepository.save(new From("sender", "#FFFFFF", "#000000", owner));
+        Letter active = letterRepository.save(
+                createLetter("active-legacy", owner, from, null)
+        );
+        Letter deleted = createLetter("deleted-legacy", owner, from, null);
+        deleted.softDelete();
+        letterRepository.save(deleted);
+        Letter encrypted = createLetter("encrypted", owner, from, null);
+        encrypted.storeEncryptedContent("ciphertext", "AAAAAAAAAAAAAAAA", 1, 1);
+        letterRepository.saveAndFlush(encrypted);
+        entityManager.clear();
+
+        assertThat(letterRepository.findIdsMissingEncryptedContent(
+                0,
+                PageRequest.of(0, 10)
+        )).containsExactly(active.getId(), deleted.getId());
+
+        Letter target = letterRepository.findByIdForContentBackfill(active.getId())
+                .orElseThrow();
+        assertThat(Hibernate.isInitialized(target.getUser())).isTrue();
+        assertThat(target.getUser().getId()).isEqualTo(owner.getId());
+    }
+
     private User saveUser(String suffix) {
         return userRepository.save(User.signUpUser(
                 Provider.GOOGLE,

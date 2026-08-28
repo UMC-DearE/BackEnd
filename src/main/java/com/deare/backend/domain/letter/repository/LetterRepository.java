@@ -20,6 +20,28 @@ public interface LetterRepository extends JpaRepository<Letter, Long>, LetterRep
     @Query("""
         select l.id
           from Letter l
+         where l.id > :afterId
+           and l.contentCiphertext is null
+         order by l.id
+    """)
+    List<Long> findIdsMissingEncryptedContent(
+            @Param("afterId") long afterId,
+            Pageable pageable
+    );
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+        select l
+          from Letter l
+          join fetch l.user
+         where l.id = :letterId
+           and l.contentCiphertext is null
+    """)
+    Optional<Letter> findByIdForContentBackfill(@Param("letterId") Long letterId);
+
+    @Query("""
+        select l.id
+          from Letter l
          where l.isDeleted = false
            and l.id > :afterId
            and not exists (
