@@ -11,8 +11,10 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 @ConditionalOnProperty(
-        prefix = "blind-index.backfill",
-        name = "enabled",
+        name = {
+                "blind-index.backfill.enabled",
+                "blind-index.keys.enabled"
+        },
         havingValue = "true"
 )
 public class LetterSearchTokenBackfillScheduler {
