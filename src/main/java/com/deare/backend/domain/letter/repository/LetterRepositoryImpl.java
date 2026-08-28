@@ -49,9 +49,11 @@ public class LetterRepositoryImpl implements LetterRepositoryCustom {
         QLetter letter = QLetter.letter;
         QFrom from = QFrom.from;
         QFolder folder = QFolder.folder;
+        QUser user = QUser.user;
 
         JPAQuery<Letter> contentQuery = queryFactory
                 .selectFrom(letter)
+                .join(letter.user, user).fetchJoin()
                 .join(letter.from, from).fetchJoin()
                 .leftJoin(letter.folder, folder).fetchJoin()
                 .where(
@@ -106,9 +108,11 @@ public class LetterRepositoryImpl implements LetterRepositoryCustom {
         QLetter letter = QLetter.letter;
         QFrom from = QFrom.from;
         QFolder folder = QFolder.folder;
+        QUser user = QUser.user;
 
         JPAQuery<Letter> contentQuery = queryFactory
                 .selectFrom(letter)
+                .join(letter.user, user).fetchJoin()
                 .join(letter.from, from).fetchJoin()
                 .leftJoin(letter.folder, folder).fetchJoin()
                 .where(

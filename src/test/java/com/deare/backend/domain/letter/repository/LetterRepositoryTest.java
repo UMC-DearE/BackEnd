@@ -149,6 +149,33 @@ class LetterRepositoryTest {
         assertThat(randomResult.getId()).isNotEqualTo(pinnedResult.getId());
     }
 
+    @Test
+    void fetchesUserForLetterListContentDecryption() {
+        User owner = saveUser("list-reader-owner");
+        From from = fromRepository.save(new From("sender", "#FFFFFF", "#000000", owner));
+        Folder folder = folderRepository.save(Folder.create("folder", 1, null, owner));
+        Letter assigned = letterRepository.saveAndFlush(
+                createLetter("assigned-content", owner, from, folder)
+        );
+        Letter unassigned = letterRepository.saveAndFlush(
+                createLetter("unassigned-content", owner, from, null)
+        );
+        entityManager.clear();
+
+        Letter listResult = letterRepository.findLettersForList(
+                owner.getId(), folder.getId(), null, null, null, null, PageRequest.of(0, 10)
+        ).getContent().get(0);
+        assertThat(listResult.getId()).isEqualTo(assigned.getId());
+        assertThat(Hibernate.isInitialized(listResult.getUser())).isTrue();
+
+        entityManager.clear();
+        Letter unassignedResult = letterRepository.findAvailableLetters(
+                owner.getId(), null, null, null, null, PageRequest.of(0, 10)
+        ).getContent().get(0);
+        assertThat(unassignedResult.getId()).isEqualTo(unassigned.getId());
+        assertThat(Hibernate.isInitialized(unassignedResult.getUser())).isTrue();
+    }
+
     private User saveUser(String suffix) {
         return userRepository.save(User.signUpUser(
                 Provider.GOOGLE,
