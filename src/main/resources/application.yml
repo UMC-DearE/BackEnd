@@ -97,3 +97,9 @@ blind-index:
     batch-size: ${BLIND_INDEX_BACKFILL_BATCH_SIZE:50}
     fixed-delay-ms: ${BLIND_INDEX_BACKFILL_DELAY_MS:60000}
     initial-delay-ms: ${BLIND_INDEX_BACKFILL_INITIAL_DELAY_MS:30000}
+
+letter-content:
+  encryption:
+    enabled: ${LETTER_CONTENT_ENCRYPTION_ENABLED:false}
+    secret-id: ${LETTER_CONTENT_ENCRYPTION_SECRET_ID:}
+    region: ${AWS_REGION}

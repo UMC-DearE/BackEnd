@@ -4,6 +4,7 @@ import com.deare.backend.domain.letter.search.BlindIndexKeyProvider;
 import com.deare.backend.domain.letter.search.HkdfBlindIndexKeyProvider;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -44,7 +45,7 @@ public class BlindIndexSecretsManagerConfig {
 
     @Bean
     public BlindIndexKeyProvider blindIndexKeyProvider(
-            SecretsManagerClient secretsManagerClient,
+            @Qualifier("blindIndexSecretsManagerClient") SecretsManagerClient secretsManagerClient,
             ObjectMapper objectMapper,
             BlindIndexSecretsProperties properties
     ) {
