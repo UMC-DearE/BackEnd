@@ -12,6 +12,7 @@ import com.deare.backend.api.folder.dto.response.UnassignedLetterListResponseDTO
 import com.deare.backend.api.folder.dto.result.FolderItemDTO;
 import com.deare.backend.api.folder.dto.result.UnassignedLetterItemDTO;
 import com.deare.backend.api.letter.mapper.LetterItemMapper;
+import com.deare.backend.api.letter.service.LetterContentReader;
 import com.deare.backend.api.letter.service.LetterSearchCandidateResolver;
 import com.deare.backend.domain.folder.entity.Folder;
 import com.deare.backend.domain.folder.exception.FolderErrorCode;
@@ -46,6 +47,7 @@ public class FolderServiceImpl implements FolderService {
     private final UserRepository userRepository;
     private final LetterRepository letterRepository;
     private final LetterSearchCandidateResolver searchCandidateResolver;
+    private final LetterContentReader contentReader;
 
     @Override
     @Transactional(readOnly = true)
@@ -164,7 +166,7 @@ public class FolderServiceImpl implements FolderService {
                 pageable
         );
         List<UnassignedLetterItemDTO> items = page.getContent().stream()
-                .map(LetterItemMapper::toItemDTO)
+                .map(letter -> LetterItemMapper.toItemDTO(letter, contentReader.read(letter)))
                 .map(UnassignedLetterItemDTO::from)
                 .toList();
 

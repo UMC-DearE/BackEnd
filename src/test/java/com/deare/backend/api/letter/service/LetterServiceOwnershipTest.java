@@ -56,6 +56,7 @@ class LetterServiceOwnershipTest {
     @Mock private LetterSearchTokenSynchronizer searchTokenSynchronizer;
     @Mock private LetterSearchCandidateResolver searchCandidateResolver;
     @Mock private LetterContentEncryptionSynchronizer contentEncryptionSynchronizer;
+    @Mock private LetterContentReader contentReader;
     @InjectMocks private LetterServiceImpl letterService;
 
     @Test

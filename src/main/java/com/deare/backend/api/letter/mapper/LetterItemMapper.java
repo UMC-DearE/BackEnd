@@ -12,10 +12,10 @@ public final class LetterItemMapper {
     private LetterItemMapper() {
     }
 
-    public static LetterItemDTO toItemDTO(Letter letter) {
+    public static LetterItemDTO toItemDTO(Letter letter, String content) {
         return new LetterItemDTO(
                 letter.getId(),
-                ExcerptUtil.excerptByChars(letter.getContent(), EXCERPT_MAX_CHARS),
+                ExcerptUtil.excerptByChars(content, EXCERPT_MAX_CHARS),
                 letter.isLiked(),
                 letter.getReceivedAt(),
                 letter.getCreatedAt(),

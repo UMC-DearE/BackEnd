@@ -30,6 +30,7 @@ class RandomLetterServiceTest {
     private RedisTemplate<String, String> redisTemplate;
     private ValueOperations<String, String> valueOperations;
     private LetterRepository letterRepository;
+    private LetterContentReader contentReader;
     private RandomLetterService service;
 
     @SuppressWarnings("unchecked")
@@ -40,6 +41,7 @@ class RandomLetterServiceTest {
         redisTemplate = mock(RedisTemplate.class);
         valueOperations = mock(ValueOperations.class);
         letterRepository = mock(LetterRepository.class);
+        contentReader = mock(LetterContentReader.class);
 
         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
 
@@ -68,13 +70,19 @@ class RandomLetterServiceTest {
         when(redisTemplate.delete(anyString()))
                 .thenAnswer(inv -> store.remove((String) inv.getArgument(0)) != null);
 
-        service = new RandomLetterService(redisTemplate, new ObjectMapper(), letterRepository);
+        service = new RandomLetterService(
+                redisTemplate,
+                new ObjectMapper(),
+                letterRepository,
+                contentReader
+        );
     }
 
     private Letter mockLetter(long id, String content) {
         Letter letter = mock(Letter.class);
         when(letter.getId()).thenReturn(id);
         when(letter.getContent()).thenReturn(content);
+        when(contentReader.read(letter)).thenReturn(content);
         return letter;
     }
 

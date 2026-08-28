@@ -2,6 +2,7 @@ package com.deare.backend.domain.letter.entity;
 
 import com.deare.backend.domain.folder.entity.Folder;
 import com.deare.backend.domain.from.entity.From;
+import com.deare.backend.domain.letter.crypto.EncryptedLetterContent;
 import com.deare.backend.domain.letter.exception.LetterErrorCode;
 import com.deare.backend.domain.user.entity.User;
 import com.deare.backend.global.common.entity.BaseEntity;
@@ -15,6 +16,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 @Getter
 @Entity
@@ -150,6 +152,27 @@ public class Letter extends BaseEntity {
         this.contentEncryptionNonce = null;
         this.contentEncryptionKeyVersion = null;
         this.contentEncryptionFormatVersion = null;
+    }
+
+    public Optional<EncryptedLetterContent> encryptedContent() {
+        boolean allAbsent = contentCiphertext == null
+                && contentEncryptionNonce == null
+                && contentEncryptionKeyVersion == null
+                && contentEncryptionFormatVersion == null;
+        if (allAbsent) {
+            return Optional.empty();
+        }
+        if (contentCiphertext == null || contentCiphertext.isBlank()
+                || contentEncryptionNonce == null || contentEncryptionNonce.length() != 16
+                || contentEncryptionKeyVersion == null || contentEncryptionKeyVersion <= 0
+                || !Objects.equals(contentEncryptionFormatVersion, 1)) {
+            throw new IllegalStateException("Invalid encrypted letter content state.");
+        }
+        return Optional.of(new EncryptedLetterContent(
+                contentEncryptionKeyVersion,
+                contentEncryptionNonce,
+                contentCiphertext
+        ));
     }
 
     public void updateReceivedAt(LocalDate receivedAt) {
