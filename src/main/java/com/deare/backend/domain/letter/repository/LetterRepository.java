@@ -33,7 +33,6 @@ public interface LetterRepository extends JpaRepository<Letter, Long>, LetterRep
     @Query("""
         select l
           from Letter l
-          join fetch l.user
          where l.id = :letterId
            and l.contentCiphertext is null
     """)

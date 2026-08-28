@@ -177,7 +177,7 @@ class LetterRepositoryTest {
     }
 
     @Test
-    void findsAllRowsMissingEncryptedContentAndLocksTargetWithUser() {
+    void findsAllRowsMissingEncryptedContentAndLocksOnlyTargetLetter() {
         User owner = saveUser("backfill-owner");
         From from = fromRepository.save(new From("sender", "#FFFFFF", "#000000", owner));
         Letter active = letterRepository.save(
@@ -198,8 +198,9 @@ class LetterRepositoryTest {
 
         Letter target = letterRepository.findByIdForContentBackfill(active.getId())
                 .orElseThrow();
-        assertThat(Hibernate.isInitialized(target.getUser())).isTrue();
+        assertThat(Hibernate.isInitialized(target.getUser())).isFalse();
         assertThat(target.getUser().getId()).isEqualTo(owner.getId());
+        assertThat(Hibernate.isInitialized(target.getUser())).isFalse();
     }
 
     private User saveUser(String suffix) {
