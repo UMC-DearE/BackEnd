@@ -8,6 +8,7 @@ import com.deare.backend.domain.user.entity.User;
 import com.deare.backend.domain.user.entity.enums.Provider;
 import com.deare.backend.domain.user.repository.UserRepository;
 import com.deare.backend.global.config.QuerydslConfig;
+import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -36,6 +37,7 @@ class LetterSearchTokenRepositoryTest {
     @Autowired private FromRepository fromRepository;
     @Autowired private LetterRepository letterRepository;
     @Autowired private LetterSearchTokenRepository searchTokenRepository;
+    @Autowired private EntityManager entityManager;
 
     @Test
     void findsOnlyLettersContainingEveryTokenForUserAndKeyVersion() {
@@ -101,6 +103,36 @@ class LetterSearchTokenRepositoryTest {
         assertThat(searchTokenRepository.findAll())
                 .extracting(token -> token.getLetter().getId())
                 .containsExactly(untouched.getId());
+    }
+
+    @Test
+    void flushesPendingLetterChangesAndClearsManagedTokensBeforeReplacement() {
+        User owner = saveUser("replace-owner");
+        Letter letter = saveLetter(owner, "replace-target");
+        LetterSearchToken oldToken = searchTokenRepository.saveAndFlush(
+                LetterSearchToken.create(letter, 1, TOKEN_A)
+        );
+        assertThat(searchTokenRepository.findById(oldToken.getId())).contains(oldToken);
+
+        LocalDate changedReceivedAt = LocalDate.of(2026, 8, 28);
+        letter.updateReceivedAt(changedReceivedAt);
+        searchTokenRepository.deleteAllByLetterId(letter.getId());
+
+        assertThat(entityManager.contains(letter)).isFalse();
+        assertThat(searchTokenRepository.findById(oldToken.getId())).isEmpty();
+
+        searchTokenRepository.saveAndFlush(
+                LetterSearchToken.create(letter, 2, TOKEN_B)
+        );
+        entityManager.clear();
+
+        assertThat(letterRepository.findById(letter.getId()))
+                .get()
+                .extracting(Letter::getReceivedAt)
+                .isEqualTo(changedReceivedAt);
+        assertThat(searchTokenRepository.findCandidateLetterIds(
+                owner.getId(), 2, Set.of(TOKEN_B), 100
+        )).containsExactly(letter.getId());
     }
 
     @Test
