@@ -59,6 +59,7 @@ public class LetterServiceImpl implements LetterService {
     private final LetterAnalyzeService letterAnalyzeService;
     private final LetterSearchTokenSynchronizer searchTokenSynchronizer;
     private final LetterSearchCandidateResolver searchCandidateResolver;
+    private final LetterContentEncryptionSynchronizer contentEncryptionSynchronizer;
 
     @Override
     @Transactional(readOnly = true)
@@ -209,6 +210,7 @@ public class LetterServiceImpl implements LetterService {
         }
 
         Letter saved = letterRepository.save(letter);
+        contentEncryptionSynchronizer.synchronize(saved, userId, saved.getContent());
 
         List<LetterEmotion> mappings = emotions.stream()
                 .map(e -> new LetterEmotion(saved, e))
@@ -281,6 +283,7 @@ public class LetterServiceImpl implements LetterService {
             } catch (Exception e) {
                 throw new GeneralException(LetterErrorCode.SUMMARY_INTERNAL_ERROR);
             }
+            contentEncryptionSynchronizer.synchronize(letter, userId, letter.getContent());
             searchTokenSynchronizer.replaceTokens(letter, userId, normalizedContent);
         }
     }
