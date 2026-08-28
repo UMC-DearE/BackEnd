@@ -41,6 +41,7 @@ import org.springframework.util.StringUtils;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -56,6 +57,9 @@ public class LetterServiceImpl implements LetterService {
     private final ImageRepository imageRepository;
     private final LetterImageRepository letterImageRepository;
     private final LetterAnalyzeService letterAnalyzeService;
+    private final LetterSearchTokenSynchronizer searchTokenSynchronizer;
+    private final LetterSearchCandidateResolver searchCandidateResolver;
+    private final LetterContentEncryptionSynchronizer contentEncryptionSynchronizer;
 
     @Override
     @Transactional(readOnly = true)
@@ -68,12 +72,15 @@ public class LetterServiceImpl implements LetterService {
             String keyword
     ) {
 
+        Set<Long> indexedCandidateIds = searchCandidateResolver.resolve(userId, keyword)
+                .orElse(null);
         Page<Letter> page = letterRepository.findLettersForList(
                 userId,
                 folderId,
                 fromId,
                 isLiked,
                 keyword,
+                indexedCandidateIds,
                 pageable
         );
 
@@ -151,7 +158,7 @@ public class LetterServiceImpl implements LetterService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new GeneralException(LetterErrorCode.UNAUTHORIZED));
 
-        From from = fromRepository.findById(req.fromId())
+        From from = fromRepository.findByIdAndUser_IdAndIsDeletedFalse(req.fromId(), userId)
                 .orElseThrow(() -> new GeneralException(LetterErrorCode.FROM_NOT_FOUND));
 
         String content = req.content().trim();
@@ -203,12 +210,14 @@ public class LetterServiceImpl implements LetterService {
         }
 
         Letter saved = letterRepository.save(letter);
+        contentEncryptionSynchronizer.synchronize(saved, userId, saved.getContent());
 
         List<LetterEmotion> mappings = emotions.stream()
                 .map(e -> new LetterEmotion(saved, e))
                 .toList();
 
         letterEmotionRepository.saveAll(mappings);
+        searchTokenSynchronizer.indexCreatedLetter(saved, userId, content);
 
         return new LetterCreateResponseDTO(saved.getId(), saved.getCreatedAt());
     }
@@ -231,7 +240,7 @@ public class LetterServiceImpl implements LetterService {
         Letter letter = getOwnedActiveLetter(userId, letterId);
 
         if (req.getFromId() != null) {
-            From from = fromRepository.findById(req.getFromId())
+            From from = fromRepository.findByIdAndUser_IdAndIsDeletedFalse(req.getFromId(), userId)
                     .orElseThrow(() -> new GeneralException(FromErrorCode.FROM_40401));
 
             letter.changeFrom(from);
@@ -242,8 +251,8 @@ public class LetterServiceImpl implements LetterService {
         }
 
         if (StringUtils.hasText(req.getContent())) {
+            String normalizedContent = req.getContent().trim();
             try {
-                String normalizedContent = req.getContent().trim();
                 String newHash = DigestUtils.sha256Hex(normalizedContent);
 
                 if (newHash.equals(letter.getContentHash())) {
@@ -274,6 +283,8 @@ public class LetterServiceImpl implements LetterService {
             } catch (Exception e) {
                 throw new GeneralException(LetterErrorCode.SUMMARY_INTERNAL_ERROR);
             }
+            contentEncryptionSynchronizer.synchronize(letter, userId, letter.getContent());
+            searchTokenSynchronizer.replaceTokens(letter, userId, normalizedContent);
         }
     }
 
@@ -282,6 +293,7 @@ public class LetterServiceImpl implements LetterService {
     public void deleteLetter(Long userId, Long letterId) {
         Letter letter = getOwnedActiveLetter(userId, letterId);
         letter.softDelete();
+        searchTokenSynchronizer.deleteTokens(letter);
     }
 
     @Override
@@ -332,7 +344,7 @@ public class LetterServiceImpl implements LetterService {
             throw new GeneralException(LetterErrorCode.INVALID_REQUEST);
         }
 
-        Letter letter = letterRepository.findById(letterId)
+        Letter letter = letterRepository.findByIdAndUser_Id(letterId, userId)
                 .orElseThrow(() -> new GeneralException(LetterErrorCode.LETTER_NOT_FOUND));
 
         if (letter.isDeleted()) {

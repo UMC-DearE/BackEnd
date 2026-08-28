@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.time.LocalDate;
@@ -49,7 +50,7 @@ class LetterSearchTokenRepositoryTest {
         saveTokens(otherUsers, 1, TOKEN_A, TOKEN_B);
 
         assertThat(searchTokenRepository.findCandidateLetterIds(
-                owner.getId(), 1, Set.of(TOKEN_A, TOKEN_B)
+                owner.getId(), 1, Set.of(TOKEN_A, TOKEN_B), 100
         )).containsExactly(exact.getId());
     }
 
@@ -62,15 +63,16 @@ class LetterSearchTokenRepositoryTest {
         saveTokens(currentVersion, 2, TOKEN_A, TOKEN_B);
 
         assertThat(searchTokenRepository.findCandidateLetterIds(
-                owner.getId(), 2, Set.of(TOKEN_A, TOKEN_B)
+                owner.getId(), 2, Set.of(TOKEN_A, TOKEN_B), 100
         )).containsExactly(currentVersion.getId());
     }
 
     @Test
     void returnsEmptyForInvalidSearchBoundary() {
-        assertThat(searchTokenRepository.findCandidateLetterIds(1L, 1, Set.of())).isEmpty();
-        assertThat(searchTokenRepository.findCandidateLetterIds(null, 1, Set.of(TOKEN_A))).isEmpty();
-        assertThat(searchTokenRepository.findCandidateLetterIds(1L, 0, Set.of(TOKEN_A))).isEmpty();
+        assertThat(searchTokenRepository.findCandidateLetterIds(1L, 1, Set.of(), 100)).isEmpty();
+        assertThat(searchTokenRepository.findCandidateLetterIds(null, 1, Set.of(TOKEN_A), 100)).isEmpty();
+        assertThat(searchTokenRepository.findCandidateLetterIds(1L, 0, Set.of(TOKEN_A), 100)).isEmpty();
+        assertThat(searchTokenRepository.findCandidateLetterIds(1L, 1, Set.of(TOKEN_A), 0)).isEmpty();
     }
 
     @Test
@@ -82,6 +84,42 @@ class LetterSearchTokenRepositoryTest {
         assertThatThrownBy(() -> searchTokenRepository.saveAndFlush(
                 LetterSearchToken.create(letter, 1, TOKEN_A)
         )).isInstanceOf(DataIntegrityViolationException.class);
+    }
+
+    @Test
+    void deletesEveryKeyVersionForLetter() {
+        User owner = saveUser("delete-owner");
+        Letter target = saveLetter(owner, "delete-target");
+        Letter untouched = saveLetter(owner, "delete-untouched");
+        saveTokens(target, 1, TOKEN_A);
+        saveTokens(target, 2, TOKEN_B);
+        saveTokens(untouched, 1, TOKEN_C);
+
+        searchTokenRepository.deleteAllByLetterId(target.getId());
+        searchTokenRepository.flush();
+
+        assertThat(searchTokenRepository.findAll())
+                .extracting(token -> token.getLetter().getId())
+                .containsExactly(untouched.getId());
+    }
+
+    @Test
+    void findsOnlyActiveLettersMissingRequestedKeyVersion() {
+        User owner = saveUser("backfill-owner");
+        Letter missing = saveLetter(owner, "missing");
+        Letter current = saveLetter(owner, "current");
+        Letter oldOnly = saveLetter(owner, "old-only");
+        Letter deleted = saveLetter(owner, "deleted");
+        saveTokens(current, 2, TOKEN_A);
+        saveTokens(oldOnly, 1, TOKEN_B);
+        deleted.softDelete();
+        letterRepository.flush();
+
+        assertThat(letterRepository.findActiveIdsMissingSearchTokenVersion(
+                0,
+                2,
+                PageRequest.of(0, 10)
+        )).containsExactly(missing.getId(), oldOnly.getId());
     }
 
     private User saveUser(String suffix) {

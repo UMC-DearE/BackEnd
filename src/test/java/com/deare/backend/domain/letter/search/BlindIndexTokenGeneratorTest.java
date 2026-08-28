@@ -73,6 +73,18 @@ class BlindIndexTokenGeneratorTest {
     }
 
     @Test
+    void createsOpaqueCompletionMarkerForUnsearchableIndexContent() {
+        BlindIndexTokenGenerator generator = new BlindIndexTokenGenerator(key("index-key"));
+
+        assertThat(generator.generateForIndex("a"))
+                .singleElement()
+                .satisfies(token -> assertThat(token).hasSize(43));
+        assertThat(generator.generateForIndex("a"))
+                .isEqualTo(generator.generateForIndex("a"));
+        assertThat(generator.generateUnique("a")).isEmpty();
+    }
+
+    @Test
     @DisplayName("HMAC에 사용할 수 없는 키는 생성 시점에 거부한다")
     void rejectInvalidKey() {
         SecretKey invalidKey = new InvalidSecretKey();

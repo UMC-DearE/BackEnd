@@ -30,6 +30,19 @@ public class Letter extends BaseEntity {
     @Column(name="content", columnDefinition = "LONGTEXT", nullable = false)
     private String content;
 
+    @Lob
+    @Column(name = "content_ciphertext", columnDefinition = "LONGTEXT")
+    private String contentCiphertext;
+
+    @Column(name = "content_encryption_nonce", length = 16)
+    private String contentEncryptionNonce;
+
+    @Column(name = "content_encryption_key_version")
+    private Integer contentEncryptionKeyVersion;
+
+    @Column(name = "content_encryption_format_version")
+    private Integer contentEncryptionFormatVersion;
+
     @Column(name="received_at")
     private LocalDate receivedAt;
 
@@ -113,6 +126,30 @@ public class Letter extends BaseEntity {
         this.aiSummary = newAiSummary;
         this.contentHash = newContentHash;
         this.contentVersion++;
+    }
+
+    public void storeEncryptedContent(
+            String ciphertext,
+            String nonce,
+            int keyVersion,
+            int formatVersion
+    ) {
+        if (ciphertext == null || ciphertext.isBlank()
+                || nonce == null || nonce.length() != 16
+                || keyVersion <= 0 || formatVersion != 1) {
+            throw new IllegalArgumentException("Valid encrypted letter content is required.");
+        }
+        this.contentCiphertext = ciphertext;
+        this.contentEncryptionNonce = nonce;
+        this.contentEncryptionKeyVersion = keyVersion;
+        this.contentEncryptionFormatVersion = formatVersion;
+    }
+
+    public void clearEncryptedContent() {
+        this.contentCiphertext = null;
+        this.contentEncryptionNonce = null;
+        this.contentEncryptionKeyVersion = null;
+        this.contentEncryptionFormatVersion = null;
     }
 
     public void updateReceivedAt(LocalDate receivedAt) {

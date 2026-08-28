@@ -38,6 +38,11 @@ public final class HkdfBlindIndexKeyProvider implements BlindIndexKeyProvider {
     }
 
     @Override
+    public BlindIndexKeyVersion currentVersion() {
+        return currentVersion;
+    }
+
+    @Override
     public VersionedBlindIndexKey currentKey(long userId) {
         return derive(currentVersion, userId);
     }

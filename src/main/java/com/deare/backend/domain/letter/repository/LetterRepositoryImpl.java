@@ -6,12 +6,14 @@ import com.deare.backend.domain.letter.entity.QLetter;
 import com.deare.backend.domain.folder.entity.QFolder;
 import com.deare.backend.domain.from.entity.QFrom;
 import com.deare.backend.domain.letter.entity.QLetterImage;
+import com.deare.backend.domain.letter.entity.QLetterSearchToken;
 import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import com.querydsl.jpa.JPAExpressions;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -22,6 +24,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @SuppressWarnings("unused")
 public class LetterRepositoryImpl implements LetterRepositoryCustom {
@@ -39,6 +42,7 @@ public class LetterRepositoryImpl implements LetterRepositoryCustom {
             Long fromId,
             Boolean isLiked,
             String keyword,
+            Set<Long> indexedCandidateIds,
             Pageable pageable
     ) {
         QLetter letter = QLetter.letter;
@@ -55,6 +59,7 @@ public class LetterRepositoryImpl implements LetterRepositoryCustom {
                         folderIdEq(letter, folderId),
                         fromIdEq(letter, fromId),
                         isLikedEq(letter, isLiked),
+                        indexedCandidateOrUnindexed(letter, keyword, indexedCandidateIds),
                         keywordLike(letter, keyword)
                 )
                 .offset(pageable.getOffset())
@@ -78,6 +83,7 @@ public class LetterRepositoryImpl implements LetterRepositoryCustom {
                         folderIdEq(letter, folderId),
                         fromIdEq(letter, fromId),
                         isLikedEq(letter, isLiked),
+                        indexedCandidateOrUnindexed(letter, keyword, indexedCandidateIds),
                         keywordLike(letter, keyword)
                 );
 
@@ -93,6 +99,7 @@ public class LetterRepositoryImpl implements LetterRepositoryCustom {
             Long fromId,
             Boolean isLiked,
             String keyword,
+            Set<Long> indexedCandidateIds,
             Pageable pageable
     ) {
         QLetter letter = QLetter.letter;
@@ -109,6 +116,7 @@ public class LetterRepositoryImpl implements LetterRepositoryCustom {
                         letter.folder.isNull(),
                         fromIdEq(letter, fromId),
                         isLikedEq(letter, isLiked),
+                        indexedCandidateOrUnindexed(letter, keyword, indexedCandidateIds),
                         keywordLike(letter, keyword)
                 )
                 .offset(pageable.getOffset())
@@ -131,6 +139,7 @@ public class LetterRepositoryImpl implements LetterRepositoryCustom {
                         letter.folder.isNull(),
                         fromIdEq(letter, fromId),
                         isLikedEq(letter, isLiked),
+                        indexedCandidateOrUnindexed(letter, keyword, indexedCandidateIds),
                         keywordLike(letter, keyword)
                 );
 
@@ -189,6 +198,26 @@ public class LetterRepositoryImpl implements LetterRepositoryCustom {
     private BooleanExpression keywordLike(QLetter letter, String keyword) {
         if (!StringUtils.hasText(keyword)) return null;
         return letter.content.contains(keyword.trim());
+    }
+
+    private BooleanExpression indexedCandidateOrUnindexed(
+            QLetter letter,
+            String keyword,
+            Set<Long> indexedCandidateIds
+    ) {
+        if (!StringUtils.hasText(keyword) || indexedCandidateIds == null) return null;
+
+        QLetterSearchToken searchToken = new QLetterSearchToken("candidateSearchToken");
+        BooleanExpression unindexed = JPAExpressions
+                .selectOne()
+                .from(searchToken)
+                .where(searchToken.letter.eq(letter))
+                .notExists();
+
+        if (indexedCandidateIds.isEmpty()) {
+            return unindexed;
+        }
+        return letter.id.in(indexedCandidateIds).or(unindexed);
     }
 
     private OrderSpecifier<?> toOrderSpecifier(Sort.Order o, QLetter letter) {
