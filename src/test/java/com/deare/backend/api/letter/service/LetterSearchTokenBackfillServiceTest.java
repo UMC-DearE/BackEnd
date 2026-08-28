@@ -56,4 +56,19 @@ class LetterSearchTokenBackfillServiceTest {
                 PageRequest.of(0, 500)
         );
     }
+
+    @Test
+    void keepsCursorWhenNoTargetsRemain() {
+        when(keyProvider.currentVersion()).thenReturn(new BlindIndexKeyVersion(2));
+        when(letterRepository.findActiveIdsMissingSearchTokenVersion(
+                30,
+                2,
+                PageRequest.of(0, 50)
+        )).thenReturn(List.of());
+
+        assertThat(service.backfillNextBatch(30, 50))
+                .isEqualTo(new LetterSearchTokenBackfillService.BackfillBatchResult(
+                        0, 0, 0, 30L
+                ));
+    }
 }

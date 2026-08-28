@@ -21,6 +21,8 @@ public class LetterSearchTokenBackfillScheduler {
 
     private final LetterSearchTokenBackfillService backfillService;
     private long afterId;
+    private boolean retryRequired;
+    private boolean completed;
 
     @Value("${blind-index.backfill.batch-size:50}")
     private int batchSize;
@@ -30,16 +32,33 @@ public class LetterSearchTokenBackfillScheduler {
             initialDelayString = "${blind-index.backfill.initial-delay-ms:30000}"
     )
     public void backfill() {
+        if (completed) {
+            return;
+        }
+
         LetterSearchTokenBackfillService.BackfillBatchResult result =
                 backfillService.backfillNextBatch(afterId, batchSize);
-        afterId = result.lastScannedId();
-        if (result.scanned() > 0) {
-            log.info(
-                    "Blind index token backfill batch completed. scanned={}, indexed={}, failed={}",
-                    result.scanned(),
-                    result.indexed(),
-                    result.failed()
-            );
+        if (result.failed() > 0) {
+            retryRequired = true;
         }
+        if (result.scanned() == 0) {
+            if (retryRequired) {
+                afterId = 0;
+                retryRequired = false;
+                log.warn("Blind index token backfill pass completed with failures. Retrying from the beginning.");
+            } else {
+                completed = true;
+                log.info("Blind index token backfill completed.");
+            }
+            return;
+        }
+
+        afterId = result.lastScannedId();
+        log.info(
+                "Blind index token backfill batch completed. scanned={}, indexed={}, failed={}",
+                result.scanned(),
+                result.indexed(),
+                result.failed()
+        );
     }
 }
