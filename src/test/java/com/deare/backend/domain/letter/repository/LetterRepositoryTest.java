@@ -10,6 +10,8 @@ import com.deare.backend.domain.user.entity.User;
 import com.deare.backend.domain.user.entity.enums.Provider;
 import com.deare.backend.domain.user.repository.UserRepository;
 import com.deare.backend.global.config.QuerydslConfig;
+import jakarta.persistence.EntityManager;
+import org.hibernate.Hibernate;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -19,6 +21,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -31,6 +34,7 @@ class LetterRepositoryTest {
     @Autowired private FolderRepository folderRepository;
     @Autowired private LetterRepository letterRepository;
     @Autowired private LetterSearchTokenRepository searchTokenRepository;
+    @Autowired private EntityManager entityManager;
 
     @Test
     void findAvailableLettersReturnsOnlyLettersWithoutFolder() {
@@ -115,6 +119,34 @@ class LetterRepositoryTest {
 
         assertThat(fromRepository.findByIdAndUser_IdAndIsDeletedFalse(from.getId(), owner.getId()))
                 .isEmpty();
+    }
+
+    @Test
+    void fetchesUserForRandomAndPinnedLetterContentDecryption() {
+        User owner = saveUser("random-reader-owner");
+        From from = fromRepository.save(new From("sender", "#FFFFFF", "#000000", owner));
+        Letter random = letterRepository.saveAndFlush(
+                createLetter("random-content", owner, from, null)
+        );
+        Letter pinned = createLetter("pinned-content", owner, from, null);
+        pinned.updatePinned(true);
+        letterRepository.saveAndFlush(pinned);
+        entityManager.clear();
+
+        Letter randomResult = letterRepository.findRandomLetterByUser(
+                owner.getId(),
+                0,
+                LocalDateTime.now().plusMinutes(1)
+        ).orElseThrow();
+        assertThat(Hibernate.isInitialized(randomResult.getUser())).isTrue();
+        assertThat(randomResult.getUser().getId()).isEqualTo(owner.getId());
+
+        entityManager.clear();
+        Letter pinnedResult = letterRepository.findPinnedLetterByUser(owner.getId())
+                .orElseThrow();
+        assertThat(Hibernate.isInitialized(pinnedResult.getUser())).isTrue();
+        assertThat(pinnedResult.getUser().getId()).isEqualTo(owner.getId());
+        assertThat(randomResult.getId()).isNotEqualTo(pinnedResult.getId());
     }
 
     private User saveUser(String suffix) {
