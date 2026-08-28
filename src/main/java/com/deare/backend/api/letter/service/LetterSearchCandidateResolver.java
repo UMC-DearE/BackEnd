@@ -1,9 +1,11 @@
 package com.deare.backend.api.letter.service;
 
+import com.deare.backend.domain.letter.exception.LetterErrorCode;
 import com.deare.backend.domain.letter.repository.LetterSearchTokenRepository;
 import com.deare.backend.domain.letter.search.BlindIndexKeyProvider;
 import com.deare.backend.domain.letter.search.BlindIndexTokenGenerator;
 import com.deare.backend.domain.letter.search.VersionedBlindIndexKey;
+import com.deare.backend.global.common.exception.GeneralException;
 import org.springframework.stereotype.Component;
 
 import java.util.LinkedHashSet;
@@ -15,6 +17,7 @@ import java.util.Set;
 public class LetterSearchCandidateResolver {
 
     private static final int MAX_SEARCH_TOKENS = 100;
+    private static final int MAX_SEARCH_KEYWORD_CODE_POINTS = MAX_SEARCH_TOKENS + 1;
     private static final int MAX_CANDIDATE_LETTERS = 1_000;
 
     private final LetterSearchTokenRepository searchTokenRepository;
@@ -29,6 +32,11 @@ public class LetterSearchCandidateResolver {
     }
 
     public Optional<Set<Long>> resolve(Long userId, String keyword) {
+        if (keyword != null
+                && keyword.codePointCount(0, keyword.length()) > MAX_SEARCH_KEYWORD_CODE_POINTS) {
+            throw new GeneralException(LetterErrorCode.INVALID_REQUEST);
+        }
+
         if (userId == null || keyProvider.isEmpty()) {
             return Optional.empty();
         }

@@ -1,9 +1,11 @@
 package com.deare.backend.api.letter.service;
 
+import com.deare.backend.domain.letter.exception.LetterErrorCode;
 import com.deare.backend.domain.letter.repository.LetterSearchTokenRepository;
 import com.deare.backend.domain.letter.search.BlindIndexKeyProvider;
 import com.deare.backend.domain.letter.search.BlindIndexKeyVersion;
 import com.deare.backend.domain.letter.search.VersionedBlindIndexKey;
+import com.deare.backend.global.common.exception.GeneralException;
 import org.junit.jupiter.api.Test;
 
 import javax.crypto.spec.SecretKeySpec;
@@ -14,6 +16,7 @@ import java.util.Set;
 import java.util.stream.LongStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anySet;
 import static org.mockito.Mockito.mock;
@@ -78,6 +81,40 @@ class LetterSearchCandidateResolverTest {
         )).thenReturn(LongStream.rangeClosed(1, 1_001).boxed().toList());
 
         assertThat(resolver.resolve(1L, "search")).isEmpty();
+    }
+
+    @Test
+    void rejectsKeywordOverCodePointLimitBeforeKeyOrTokenLookup() {
+        LetterSearchCandidateResolver resolver = enabledResolver();
+        String keyword = Character.toString(0x1F600).repeat(102);
+
+        assertThatThrownBy(() -> resolver.resolve(1L, keyword))
+                .isInstanceOfSatisfying(GeneralException.class, exception ->
+                        assertThat(exception.getErrorCode()).isEqualTo(LetterErrorCode.INVALID_REQUEST)
+                );
+
+        verify(keyProvider, never()).readableKeys(org.mockito.ArgumentMatchers.anyLong());
+        verify(repository, never()).findCandidateLetterIds(
+                org.mockito.ArgumentMatchers.anyLong(),
+                anyInt(),
+                anySet(),
+                anyInt()
+        );
+    }
+
+    @Test
+    void acceptsKeywordAtCodePointLimit() {
+        LetterSearchCandidateResolver resolver = enabledResolver();
+        when(keyProvider.readableKeys(1L)).thenReturn(List.of(versionedKey(1)));
+
+        resolver.resolve(1L, Character.toString(97).repeat(101));
+
+        verify(repository).findCandidateLetterIds(
+                org.mockito.ArgumentMatchers.eq(1L),
+                org.mockito.ArgumentMatchers.eq(1),
+                anySet(),
+                org.mockito.ArgumentMatchers.eq(1_001)
+        );
     }
 
     @Test
