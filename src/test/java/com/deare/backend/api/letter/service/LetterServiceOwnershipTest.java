@@ -57,17 +57,21 @@ class LetterServiceOwnershipTest {
     @Mock private LetterSearchCandidateResolver searchCandidateResolver;
     @Mock private LetterContentEncryptionSynchronizer contentEncryptionSynchronizer;
     @Mock private LetterContentReader contentReader;
+    @Mock private LetterSearchResultPager searchResultPager;
     @InjectMocks private LetterServiceImpl letterService;
 
     @Test
     void forwardsBlindIndexCandidatesResolvedForAuthenticatedUser() {
         PageRequest pageable = PageRequest.of(0, 10);
         Set<Long> candidateIds = Set.of(11L, 12L);
+        PageRequest repositoryPageable = PageRequest.of(0, Integer.MAX_VALUE);
         when(searchCandidateResolver.resolve(USER_ID, "keyword"))
                 .thenReturn(Optional.of(candidateIds));
         when(letterRepository.findLettersForList(
-                USER_ID, null, null, null, "keyword", candidateIds, pageable
+                USER_ID, null, null, null, "keyword", candidateIds, repositoryPageable
         )).thenReturn(Page.empty(pageable));
+        when(searchResultPager.verifyAndPage(any(Page.class), org.mockito.ArgumentMatchers.eq("keyword"), org.mockito.ArgumentMatchers.eq(pageable)))
+                .thenReturn(Page.empty(pageable));
 
         letterService.getLetterList(
                 pageable, USER_ID, null, null, null, "keyword"
@@ -75,7 +79,7 @@ class LetterServiceOwnershipTest {
 
         verify(searchCandidateResolver).resolve(USER_ID, "keyword");
         verify(letterRepository).findLettersForList(
-                USER_ID, null, null, null, "keyword", candidateIds, pageable
+                USER_ID, null, null, null, "keyword", candidateIds, repositoryPageable
         );
     }
 

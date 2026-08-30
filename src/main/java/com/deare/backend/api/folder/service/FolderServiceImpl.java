@@ -14,6 +14,7 @@ import com.deare.backend.api.folder.dto.result.UnassignedLetterItemDTO;
 import com.deare.backend.api.letter.mapper.LetterItemMapper;
 import com.deare.backend.api.letter.service.LetterContentReader;
 import com.deare.backend.api.letter.service.LetterSearchCandidateResolver;
+import com.deare.backend.api.letter.service.LetterSearchResultPager;
 import com.deare.backend.domain.folder.entity.Folder;
 import com.deare.backend.domain.folder.exception.FolderErrorCode;
 import com.deare.backend.domain.folder.repository.FolderRepository;
@@ -30,7 +31,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.util.StringUtils;
 
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -48,6 +51,7 @@ public class FolderServiceImpl implements FolderService {
     private final LetterRepository letterRepository;
     private final LetterSearchCandidateResolver searchCandidateResolver;
     private final LetterContentReader contentReader;
+    private final LetterSearchResultPager searchResultPager;
 
     @Override
     @Transactional(readOnly = true)
@@ -157,14 +161,18 @@ public class FolderServiceImpl implements FolderService {
     ) {
         Set<Long> indexedCandidateIds = searchCandidateResolver.resolve(userId, keyword)
                 .orElse(null);
-        Page<Letter> page = letterRepository.findAvailableLetters(
+        Pageable repositoryPageable = StringUtils.hasText(keyword)
+                ? PageRequest.of(0, Integer.MAX_VALUE, pageable.getSort())
+                : pageable;
+        Page<Letter> candidates = letterRepository.findAvailableLetters(
                 userId,
                 fromId,
                 isLiked,
                 keyword,
                 indexedCandidateIds,
-                pageable
+                repositoryPageable
         );
+        Page<Letter> page = searchResultPager.verifyAndPage(candidates, keyword, pageable);
         List<UnassignedLetterItemDTO> items = page.getContent().stream()
                 .map(letter -> LetterItemMapper.toItemDTO(letter, contentReader.read(letter)))
                 .map(UnassignedLetterItemDTO::from)

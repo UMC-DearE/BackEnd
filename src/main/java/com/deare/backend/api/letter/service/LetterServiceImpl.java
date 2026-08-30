@@ -31,8 +31,8 @@ import com.deare.backend.domain.user.repository.UserRepository;
 import com.deare.backend.global.common.exception.GeneralException;
 import com.deare.backend.global.external.feign.exception.ExternalApiException;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -61,6 +61,7 @@ public class LetterServiceImpl implements LetterService {
     private final LetterSearchCandidateResolver searchCandidateResolver;
     private final LetterContentEncryptionSynchronizer contentEncryptionSynchronizer;
     private final LetterContentReader contentReader;
+    private final LetterSearchResultPager searchResultPager;
 
     @Override
     @Transactional(readOnly = true)
@@ -75,15 +76,17 @@ public class LetterServiceImpl implements LetterService {
 
         Set<Long> indexedCandidateIds = searchCandidateResolver.resolve(userId, keyword)
                 .orElse(null);
-        Page<Letter> page = letterRepository.findLettersForList(
+        Pageable repositoryPageable = searchPageable(pageable, keyword);
+        Page<Letter> candidates = letterRepository.findLettersForList(
                 userId,
                 folderId,
                 fromId,
                 isLiked,
                 keyword,
                 indexedCandidateIds,
-                pageable
+                repositoryPageable
         );
+        Page<Letter> page = searchResultPager.verifyAndPage(candidates, keyword, pageable);
 
         List<LetterItemDTO> items = page.getContent().stream()
                 .map(letter -> LetterItemMapper.toItemDTO(letter, contentReader.read(letter)))
@@ -164,7 +167,6 @@ public class LetterServiceImpl implements LetterService {
 
         String content = req.content().trim();
         String aiSummary = req.aiSummary().trim();
-        String contentHash = DigestUtils.sha256Hex(content);
         int contentVersion = 1;
 
         LocalDate receivedAt = req.receivedAt();
@@ -174,7 +176,6 @@ public class LetterServiceImpl implements LetterService {
                 receivedAt,
                 aiSummary,
                 contentVersion,
-                contentHash,
                 user,
                 from,
                 null
@@ -253,12 +254,10 @@ public class LetterServiceImpl implements LetterService {
 
         if (StringUtils.hasText(req.getContent())) {
             String normalizedContent = req.getContent().trim();
+            if (normalizedContent.equals(contentReader.read(letter))) {
+                return;
+            }
             try {
-                String newHash = DigestUtils.sha256Hex(normalizedContent);
-
-                if (newHash.equals(letter.getContentHash())) {
-                    return;
-                }
 
                 ReAnalyzeResponseDTO result = letterAnalyzeService.analyzeForUpdate(normalizedContent);
 
@@ -277,7 +276,7 @@ public class LetterServiceImpl implements LetterService {
                         .toList();
 
                 letterEmotionRepository.saveAll(updateEmotions);
-                letter.updateContent(req.getContent(), AiSummary, newHash);
+                letter.updateContent(normalizedContent, AiSummary);
 
             } catch (ExternalApiException e) {
                 throw e;
@@ -335,6 +334,11 @@ public class LetterServiceImpl implements LetterService {
                 .orElseThrow(() -> new GeneralException(LetterErrorCode.LETTER_NOT_FOUND));
 
         letter.deleteReply();
+    }
+
+    private Pageable searchPageable(Pageable pageable, String keyword) {
+        if (!StringUtils.hasText(keyword)) return pageable;
+        return PageRequest.of(0, Integer.MAX_VALUE, pageable.getSort());
     }
 
     private Letter getOwnedActiveLetter(Long userId, Long letterId) {

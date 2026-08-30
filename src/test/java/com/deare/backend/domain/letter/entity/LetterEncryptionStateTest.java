@@ -53,7 +53,6 @@ class LetterEncryptionStateTest {
                 LocalDate.of(2026, 8, 28),
                 "summary",
                 1,
-                "a".repeat(64),
                 mock(User.class),
                 mock(From.class),
                 null
