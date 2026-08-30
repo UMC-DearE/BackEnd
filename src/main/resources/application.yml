@@ -104,3 +104,9 @@ letter-content:
     enabled: ${LETTER_CONTENT_ENCRYPTION_ENABLED:false}
     secret-id: ${LETTER_CONTENT_ENCRYPTION_SECRET_ID:}
     region: ${AWS_REGION}
+  backfill:
+    enabled: ${LETTER_CONTENT_BACKFILL_ENABLED:false}
+    batch-size: ${LETTER_CONTENT_BACKFILL_BATCH_SIZE:50}
+    max-retry-passes: ${LETTER_CONTENT_BACKFILL_MAX_RETRY_PASSES:3}
+    fixed-delay-ms: ${LETTER_CONTENT_BACKFILL_DELAY_MS:60000}
+    initial-delay-ms: ${LETTER_CONTENT_BACKFILL_INITIAL_DELAY_MS:30000}
