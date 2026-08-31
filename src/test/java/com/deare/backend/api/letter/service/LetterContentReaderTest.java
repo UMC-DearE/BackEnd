@@ -86,7 +86,6 @@ class LetterContentReaderTest {
                 LocalDate.of(2026, 8, 28),
                 "summary",
                 1,
-                "a".repeat(64),
                 user,
                 mock(From.class),
                 null

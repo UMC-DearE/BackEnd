@@ -62,8 +62,7 @@ public class LetterRepositoryImpl implements LetterRepositoryCustom {
                         folderIdEq(letter, folderId),
                         fromIdEq(letter, fromId),
                         isLikedEq(letter, isLiked),
-                        indexedCandidateOrUnindexed(letter, keyword, indexedCandidateIds),
-                        keywordLike(letter, keyword)
+                        indexedCandidateOrUnindexed(letter, keyword, indexedCandidateIds)
                 )
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize());
@@ -86,8 +85,7 @@ public class LetterRepositoryImpl implements LetterRepositoryCustom {
                         folderIdEq(letter, folderId),
                         fromIdEq(letter, fromId),
                         isLikedEq(letter, isLiked),
-                        indexedCandidateOrUnindexed(letter, keyword, indexedCandidateIds),
-                        keywordLike(letter, keyword)
+                        indexedCandidateOrUnindexed(letter, keyword, indexedCandidateIds)
                 );
 
         return PageableExecutionUtils.getPage(contents, pageable, () -> {
@@ -121,8 +119,7 @@ public class LetterRepositoryImpl implements LetterRepositoryCustom {
                         letter.folder.isNull(),
                         fromIdEq(letter, fromId),
                         isLikedEq(letter, isLiked),
-                        indexedCandidateOrUnindexed(letter, keyword, indexedCandidateIds),
-                        keywordLike(letter, keyword)
+                        indexedCandidateOrUnindexed(letter, keyword, indexedCandidateIds)
                 )
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize());
@@ -144,8 +141,7 @@ public class LetterRepositoryImpl implements LetterRepositoryCustom {
                         letter.folder.isNull(),
                         fromIdEq(letter, fromId),
                         isLikedEq(letter, isLiked),
-                        indexedCandidateOrUnindexed(letter, keyword, indexedCandidateIds),
-                        keywordLike(letter, keyword)
+                        indexedCandidateOrUnindexed(letter, keyword, indexedCandidateIds)
                 );
 
         return PageableExecutionUtils.getPage(contents, pageable, () -> {
@@ -199,12 +195,6 @@ public class LetterRepositoryImpl implements LetterRepositoryCustom {
         if (isLiked == null) return null;
         return letter.isLiked.eq(isLiked);
     }
-
-    private BooleanExpression keywordLike(QLetter letter, String keyword) {
-        if (!StringUtils.hasText(keyword)) return null;
-        return letter.content.contains(keyword.trim());
-    }
-
     private BooleanExpression indexedCandidateOrUnindexed(
             QLetter letter,
             String keyword,

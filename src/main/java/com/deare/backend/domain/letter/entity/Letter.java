@@ -66,9 +66,6 @@ public class Letter extends BaseEntity {
     @Column(name="content_version", nullable = false)
     private int contentVersion;
 
-    @Column(name="content_hash", nullable = false, length = 64)
-    private String contentHash;
-
     @ManyToOne(fetch=FetchType.LAZY, optional = false)
     @JoinColumn(name="user_id", nullable = false)
     private User user;
@@ -95,7 +92,6 @@ public class Letter extends BaseEntity {
             LocalDate receivedAt,
             String aiSummary,
             int contentVersion,
-            String contentHash,
             User user,
             From from,
             Folder folder
@@ -104,7 +100,6 @@ public class Letter extends BaseEntity {
         this.receivedAt = receivedAt;
         this.aiSummary = aiSummary;
         this.contentVersion = contentVersion;
-        this.contentHash = contentHash;
         this.user = user;
         this.from = from;
         this.folder = folder;
@@ -121,12 +116,10 @@ public class Letter extends BaseEntity {
 
     public void updateContent(
             String content,
-            String newAiSummary,
-            String newContentHash
+            String newAiSummary
     ) {
         this.content = content;
         this.aiSummary = newAiSummary;
-        this.contentHash = newContentHash;
         this.contentVersion++;
     }
 

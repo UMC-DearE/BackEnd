@@ -175,7 +175,6 @@ class LetterSearchTokenRepositoryTest {
                 LocalDate.of(2026, 8, 26),
                 "summary",
                 1,
-                "0".repeat(64),
                 user,
                 from,
                 null

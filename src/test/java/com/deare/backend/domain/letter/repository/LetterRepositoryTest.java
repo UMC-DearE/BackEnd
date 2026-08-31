@@ -78,7 +78,7 @@ class LetterRepositoryTest {
     }
 
     @Test
-    void candidateFilterKeepsUnindexedLettersAndVerifiesPlaintextMatch() {
+    void candidateFilterKeepsBlindIndexCandidatesAndUnindexedLettersForApplicationVerification() {
         User user = saveUser("candidate-owner");
         From from = fromRepository.save(new From("sender", "#FFFFFF", "#000000", user));
         Letter candidate = letterRepository.save(createLetter("needle candidate", user, from, null));
@@ -99,8 +99,8 @@ class LetterRepositoryTest {
         );
 
         assertThat(result.getContent()).extracting(Letter::getId)
-                .containsExactlyInAnyOrder(candidate.getId(), unindexed.getId());
-        assertThat(result.getTotalElements()).isEqualTo(2);
+                .containsExactlyInAnyOrder(candidate.getId(), unindexed.getId(), falsePositive.getId());
+        assertThat(result.getTotalElements()).isEqualTo(3);
     }
 
     @Test
@@ -218,7 +218,6 @@ class LetterRepositoryTest {
                 LocalDate.of(2026, 8, 26),
                 content,
                 1,
-                content + "-hash",
                 user,
                 from,
                 folder

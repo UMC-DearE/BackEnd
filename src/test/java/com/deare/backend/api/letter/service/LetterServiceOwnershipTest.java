@@ -57,25 +57,40 @@ class LetterServiceOwnershipTest {
     @Mock private LetterSearchCandidateResolver searchCandidateResolver;
     @Mock private LetterContentEncryptionSynchronizer contentEncryptionSynchronizer;
     @Mock private LetterContentReader contentReader;
+    @Mock private LetterSearchResultPager searchResultPager;
     @InjectMocks private LetterServiceImpl letterService;
 
     @Test
     void forwardsBlindIndexCandidatesResolvedForAuthenticatedUser() {
         PageRequest pageable = PageRequest.of(0, 10);
         Set<Long> candidateIds = Set.of(11L, 12L);
+        PageRequest repositoryPageable = PageRequest.of(0, LetterSearchResultPager.CANDIDATE_BATCH_SIZE);
         when(searchCandidateResolver.resolve(USER_ID, "keyword"))
                 .thenReturn(Optional.of(candidateIds));
         when(letterRepository.findLettersForList(
-                USER_ID, null, null, null, "keyword", candidateIds, pageable
+                USER_ID, null, null, null, "keyword", candidateIds, repositoryPageable
         )).thenReturn(Page.empty(pageable));
+        when(searchResultPager.verifyAndPage(any(), org.mockito.ArgumentMatchers.eq("keyword"), org.mockito.ArgumentMatchers.eq(pageable)))
+                .thenAnswer(invocation -> {
+                    @SuppressWarnings("unchecked")
+                    java.util.function.Function<org.springframework.data.domain.Pageable, List<Letter>> fetcher =
+                            invocation.getArgument(0);
+                    fetcher.apply(repositoryPageable);
+                    return Page.empty(pageable);
+                });
 
         letterService.getLetterList(
                 pageable, USER_ID, null, null, null, "keyword"
         );
 
         verify(searchCandidateResolver).resolve(USER_ID, "keyword");
+        verify(searchResultPager).verifyAndPage(
+                any(),
+                org.mockito.ArgumentMatchers.eq("keyword"),
+                org.mockito.ArgumentMatchers.eq(pageable)
+        );
         verify(letterRepository).findLettersForList(
-                USER_ID, null, null, null, "keyword", candidateIds, pageable
+                USER_ID, null, null, null, "keyword", candidateIds, repositoryPageable
         );
     }
 
