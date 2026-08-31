@@ -31,7 +31,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.util.StringUtils;
 
@@ -161,18 +160,20 @@ public class FolderServiceImpl implements FolderService {
     ) {
         Set<Long> indexedCandidateIds = searchCandidateResolver.resolve(userId, keyword)
                 .orElse(null);
-        Pageable repositoryPageable = StringUtils.hasText(keyword)
-                ? PageRequest.of(0, Integer.MAX_VALUE, pageable.getSort())
-                : pageable;
-        Page<Letter> candidates = letterRepository.findAvailableLetters(
-                userId,
-                fromId,
-                isLiked,
-                keyword,
-                indexedCandidateIds,
-                repositoryPageable
-        );
-        Page<Letter> page = searchResultPager.verifyAndPage(candidates, keyword, pageable);
+        Page<Letter> page;
+        if (StringUtils.hasText(keyword)) {
+            page = searchResultPager.verifyAndPage(
+                    batch -> letterRepository.findAvailableLetters(
+                            userId, fromId, isLiked, keyword, indexedCandidateIds, batch
+                    ).getContent(),
+                    keyword,
+                    pageable
+            );
+        } else {
+            page = letterRepository.findAvailableLetters(
+                    userId, fromId, isLiked, keyword, indexedCandidateIds, pageable
+            );
+        }
         List<UnassignedLetterItemDTO> items = page.getContent().stream()
                 .map(letter -> LetterItemMapper.toItemDTO(letter, contentReader.read(letter)))
                 .map(UnassignedLetterItemDTO::from)
