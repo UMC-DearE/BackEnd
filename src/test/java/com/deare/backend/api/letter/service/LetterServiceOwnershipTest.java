@@ -84,6 +84,11 @@ class LetterServiceOwnershipTest {
         );
 
         verify(searchCandidateResolver).resolve(USER_ID, "keyword");
+        verify(searchResultPager).verifyAndPage(
+                any(),
+                org.mockito.ArgumentMatchers.eq("keyword"),
+                org.mockito.ArgumentMatchers.eq(pageable)
+        );
         verify(letterRepository).findLettersForList(
                 USER_ID, null, null, null, "keyword", candidateIds, repositoryPageable
         );
