@@ -81,7 +81,6 @@ class RandomLetterServiceTest {
     private Letter mockLetter(long id, String content) {
         Letter letter = mock(Letter.class);
         when(letter.getId()).thenReturn(id);
-        when(letter.getContent()).thenReturn(content);
         when(contentReader.read(letter)).thenReturn(content);
         return letter;
     }

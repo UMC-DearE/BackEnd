@@ -171,7 +171,6 @@ class LetterSearchTokenRepositoryTest {
                 user
         ));
         return letterRepository.saveAndFlush(new Letter(
-                content,
                 LocalDate.of(2026, 8, 26),
                 "summary",
                 1,

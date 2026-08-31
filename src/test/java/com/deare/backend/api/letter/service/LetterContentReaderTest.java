@@ -37,21 +37,18 @@ class LetterContentReaderTest {
     }
 
     @Test
-    void fallsBackToPlaintextWhenCiphertextIsAbsentOrEncryptionIsDisabled() {
-        Letter plaintextOnly = letter("legacy-plaintext");
-        assertThat(new LetterContentReader(Optional.of(cipher())).read(plaintextOnly))
-                .isEqualTo("legacy-plaintext");
+    void rejectsMissingCiphertextOrDisabledEncryption() {
+        Letter missingCiphertext = letter("unused");
+        assertThatThrownBy(() -> new LetterContentReader(Optional.of(cipher())).read(missingCiphertext))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("Encrypted letter content is required.");
 
-        Letter encrypted = letter("rollback-plaintext");
+        Letter encrypted = letter("unused");
         EncryptedLetterContent value = cipher().encrypt("encrypted", 7L, 10L, 1);
-        encrypted.storeEncryptedContent(
-                value.ciphertext(),
-                value.nonce(),
-                value.keyVersion(),
-                1
-        );
-        assertThat(new LetterContentReader(Optional.empty()).read(encrypted))
-                .isEqualTo("rollback-plaintext");
+        encrypted.storeEncryptedContent(value.ciphertext(), value.nonce(), value.keyVersion(), 1);
+        assertThatThrownBy(() -> new LetterContentReader(Optional.empty()).read(encrypted))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("Letter content encryption is required.");
     }
 
     @Test
@@ -82,7 +79,6 @@ class LetterContentReaderTest {
         User user = mock(User.class);
         when(user.getId()).thenReturn(7L);
         Letter letter = new Letter(
-                plaintext,
                 LocalDate.of(2026, 8, 28),
                 "summary",
                 1,

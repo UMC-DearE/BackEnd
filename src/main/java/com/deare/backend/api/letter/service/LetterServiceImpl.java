@@ -172,7 +172,6 @@ public class LetterServiceImpl implements LetterService {
         LocalDate receivedAt = req.receivedAt();
 
         Letter letter = new Letter(
-                content,
                 receivedAt,
                 aiSummary,
                 contentVersion,
@@ -212,7 +211,7 @@ public class LetterServiceImpl implements LetterService {
         }
 
         Letter saved = letterRepository.save(letter);
-        contentEncryptionSynchronizer.synchronize(saved, userId, saved.getContent());
+        contentEncryptionSynchronizer.synchronize(saved, userId, content);
 
         List<LetterEmotion> mappings = emotions.stream()
                 .map(e -> new LetterEmotion(saved, e))
@@ -276,14 +275,14 @@ public class LetterServiceImpl implements LetterService {
                         .toList();
 
                 letterEmotionRepository.saveAll(updateEmotions);
-                letter.updateContent(normalizedContent, AiSummary);
+                letter.updateContent(AiSummary);
 
             } catch (ExternalApiException e) {
                 throw e;
             } catch (Exception e) {
                 throw new GeneralException(LetterErrorCode.SUMMARY_INTERNAL_ERROR);
             }
-            contentEncryptionSynchronizer.synchronize(letter, userId, letter.getContent());
+            contentEncryptionSynchronizer.synchronize(letter, userId, normalizedContent);
             searchTokenSynchronizer.replaceTokens(letter, userId, normalizedContent);
         }
     }
