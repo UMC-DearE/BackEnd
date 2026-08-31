@@ -39,6 +39,21 @@ class LetterSearchResultPagerTest {
     }
 
     @Test
+    void avoidsOverflowWhenPageSizeIsIntegerMaxValue() {
+        Letter match = mock(Letter.class);
+        when(contentReader.read(match)).thenReturn("needle");
+        PageRequest requestedPage = PageRequest.of(1, Integer.MAX_VALUE);
+
+        Page<Letter> result = pager.verifyAndPage(
+                new PageImpl<>(List.of(match)),
+                "needle",
+                requestedPage
+        );
+
+        assertThat(result.getContent()).isEmpty();
+        assertThat(result.getTotalElements()).isEqualTo(1);
+    }
+    @Test
     void keepsRepositoryPageWhenKeywordIsBlank() {
         PageRequest pageable = PageRequest.of(0, 10);
         Page<Letter> repositoryPage = Page.empty(pageable);

@@ -27,7 +27,7 @@ public class LetterSearchResultPager {
                         .contains(normalizedKeyword))
                 .toList();
         int fromIndex = Math.toIntExact(Math.min(pageable.getOffset(), matches.size()));
-        int toIndex = Math.min(fromIndex + pageable.getPageSize(), matches.size());
+        int toIndex = (int) Math.min((long) fromIndex + pageable.getPageSize(), matches.size());
         return new PageImpl<>(matches.subList(fromIndex, toIndex), pageable, matches.size());
     }
 }
