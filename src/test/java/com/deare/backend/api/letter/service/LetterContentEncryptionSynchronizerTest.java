@@ -33,13 +33,13 @@ class LetterContentEncryptionSynchronizerTest {
     }
 
     @Test
-    void clearsStaleEncryptedContentWhenEncryptionIsDisabled() {
+    void rejectsWriteWhenEncryptionIsDisabled() {
         LetterContentEncryptionSynchronizer synchronizer =
                 new LetterContentEncryptionSynchronizer(Optional.empty());
 
-        synchronizer.synchronize(letter, 10L, "content");
-
-        verify(letter).clearEncryptedContent();
+        assertThatThrownBy(() -> synchronizer.synchronize(letter, 10L, "content"))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("Letter content encryption is required.");
         verify(cipher, never()).encrypt("content", 10L, 20L, 3);
     }
 

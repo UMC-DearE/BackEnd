@@ -10,33 +10,13 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
 
 @Repository
 public interface LetterRepository extends JpaRepository<Letter, Long>, LetterRepositoryCustom {
-
-    @Query("""
-        select l.id
-          from Letter l
-         where l.id > :afterId
-           and l.contentCiphertext is null
-         order by l.id
-    """)
-    List<Long> findIdsMissingEncryptedContent(
-            @Param("afterId") long afterId,
-            Pageable pageable
-    );
-
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("""
-        select l
-          from Letter l
-         where l.id = :letterId
-           and l.contentCiphertext is null
-    """)
-    Optional<Letter> findByIdForContentBackfill(@Param("letterId") Long letterId);
 
     @Query("""
         select l.id
@@ -97,6 +77,11 @@ public interface LetterRepository extends JpaRepository<Letter, Long>, LetterRep
 
 
     List<Letter> findAllByUser_IdAndFrom_IdAndIsDeletedFalse(Long userId, Long fromId);
+
+    @Transactional
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query("DELETE FROM Letter l WHERE l.user.id = :userId")
+    void deleteAllByUserId(@Param("userId") Long userId);
 
     @Query("""
         select l.isPinned

@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 
 public interface LetterEmotionRepository
         extends JpaRepository<LetterEmotion, Long> {
@@ -13,6 +14,7 @@ public interface LetterEmotionRepository
     /**
      * 해당 유저의 모든 letterEmotion 삭제
      */
+    @Transactional
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query("DELETE FROM LetterEmotion le WHERE le.letter.user.id = :userId")
     void deleteAllByUserId(@Param("userId") Long userId);

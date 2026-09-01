@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -30,7 +31,16 @@ public interface FolderRepository extends JpaRepository<Folder, Long> {
     /**
      * 해당 유저의 모든 folder 삭제
      */
+    @Transactional
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query("DELETE FROM Folder f WHERE f.user.id = :userId")
     void deleteAllByUserId(@Param("userId") Long userId);
+
+    @Query("""
+        select f.image.imageKey
+        from Folder f
+        where f.user.id = :userId
+          and f.image is not null
+    """)
+    List<String> findImageKeysByUserId(@Param("userId") Long userId);
 }

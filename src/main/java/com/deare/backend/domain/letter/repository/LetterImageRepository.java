@@ -18,4 +18,11 @@ public interface LetterImageRepository extends JpaRepository<LetterImage, Long> 
     """)
     List<Long> findOwnedImageIds(@Param("userId") Long userId, @Param("imageIds") List<Long> imageIds);
 
+    @Query("""
+        select li.image.imageKey
+        from LetterImage li
+        where li.letter.user.id = :userId
+    """)
+    List<String> findImageKeysByUserId(@Param("userId") Long userId);
+
 }

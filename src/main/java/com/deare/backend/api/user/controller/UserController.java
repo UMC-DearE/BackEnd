@@ -1,5 +1,6 @@
 package com.deare.backend.api.user.controller;
 
+import com.deare.backend.api.user.UserWithdrawFacade;
 import com.deare.backend.api.user.dto.response.ProfileResponseDTO;
 import com.deare.backend.api.user.dto.request.ProfileUpdateRequestDTO;
 import com.deare.backend.api.user.dto.response.ProfileUpdateResponseDTO;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
 
     private final UserService userService;
+    private final UserWithdrawFacade userWithdrawFacade;
     private final CookieProvider cookieProvider;
 
     @GetMapping("/me")
@@ -42,7 +44,7 @@ public class UserController {
     @Operation(summary = "회원 탈퇴", description = "회원 탈퇴를 처리합니다. 탈퇴 즉시 모든 데이터가 삭제됩니다.")
     public ResponseEntity<ApiResponse<Void>> deactivateUser() {
         Long userId = SecurityUtil.getCurrentUserId();
-        userService.deactivateUser(userId);
+        userWithdrawFacade.withdraw(userId);
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, cookieProvider.expireRefreshTokenCookie().toString())

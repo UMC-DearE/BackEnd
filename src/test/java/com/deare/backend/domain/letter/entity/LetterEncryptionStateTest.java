@@ -13,7 +13,7 @@ import static org.mockito.Mockito.mock;
 class LetterEncryptionStateTest {
 
     @Test
-    void storesAndClearsEncryptedContentAsOneState() {
+    void storesEncryptedContentAsOneState() {
         Letter letter = letter();
 
         letter.storeEncryptedContent("ciphertext", "AAAAAAAAAAAAAAAA", 2, 1);
@@ -23,12 +23,6 @@ class LetterEncryptionStateTest {
         assertThat(letter.getContentEncryptionKeyVersion()).isEqualTo(2);
         assertThat(letter.getContentEncryptionFormatVersion()).isEqualTo(1);
 
-        letter.clearEncryptedContent();
-
-        assertThat(letter.getContentCiphertext()).isNull();
-        assertThat(letter.getContentEncryptionNonce()).isNull();
-        assertThat(letter.getContentEncryptionKeyVersion()).isNull();
-        assertThat(letter.getContentEncryptionFormatVersion()).isNull();
     }
 
     @Test
@@ -49,7 +43,6 @@ class LetterEncryptionStateTest {
 
     private Letter letter() {
         return new Letter(
-                "content",
                 LocalDate.of(2026, 8, 28),
                 "summary",
                 1,

@@ -20,8 +20,7 @@ public class LetterContentEncryptionSynchronizer {
 
     public void synchronize(Letter letter, long userId, String plaintext) {
         if (cipher.isEmpty()) {
-            letter.clearEncryptedContent();
-            return;
+            throw new IllegalStateException("Letter content encryption is required.");
         }
         if (letter.getId() == null) {
             throw new IllegalStateException("Persisted letter is required for content encryption.");

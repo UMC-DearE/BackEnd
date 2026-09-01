@@ -29,10 +29,6 @@ public class Letter extends BaseEntity {
     private Long id;
 
     @Lob
-    @Column(name="content", columnDefinition = "LONGTEXT", nullable = false)
-    private String content;
-
-    @Lob
     @Column(name = "content_ciphertext", columnDefinition = "LONGTEXT")
     private String contentCiphertext;
 
@@ -88,7 +84,6 @@ public class Letter extends BaseEntity {
 
 
     public Letter(
-            String content,
             LocalDate receivedAt,
             String aiSummary,
             int contentVersion,
@@ -96,7 +91,6 @@ public class Letter extends BaseEntity {
             From from,
             Folder folder
     ){
-        this.content = content;
         this.receivedAt = receivedAt;
         this.aiSummary = aiSummary;
         this.contentVersion = contentVersion;
@@ -115,10 +109,8 @@ public class Letter extends BaseEntity {
     }
 
     public void updateContent(
-            String content,
             String newAiSummary
     ) {
-        this.content = content;
         this.aiSummary = newAiSummary;
         this.contentVersion++;
     }
@@ -138,13 +130,6 @@ public class Letter extends BaseEntity {
         this.contentEncryptionNonce = nonce;
         this.contentEncryptionKeyVersion = keyVersion;
         this.contentEncryptionFormatVersion = formatVersion;
-    }
-
-    public void clearEncryptedContent() {
-        this.contentCiphertext = null;
-        this.contentEncryptionNonce = null;
-        this.contentEncryptionKeyVersion = null;
-        this.contentEncryptionFormatVersion = null;
     }
 
     public Optional<EncryptedLetterContent> encryptedContent() {

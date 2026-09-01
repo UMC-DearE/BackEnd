@@ -20,8 +20,11 @@ public class LetterContentReader {
     public String read(Letter letter) {
         Objects.requireNonNull(letter, "Letter is required.");
         Optional<EncryptedLetterContent> encryptedContent = letter.encryptedContent();
-        if (cipher.isEmpty() || encryptedContent.isEmpty()) {
-            return letter.getContent();
+        if (cipher.isEmpty()) {
+            throw new IllegalStateException("Letter content encryption is required.");
+        }
+        if (encryptedContent.isEmpty()) {
+            throw new IllegalStateException("Encrypted letter content is required.");
         }
         if (letter.getId() == null || letter.getUser() == null || letter.getUser().getId() == null) {
             throw new IllegalStateException("Persisted owned letter is required for decryption.");
