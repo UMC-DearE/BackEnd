@@ -14,7 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class SettingWriteServiceImpl implements SettingWriteService {
 
-    private static final String DEFAULT_HOME_COLOR = "#FFFFFF";
+    private static final String DEFAULT_HOME_COLOR = "#F7F8F9";
 
     private final UserSettingRepository userSettingRepository;
     private final UserRepository userRepository;
