@@ -6,12 +6,15 @@ import com.deare.backend.domain.letter.entity.QLetter;
 import com.deare.backend.domain.folder.entity.QFolder;
 import com.deare.backend.domain.from.entity.QFrom;
 import com.deare.backend.domain.letter.entity.QLetterImage;
+import com.deare.backend.domain.letter.entity.QLetterSearchToken;
+import com.deare.backend.domain.user.entity.QUser;
 import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import com.querydsl.jpa.JPAExpressions;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -22,6 +25,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @SuppressWarnings("unused")
 public class LetterRepositoryImpl implements LetterRepositoryCustom {
@@ -39,14 +43,17 @@ public class LetterRepositoryImpl implements LetterRepositoryCustom {
             Long fromId,
             Boolean isLiked,
             String keyword,
+            Set<Long> indexedCandidateIds,
             Pageable pageable
     ) {
         QLetter letter = QLetter.letter;
         QFrom from = QFrom.from;
         QFolder folder = QFolder.folder;
+        QUser user = QUser.user;
 
         JPAQuery<Letter> contentQuery = queryFactory
                 .selectFrom(letter)
+                .join(letter.user, user).fetchJoin()
                 .join(letter.from, from).fetchJoin()
                 .leftJoin(letter.folder, folder).fetchJoin()
                 .where(
@@ -55,7 +62,7 @@ public class LetterRepositoryImpl implements LetterRepositoryCustom {
                         folderIdEq(letter, folderId),
                         fromIdEq(letter, fromId),
                         isLikedEq(letter, isLiked),
-                        keywordLike(letter, keyword)
+                        indexedCandidateOrUnindexed(letter, keyword, indexedCandidateIds)
                 )
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize());
@@ -78,7 +85,7 @@ public class LetterRepositoryImpl implements LetterRepositoryCustom {
                         folderIdEq(letter, folderId),
                         fromIdEq(letter, fromId),
                         isLikedEq(letter, isLiked),
-                        keywordLike(letter, keyword)
+                        indexedCandidateOrUnindexed(letter, keyword, indexedCandidateIds)
                 );
 
         return PageableExecutionUtils.getPage(contents, pageable, () -> {
@@ -93,14 +100,17 @@ public class LetterRepositoryImpl implements LetterRepositoryCustom {
             Long fromId,
             Boolean isLiked,
             String keyword,
+            Set<Long> indexedCandidateIds,
             Pageable pageable
     ) {
         QLetter letter = QLetter.letter;
         QFrom from = QFrom.from;
         QFolder folder = QFolder.folder;
+        QUser user = QUser.user;
 
         JPAQuery<Letter> contentQuery = queryFactory
                 .selectFrom(letter)
+                .join(letter.user, user).fetchJoin()
                 .join(letter.from, from).fetchJoin()
                 .leftJoin(letter.folder, folder).fetchJoin()
                 .where(
@@ -109,7 +119,7 @@ public class LetterRepositoryImpl implements LetterRepositoryCustom {
                         letter.folder.isNull(),
                         fromIdEq(letter, fromId),
                         isLikedEq(letter, isLiked),
-                        keywordLike(letter, keyword)
+                        indexedCandidateOrUnindexed(letter, keyword, indexedCandidateIds)
                 )
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize());
@@ -131,7 +141,7 @@ public class LetterRepositoryImpl implements LetterRepositoryCustom {
                         letter.folder.isNull(),
                         fromIdEq(letter, fromId),
                         isLikedEq(letter, isLiked),
-                        keywordLike(letter, keyword)
+                        indexedCandidateOrUnindexed(letter, keyword, indexedCandidateIds)
                 );
 
         return PageableExecutionUtils.getPage(contents, pageable, () -> {
@@ -185,10 +195,24 @@ public class LetterRepositoryImpl implements LetterRepositoryCustom {
         if (isLiked == null) return null;
         return letter.isLiked.eq(isLiked);
     }
+    private BooleanExpression indexedCandidateOrUnindexed(
+            QLetter letter,
+            String keyword,
+            Set<Long> indexedCandidateIds
+    ) {
+        if (!StringUtils.hasText(keyword) || indexedCandidateIds == null) return null;
 
-    private BooleanExpression keywordLike(QLetter letter, String keyword) {
-        if (!StringUtils.hasText(keyword)) return null;
-        return letter.content.contains(keyword.trim());
+        QLetterSearchToken searchToken = new QLetterSearchToken("candidateSearchToken");
+        BooleanExpression unindexed = JPAExpressions
+                .selectOne()
+                .from(searchToken)
+                .where(searchToken.letter.eq(letter))
+                .notExists();
+
+        if (indexedCandidateIds.isEmpty()) {
+            return unindexed;
+        }
+        return letter.id.in(indexedCandidateIds).or(unindexed);
     }
 
     private OrderSpecifier<?> toOrderSpecifier(Sort.Order o, QLetter letter) {
@@ -225,9 +249,11 @@ public class LetterRepositoryImpl implements LetterRepositoryCustom {
     @Override
     public Optional<Letter> findRandomLetterByUser(Long userId, long offset, LocalDateTime createdBefore) {
         QLetter letter = QLetter.letter;
+        QUser user = QUser.user;
 
         Letter result = queryFactory
                 .selectFrom(letter)
+                .join(letter.user, user).fetchJoin()
                 .where(
                         letter.user.id.eq(userId),
                         letter.isDeleted.eq(false),
@@ -263,9 +289,11 @@ public class LetterRepositoryImpl implements LetterRepositoryCustom {
     @Override
     public Optional<Letter> findPinnedLetterByUser(Long userId) {
         QLetter letter = QLetter.letter;
+        QUser user = QUser.user;
 
         Letter result = queryFactory
                 .selectFrom(letter)
+                .join(letter.user, user).fetchJoin()
                 .where(
                         letter.user.id.eq(userId),
                         letter.isPinned.isTrue(),

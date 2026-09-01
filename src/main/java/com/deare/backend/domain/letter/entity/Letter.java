@@ -2,6 +2,7 @@ package com.deare.backend.domain.letter.entity;
 
 import com.deare.backend.domain.folder.entity.Folder;
 import com.deare.backend.domain.from.entity.From;
+import com.deare.backend.domain.letter.crypto.EncryptedLetterContent;
 import com.deare.backend.domain.letter.exception.LetterErrorCode;
 import com.deare.backend.domain.user.entity.User;
 import com.deare.backend.global.common.entity.BaseEntity;
@@ -15,6 +16,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 @Getter
 @Entity
@@ -29,6 +31,19 @@ public class Letter extends BaseEntity {
     @Lob
     @Column(name="content", columnDefinition = "LONGTEXT", nullable = false)
     private String content;
+
+    @Lob
+    @Column(name = "content_ciphertext", columnDefinition = "LONGTEXT")
+    private String contentCiphertext;
+
+    @Column(name = "content_encryption_nonce", length = 16)
+    private String contentEncryptionNonce;
+
+    @Column(name = "content_encryption_key_version")
+    private Integer contentEncryptionKeyVersion;
+
+    @Column(name = "content_encryption_format_version")
+    private Integer contentEncryptionFormatVersion;
 
     @Column(name="received_at")
     private LocalDate receivedAt;
@@ -50,9 +65,6 @@ public class Letter extends BaseEntity {
 
     @Column(name="content_version", nullable = false)
     private int contentVersion;
-
-    @Column(name="content_hash", nullable = false, length = 64)
-    private String contentHash;
 
     @ManyToOne(fetch=FetchType.LAZY, optional = false)
     @JoinColumn(name="user_id", nullable = false)
@@ -80,7 +92,6 @@ public class Letter extends BaseEntity {
             LocalDate receivedAt,
             String aiSummary,
             int contentVersion,
-            String contentHash,
             User user,
             From from,
             Folder folder
@@ -89,7 +100,6 @@ public class Letter extends BaseEntity {
         this.receivedAt = receivedAt;
         this.aiSummary = aiSummary;
         this.contentVersion = contentVersion;
-        this.contentHash = contentHash;
         this.user = user;
         this.from = from;
         this.folder = folder;
@@ -106,13 +116,56 @@ public class Letter extends BaseEntity {
 
     public void updateContent(
             String content,
-            String newAiSummary,
-            String newContentHash
+            String newAiSummary
     ) {
         this.content = content;
         this.aiSummary = newAiSummary;
-        this.contentHash = newContentHash;
         this.contentVersion++;
+    }
+
+    public void storeEncryptedContent(
+            String ciphertext,
+            String nonce,
+            int keyVersion,
+            int formatVersion
+    ) {
+        if (ciphertext == null || ciphertext.isBlank()
+                || nonce == null || nonce.length() != 16
+                || keyVersion <= 0 || formatVersion != 1) {
+            throw new IllegalArgumentException("Valid encrypted letter content is required.");
+        }
+        this.contentCiphertext = ciphertext;
+        this.contentEncryptionNonce = nonce;
+        this.contentEncryptionKeyVersion = keyVersion;
+        this.contentEncryptionFormatVersion = formatVersion;
+    }
+
+    public void clearEncryptedContent() {
+        this.contentCiphertext = null;
+        this.contentEncryptionNonce = null;
+        this.contentEncryptionKeyVersion = null;
+        this.contentEncryptionFormatVersion = null;
+    }
+
+    public Optional<EncryptedLetterContent> encryptedContent() {
+        boolean allAbsent = contentCiphertext == null
+                && contentEncryptionNonce == null
+                && contentEncryptionKeyVersion == null
+                && contentEncryptionFormatVersion == null;
+        if (allAbsent) {
+            return Optional.empty();
+        }
+        if (contentCiphertext == null || contentCiphertext.isBlank()
+                || contentEncryptionNonce == null || contentEncryptionNonce.length() != 16
+                || contentEncryptionKeyVersion == null || contentEncryptionKeyVersion <= 0
+                || !Objects.equals(contentEncryptionFormatVersion, 1)) {
+            throw new IllegalStateException("Invalid encrypted letter content state.");
+        }
+        return Optional.of(new EncryptedLetterContent(
+                contentEncryptionKeyVersion,
+                contentEncryptionNonce,
+                contentCiphertext
+        ));
     }
 
     public void updateReceivedAt(LocalDate receivedAt) {

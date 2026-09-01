@@ -79,3 +79,9 @@ jwt:
 signup-token:
   secret-key: testtesttesttesttesttesttesttesttesttest
   expiration: 1800000
+
+blind-index:
+  keys:
+    enabled: false
+    secret-id: ""
+    region: ap-northeast-2
