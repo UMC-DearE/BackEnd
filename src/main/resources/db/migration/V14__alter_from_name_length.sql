@@ -1,1 +1,0 @@
-ALTER TABLE user_from MODIFY COLUMN from_name VARCHAR(10) NOT NULL;
