@@ -19,4 +19,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select u from User u where u.id = :id")
     Optional<User> findByIdForUpdate(@Param("id") Long id);
+
+    @Query("select u.image.imageKey from User u where u.id = :userId and u.image is not null")
+    Optional<String> findProfileImageKeyByUserId(@Param("userId") Long userId);
 }
