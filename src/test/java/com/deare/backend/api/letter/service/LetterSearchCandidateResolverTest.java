@@ -51,16 +51,44 @@ class LetterSearchCandidateResolverTest {
     }
 
     @Test
-    void fallsBackWhenKeyProviderIsDisabledOrKeywordCannotProduceBigrams() {
+    void fallsBackWhenKeyProviderIsDisabled() {
         LetterSearchCandidateResolver disabled = new LetterSearchCandidateResolver(
                 repository,
                 Optional.empty()
         );
 
         assertThat(disabled.resolve(1L, "search")).isEmpty();
-        when(keyProvider.readableKeys(1L)).thenReturn(List.of(versionedKey(1)));
-        assertThat(enabledResolver().resolve(1L, "a")).isEmpty();
+        verify(repository, never()).findCandidateLetterIds(
+                org.mockito.ArgumentMatchers.anyLong(),
+                anyInt(),
+                anySet(),
+                anyInt()
+        );
+    }
 
+    @Test
+    void rejectsSingleCodePointKeywordAfterNormalization() {
+        LetterSearchCandidateResolver resolver = enabledResolver();
+
+        assertThatThrownBy(() -> resolver.resolve(1L, "  Ａ  "))
+                .isInstanceOfSatisfying(GeneralException.class, exception ->
+                        assertThat(exception.getErrorCode()).isEqualTo(LetterErrorCode.INVALID_REQUEST)
+                );
+
+        verify(keyProvider, never()).readableKeys(org.mockito.ArgumentMatchers.anyLong());
+        verify(repository, never()).findCandidateLetterIds(
+                org.mockito.ArgumentMatchers.anyLong(),
+                anyInt(),
+                anySet(),
+                anyInt()
+        );
+    }
+
+    @Test
+    void treatsBlankKeywordAsNoSearch() {
+        assertThat(enabledResolver().resolve(1L, "   ")).isEmpty();
+
+        verify(keyProvider, never()).readableKeys(org.mockito.ArgumentMatchers.anyLong());
         verify(repository, never()).findCandidateLetterIds(
                 org.mockito.ArgumentMatchers.anyLong(),
                 anyInt(),
