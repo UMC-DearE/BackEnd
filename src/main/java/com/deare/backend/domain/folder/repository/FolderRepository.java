@@ -33,4 +33,12 @@ public interface FolderRepository extends JpaRepository<Folder, Long> {
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query("DELETE FROM Folder f WHERE f.user.id = :userId")
     void deleteAllByUserId(@Param("userId") Long userId);
+
+    @Query("""
+        select f.image.imageKey
+        from Folder f
+        where f.user.id = :userId
+          and f.image is not null
+    """)
+    List<String> findImageKeysByUserId(@Param("userId") Long userId);
 }
