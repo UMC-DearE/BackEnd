@@ -32,7 +32,6 @@ import com.deare.backend.global.common.exception.GeneralException;
 import com.deare.backend.global.external.feign.exception.ExternalApiException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -76,17 +75,20 @@ public class LetterServiceImpl implements LetterService {
 
         Set<Long> indexedCandidateIds = searchCandidateResolver.resolve(userId, keyword)
                 .orElse(null);
-        Pageable repositoryPageable = searchPageable(pageable, keyword);
-        Page<Letter> candidates = letterRepository.findLettersForList(
-                userId,
-                folderId,
-                fromId,
-                isLiked,
-                keyword,
-                indexedCandidateIds,
-                repositoryPageable
-        );
-        Page<Letter> page = searchResultPager.verifyAndPage(candidates, keyword, pageable);
+        Page<Letter> page;
+        if (StringUtils.hasText(keyword)) {
+            page = searchResultPager.verifyAndPage(
+                    batch -> letterRepository.findLettersForList(
+                            userId, folderId, fromId, isLiked, keyword, indexedCandidateIds, batch
+                    ).getContent(),
+                    keyword,
+                    pageable
+            );
+        } else {
+            page = letterRepository.findLettersForList(
+                    userId, folderId, fromId, isLiked, keyword, indexedCandidateIds, pageable
+            );
+        }
 
         List<LetterItemDTO> items = page.getContent().stream()
                 .map(letter -> LetterItemMapper.toItemDTO(letter, contentReader.read(letter)))
@@ -333,11 +335,6 @@ public class LetterServiceImpl implements LetterService {
                 .orElseThrow(() -> new GeneralException(LetterErrorCode.LETTER_NOT_FOUND));
 
         letter.deleteReply();
-    }
-
-    private Pageable searchPageable(Pageable pageable, String keyword) {
-        if (!StringUtils.hasText(keyword)) return pageable;
-        return PageRequest.of(0, Integer.MAX_VALUE, pageable.getSort());
     }
 
     private Letter getOwnedActiveLetter(Long userId, Long letterId) {

@@ -3,10 +3,13 @@ package com.deare.backend.api.letter.service;
 import com.deare.backend.domain.letter.entity.Letter;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -18,19 +21,15 @@ class LetterSearchResultPagerTest {
     private final LetterSearchResultPager pager = new LetterSearchResultPager(contentReader);
 
     @Test
-    void removesBlindIndexFalsePositivesAndCalculatesPageAfterVerification() {
-        Letter first = mock(Letter.class);
-        Letter falsePositive = mock(Letter.class);
-        Letter second = mock(Letter.class);
-        when(contentReader.read(first)).thenReturn("첫 번째 NEEDLE 편지");
-        when(contentReader.read(falsePositive)).thenReturn("일치하지 않는 본문");
-        when(contentReader.read(second)).thenReturn("두 번째 needle 편지");
+    void removesFalsePositivesBeforeApplyingRequestedPage() {
+        Letter first = letter("first needle");
+        Letter falsePositive = letter("different content");
+        Letter second = letter("second needle");
 
-        PageRequest requestedPage = PageRequest.of(1, 1);
         Page<Letter> result = pager.verifyAndPage(
-                new PageImpl<>(List.of(first, falsePositive, second)),
-                "ＮＥＥＤＬＥ",
-                requestedPage
+                ignored -> List.of(first, falsePositive, second),
+                "NEEDLE",
+                PageRequest.of(1, 1)
         );
 
         assertThat(result.getContent()).containsExactly(second);
@@ -39,11 +38,48 @@ class LetterSearchResultPagerTest {
     }
 
     @Test
-    void keepsRepositoryPageWhenKeywordIsBlank() {
-        PageRequest pageable = PageRequest.of(0, 10);
-        Page<Letter> repositoryPage = Page.empty(pageable);
+    void fetchesCandidatesInBoundedBatchesAndKeepsOnlyRequestedPage() {
+        List<Letter> candidates = new ArrayList<>();
+        for (int i = 0; i < LetterSearchResultPager.CANDIDATE_BATCH_SIZE + 1; i++) {
+            candidates.add(letter("needle " + i));
+        }
+        List<Pageable> requestedBatches = new ArrayList<>();
 
-        assertThat(pager.verifyAndPage(repositoryPage, " ", pageable))
-                .isSameAs(repositoryPage);
+        Page<Letter> result = pager.verifyAndPage(batch -> {
+            requestedBatches.add(batch);
+            int from = (int) batch.getOffset();
+            int to = Math.min(from + batch.getPageSize(), candidates.size());
+            return from >= candidates.size() ? List.of() : candidates.subList(from, to);
+        }, "needle", PageRequest.of(1, 1));
+
+        assertThat(requestedBatches).hasSize(2);
+        assertThat(requestedBatches)
+                .allSatisfy(batch -> assertThat(batch.getPageSize())
+                        .isEqualTo(LetterSearchResultPager.CANDIDATE_BATCH_SIZE));
+        assertThat(result.getContent()).containsExactly(candidates.get(1));
+        assertThat(result.getTotalElements()).isEqualTo(candidates.size());
+        assertThat(requestedBatches.get(0).getSort())
+                .containsExactly(Sort.Order.desc("id"));
+    }
+
+    @Test
+    void avoidsOverflowWhenPageSizeIsIntegerMaxValue() {
+        Letter match = letter("needle");
+        AtomicInteger fetchCount = new AtomicInteger();
+
+        Page<Letter> result = pager.verifyAndPage(
+                ignored -> fetchCount.getAndIncrement() == 0 ? List.of(match) : List.of(),
+                "needle",
+                PageRequest.of(1, Integer.MAX_VALUE)
+        );
+
+        assertThat(result.getContent()).isEmpty();
+        assertThat(result.getTotalElements()).isEqualTo(1);
+    }
+
+    private Letter letter(String content) {
+        Letter letter = mock(Letter.class);
+        when(contentReader.read(letter)).thenReturn(content);
+        return letter;
     }
 }
