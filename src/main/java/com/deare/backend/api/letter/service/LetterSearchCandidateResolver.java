@@ -4,6 +4,7 @@ import com.deare.backend.domain.letter.exception.LetterErrorCode;
 import com.deare.backend.domain.letter.repository.LetterSearchTokenRepository;
 import com.deare.backend.domain.letter.search.BlindIndexKeyProvider;
 import com.deare.backend.domain.letter.search.BlindIndexTokenGenerator;
+import com.deare.backend.domain.letter.search.LetterSearchBigramGenerator;
 import com.deare.backend.domain.letter.search.VersionedBlindIndexKey;
 import com.deare.backend.global.common.exception.GeneralException;
 import org.springframework.stereotype.Component;
@@ -32,8 +33,12 @@ public class LetterSearchCandidateResolver {
     }
 
     public Optional<Set<Long>> resolve(Long userId, String keyword) {
-        if (keyword != null
-                && keyword.codePointCount(0, keyword.length()) > MAX_SEARCH_KEYWORD_CODE_POINTS) {
+        String normalizedKeyword = LetterSearchBigramGenerator.normalize(keyword);
+        int keywordLength = normalizedKeyword.codePointCount(0, normalizedKeyword.length());
+        if (keywordLength == 0) {
+            return Optional.empty();
+        }
+        if (keywordLength < 2 || keywordLength > MAX_SEARCH_KEYWORD_CODE_POINTS) {
             throw new GeneralException(LetterErrorCode.INVALID_REQUEST);
         }
 
