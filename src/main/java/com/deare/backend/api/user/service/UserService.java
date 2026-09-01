@@ -9,6 +9,4 @@ public interface UserService {
     ProfileResponseDTO getMyProfile(Long userId);
 
     ProfileUpdateResponseDTO updateMyProfile(Long userId, ProfileUpdateRequestDTO request);
-
-    void deactivateUser(Long userId);
 }
