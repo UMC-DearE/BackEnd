@@ -60,7 +60,7 @@ public class HomeServiceImpl implements HomeService {
 
         String homeColor = (userSetting != null)
                 ? userSetting.getHomeColor()
-                : "#F7F7F7F7";
+                : "#F7F8F9";
 
         HomeSettingDto settingDto = new HomeSettingDto(
                 homeColor,
