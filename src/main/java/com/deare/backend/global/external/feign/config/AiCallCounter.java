@@ -47,4 +47,9 @@ public class AiCallCounter {
             default -> new CallCount(totalCount.incrementAndGet(), totalCount.get());
         };
     }
+
+    public String summary() {
+        return String.format("ocr=%d analyze=%d report=%d total=%d",
+                ocrCount.get(), analyzeCount.get(), reportCount.get(), totalCount.get());
+    }
 }
