@@ -8,11 +8,14 @@ import com.deare.backend.global.external.gemini.dto.request.report.ReportAnalyze
 import com.deare.backend.global.external.gemini.dto.response.GeminiTextResponseDTO;
 import com.deare.backend.global.external.gemini.dto.response.report.ReportAnalyzeResponseDTO;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.deare.backend.global.external.feign.config.AiCallCounter;
+import com.deare.backend.global.external.feign.config.AiCallLogTag;
 import feign.FeignException;
 import feign.RetryableException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -27,6 +30,7 @@ public class ReportAnalyzedAdapterImpl implements ReportAnalyzedAdapter {
 
     private final GeminiFeignClient feignClient;
     private final ObjectMapper om;
+    private final AiCallCounter counter;
 
     @Value("${external.ai.api-key}")
     private String apiKey;
@@ -36,7 +40,16 @@ public class ReportAnalyzedAdapterImpl implements ReportAnalyzedAdapter {
 
     @Override
     public ReportAnalyzeResponseDTO reportAnalyze(List<String> summaries) {
+        AiCallCounter.CallCount count = counter.nextReport();
+        long attemptSeq = count.attemptSeq();
+        long total = count.total();
+        MDC.put("aiCallType", "REPORT");
+        MDC.put("aiAttemptSeq", String.valueOf(attemptSeq));
+        MDC.put("aiTotal", String.valueOf(total));
+        long start = System.currentTimeMillis();
         try {
+            log.info("{} attemptSeq={} total={} START", AiCallLogTag.REPORT, attemptSeq, total);
+
             GeminiTextRequestDTO request =
                     ReportAnalyzePromptFactory.fromSummaries(model, summaries);
 
@@ -51,42 +64,28 @@ public class ReportAnalyzedAdapterImpl implements ReportAnalyzedAdapter {
 
             validateResult(result);
 
+            log.info("{} attemptSeq={} total={} SUCCESS elapsed={}ms", AiCallLogTag.REPORT, MDC.get("aiAttemptSeq"), MDC.get("aiTotal"), System.currentTimeMillis() - start);
             return result;
 
         } catch (RetryableException e) {
-            log.warn(
-                    "[ReportAnalyze] AI 호출 타임아웃/네트워크 오류 - status={}, message={}",
-                    e.status(),
-                    e.getMessage()
-            );
-
-            throw new ExternalApiException(
-                    ExternalApiErrorCode.AI_TIMEOUT
-            );
+            log.error("{} attemptSeq={} total={} FAIL reason=TIMEOUT status={} elapsed={}ms", AiCallLogTag.REPORT, MDC.get("aiAttemptSeq"), MDC.get("aiTotal"), e.status(), System.currentTimeMillis() - start);
+            throw new ExternalApiException(ExternalApiErrorCode.AI_TIMEOUT);
 
         } catch (FeignException e) {
-            log.error(
-                    "[ReportAnalyze] AI API 오류 - status={}, message={}",
-                    e.status(),
-                    e.getMessage()
-            );
-
-            throw new ExternalApiException(
-                    ExternalApiErrorCode.AI_REQUEST_FAILED
-            );
+            log.error("{} attemptSeq={} total={} FAIL reason=ERROR status={} elapsed={}ms", AiCallLogTag.REPORT, MDC.get("aiAttemptSeq"), MDC.get("aiTotal"), e.status(), System.currentTimeMillis() - start);
+            throw new ExternalApiException(ExternalApiErrorCode.AI_REQUEST_FAILED);
 
         } catch (ExternalApiException e) {
+            log.error("{} attemptSeq={} total={} FAIL reason={} elapsed={}ms", AiCallLogTag.REPORT, MDC.get("aiAttemptSeq"), MDC.get("aiTotal"), e.getErrorCode().getCode(), System.currentTimeMillis() - start);
             throw e;
 
         } catch (Exception e) {
-            log.error(
-                    "[ReportAnalyze] 예상하지 못한 오류",
-                    e
-            );
-
-            throw new ExternalApiException(
-                    ExternalApiErrorCode.AI_REQUEST_FAILED
-            );
+            log.error("{} attemptSeq={} total={} FAIL reason=ERROR elapsed={}ms", AiCallLogTag.REPORT, MDC.get("aiAttemptSeq"), MDC.get("aiTotal"), System.currentTimeMillis() - start, e);
+            throw new ExternalApiException(ExternalApiErrorCode.AI_REQUEST_FAILED);
+        } finally {
+            MDC.remove("aiCallType");
+            MDC.remove("aiAttemptSeq");
+            MDC.remove("aiTotal");
         }
     }
 
