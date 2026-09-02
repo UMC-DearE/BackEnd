@@ -68,7 +68,7 @@ public class AnalyzeAdapterImpl implements AnalyzeAdapter {
             log.error("{} seq={} total={} FAIL reason={} elapsed={}ms", AiCallLogTag.ANALYZE, MDC.get("aiSeq"), MDC.get("aiTotal"), e.getErrorCode().getCode(), System.currentTimeMillis() - start);
             throw e;
         } catch (Exception e) {
-            log.error("{} seq={} total={} FAIL reason=ERROR elapsed={}ms", AiCallLogTag.ANALYZE, MDC.get("aiSeq"), MDC.get("aiTotal"), System.currentTimeMillis() - start);
+            log.error("{} seq={} total={} FAIL reason=ERROR elapsed={}ms", AiCallLogTag.ANALYZE, MDC.get("aiSeq"), MDC.get("aiTotal"), System.currentTimeMillis() - start, e);
             throw new ExternalApiException(ExternalApiErrorCode.AI_REQUEST_FAILED);
         } finally {
             MDC.remove("aiCallType");
