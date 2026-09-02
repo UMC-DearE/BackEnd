@@ -62,12 +62,12 @@ public class OcrAdapterImpl implements OcrAdapter {
             return response.getChoices().get(0).getMessage().getContent();
 
         } catch (feign.RetryableException e) {
-            log.warn("{} seq={} total={} FAIL reason=TIMEOUT status={} elapsed={}ms", AiCallLogTag.OCR, MDC.get("aiSeq"), MDC.get("aiTotal"), e.status(), System.currentTimeMillis() - start);
+            log.error("{} seq={} total={} FAIL reason=TIMEOUT status={} elapsed={}ms", AiCallLogTag.OCR, MDC.get("aiSeq"), MDC.get("aiTotal"), e.status(), System.currentTimeMillis() - start);
             throw new ExternalApiException(ExternalApiErrorCode.AI_TIMEOUT);
         } catch (ExternalApiException e) {
             throw e;
         } catch (Exception e) {
-            log.warn("{} seq={} total={} FAIL reason=ERROR elapsed={}ms", AiCallLogTag.OCR, MDC.get("aiSeq"), MDC.get("aiTotal"), System.currentTimeMillis() - start);
+            log.error("{} seq={} total={} FAIL reason=ERROR elapsed={}ms", AiCallLogTag.OCR, MDC.get("aiSeq"), MDC.get("aiTotal"), System.currentTimeMillis() - start);
             throw new ExternalApiException(ExternalApiErrorCode.AI_REQUEST_FAILED);
         } finally {
             MDC.remove("aiCallType");

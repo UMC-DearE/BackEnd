@@ -68,7 +68,7 @@ public class ReportAnalyzedAdapterImpl implements ReportAnalyzedAdapter {
             return result;
 
         } catch (RetryableException e) {
-            log.warn("{} seq={} total={} FAIL reason=TIMEOUT status={} elapsed={}ms", AiCallLogTag.REPORT, MDC.get("aiSeq"), MDC.get("aiTotal"), e.status(), System.currentTimeMillis() - start);
+            log.error("{} seq={} total={} FAIL reason=TIMEOUT status={} elapsed={}ms", AiCallLogTag.REPORT, MDC.get("aiSeq"), MDC.get("aiTotal"), e.status(), System.currentTimeMillis() - start);
             throw new ExternalApiException(ExternalApiErrorCode.AI_TIMEOUT);
 
         } catch (FeignException e) {
