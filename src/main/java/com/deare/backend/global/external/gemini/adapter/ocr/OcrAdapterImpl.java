@@ -59,16 +59,20 @@ public class OcrAdapterImpl implements OcrAdapter {
             }
 
             log.info("{} attemptSeq={} total={} SUCCESS elapsed={}ms", AiCallLogTag.OCR, MDC.get("aiAttemptSeq"), MDC.get("aiTotal"), System.currentTimeMillis() - start);
+            log.info("[AI-CALL][SUMMARY] {}", counter.summary());
             return response.getChoices().get(0).getMessage().getContent();
 
         } catch (feign.RetryableException e) {
             log.error("{} attemptSeq={} total={} FAIL reason=TIMEOUT status={} elapsed={}ms", AiCallLogTag.OCR, MDC.get("aiAttemptSeq"), MDC.get("aiTotal"), e.status(), System.currentTimeMillis() - start);
+            log.info("[AI-CALL][SUMMARY] {}", counter.summary());
             throw new ExternalApiException(ExternalApiErrorCode.AI_TIMEOUT);
         } catch (ExternalApiException e) {
             log.error("{} attemptSeq={} total={} FAIL reason={} elapsed={}ms", AiCallLogTag.OCR, MDC.get("aiAttemptSeq"), MDC.get("aiTotal"), e.getErrorCode().getCode(), System.currentTimeMillis() - start);
+            log.info("[AI-CALL][SUMMARY] {}", counter.summary());
             throw e;
         } catch (Exception e) {
             log.error("{} attemptSeq={} total={} FAIL reason=ERROR elapsed={}ms", AiCallLogTag.OCR, MDC.get("aiAttemptSeq"), MDC.get("aiTotal"), System.currentTimeMillis() - start, e);
+            log.info("[AI-CALL][SUMMARY] {}", counter.summary());
             throw new ExternalApiException(ExternalApiErrorCode.AI_REQUEST_FAILED);
         } finally {
             MDC.remove("aiCallType");
