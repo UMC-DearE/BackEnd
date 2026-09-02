@@ -41,14 +41,14 @@ public class ReportAnalyzedAdapterImpl implements ReportAnalyzedAdapter {
     @Override
     public ReportAnalyzeResponseDTO reportAnalyze(List<String> summaries) {
         AiCallCounter.CallCount count = counter.nextReport();
-        long seq = count.seq();
+        long attemptSeq = count.attemptSeq();
         long total = count.total();
         MDC.put("aiCallType", "REPORT");
-        MDC.put("aiSeq", String.valueOf(seq));
+        MDC.put("aiAttemptSeq", String.valueOf(attemptSeq));
         MDC.put("aiTotal", String.valueOf(total));
         long start = System.currentTimeMillis();
         try {
-            log.info("{} seq={} total={} START", AiCallLogTag.REPORT, seq, total);
+            log.info("{} attemptSeq={} total={} START", AiCallLogTag.REPORT, attemptSeq, total);
 
             GeminiTextRequestDTO request =
                     ReportAnalyzePromptFactory.fromSummaries(model, summaries);
@@ -64,27 +64,27 @@ public class ReportAnalyzedAdapterImpl implements ReportAnalyzedAdapter {
 
             validateResult(result);
 
-            log.info("{} seq={} total={} SUCCESS elapsed={}ms", AiCallLogTag.REPORT, MDC.get("aiSeq"), MDC.get("aiTotal"), System.currentTimeMillis() - start);
+            log.info("{} attemptSeq={} total={} SUCCESS elapsed={}ms", AiCallLogTag.REPORT, MDC.get("aiAttemptSeq"), MDC.get("aiTotal"), System.currentTimeMillis() - start);
             return result;
 
         } catch (RetryableException e) {
-            log.error("{} seq={} total={} FAIL reason=TIMEOUT status={} elapsed={}ms", AiCallLogTag.REPORT, MDC.get("aiSeq"), MDC.get("aiTotal"), e.status(), System.currentTimeMillis() - start);
+            log.error("{} attemptSeq={} total={} FAIL reason=TIMEOUT status={} elapsed={}ms", AiCallLogTag.REPORT, MDC.get("aiAttemptSeq"), MDC.get("aiTotal"), e.status(), System.currentTimeMillis() - start);
             throw new ExternalApiException(ExternalApiErrorCode.AI_TIMEOUT);
 
         } catch (FeignException e) {
-            log.error("{} seq={} total={} FAIL reason=ERROR status={} elapsed={}ms", AiCallLogTag.REPORT, MDC.get("aiSeq"), MDC.get("aiTotal"), e.status(), System.currentTimeMillis() - start);
+            log.error("{} attemptSeq={} total={} FAIL reason=ERROR status={} elapsed={}ms", AiCallLogTag.REPORT, MDC.get("aiAttemptSeq"), MDC.get("aiTotal"), e.status(), System.currentTimeMillis() - start);
             throw new ExternalApiException(ExternalApiErrorCode.AI_REQUEST_FAILED);
 
         } catch (ExternalApiException e) {
-            log.error("{} seq={} total={} FAIL reason={} elapsed={}ms", AiCallLogTag.REPORT, MDC.get("aiSeq"), MDC.get("aiTotal"), e.getErrorCode().getCode(), System.currentTimeMillis() - start);
+            log.error("{} attemptSeq={} total={} FAIL reason={} elapsed={}ms", AiCallLogTag.REPORT, MDC.get("aiAttemptSeq"), MDC.get("aiTotal"), e.getErrorCode().getCode(), System.currentTimeMillis() - start);
             throw e;
 
         } catch (Exception e) {
-            log.error("{} seq={} total={} FAIL reason=ERROR elapsed={}ms", AiCallLogTag.REPORT, MDC.get("aiSeq"), MDC.get("aiTotal"), System.currentTimeMillis() - start, e);
+            log.error("{} attemptSeq={} total={} FAIL reason=ERROR elapsed={}ms", AiCallLogTag.REPORT, MDC.get("aiAttemptSeq"), MDC.get("aiTotal"), System.currentTimeMillis() - start, e);
             throw new ExternalApiException(ExternalApiErrorCode.AI_REQUEST_FAILED);
         } finally {
             MDC.remove("aiCallType");
-            MDC.remove("aiSeq");
+            MDC.remove("aiAttemptSeq");
             MDC.remove("aiTotal");
         }
     }

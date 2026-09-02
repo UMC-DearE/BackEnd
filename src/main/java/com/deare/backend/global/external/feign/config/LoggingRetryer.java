@@ -27,18 +27,18 @@ public class LoggingRetryer implements Retryer {
     public void continueOrPropagate(RetryableException e) {
         String callType = MDC.get("aiCallType") != null ? MDC.get("aiCallType") : "UNKNOWN";
         AiCallCounter.CallCount count = counter.nextByType(callType);
-        MDC.put("aiSeq", String.valueOf(count.seq()));
+        MDC.put("aiAttemptSeq", String.valueOf(count.attemptSeq()));
         MDC.put("aiTotal", String.valueOf(count.total()));
 
         if (attempt < maxAttempts) {
             log.warn(
-                    "{} callType={} seq={} total={} {}/{}번째 시도 실패, 재시도 진행 - status={}, reason={}",
-                    AiCallLogTag.RETRY, callType, count.seq(), count.total(), attempt, maxAttempts, e.status(), e.getMessage()
+                    "{} callType={} attemptSeq={} total={} {}/{}번째 시도 실패, 재시도 진행 - status={}, reason={}",
+                    AiCallLogTag.RETRY, callType, count.attemptSeq(), count.total(), attempt, maxAttempts, e.status(), e.getMessage()
             );
         } else {
             log.warn(
-                    "{} callType={} seq={} total={} {}/{}번째 시도까지 모두 실패, 재시도 소진 - status={}, reason={}",
-                    AiCallLogTag.RETRY, callType, count.seq(), count.total(), attempt, maxAttempts, e.status(), e.getMessage()
+                    "{} callType={} attemptSeq={} total={} {}/{}번째 시도까지 모두 실패, 재시도 소진 - status={}, reason={}",
+                    AiCallLogTag.RETRY, callType, count.attemptSeq(), count.total(), attempt, maxAttempts, e.status(), e.getMessage()
             );
         }
 
