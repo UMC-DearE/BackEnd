@@ -76,6 +76,7 @@ public class ReportAnalyzedAdapterImpl implements ReportAnalyzedAdapter {
             throw new ExternalApiException(ExternalApiErrorCode.AI_REQUEST_FAILED);
 
         } catch (ExternalApiException e) {
+            log.error("{} seq={} total={} FAIL reason={} elapsed={}ms", AiCallLogTag.REPORT, MDC.get("aiSeq"), MDC.get("aiTotal"), e.getErrorCode().getCode(), System.currentTimeMillis() - start);
             throw e;
 
         } catch (Exception e) {
