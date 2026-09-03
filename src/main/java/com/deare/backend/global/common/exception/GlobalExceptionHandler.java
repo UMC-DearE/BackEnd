@@ -5,14 +5,17 @@ import com.deare.backend.global.external.feign.exception.ExternalApiException;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
+import org.springframework.web.bind.ServletRequestBindingException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.stream.Collectors;
 
@@ -24,7 +27,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Void>> handleGeneral(GeneralException e) {
         BaseErrorCode ec = e.getErrorCode();
 
-        log.warn("[GeneralException] Code: {}, Message: {}", ec.getCode(), ec.getMessage());
+        logByStatus("GeneralException", ec, ec.getMessage(), e);
 
         return ResponseEntity
                 .status(ec.getStatus())
@@ -36,7 +39,7 @@ public class GlobalExceptionHandler {
         BaseErrorCode ec = e.getErrorCode();
         String message = e.getCustomMessage();
 
-        log.warn("[GeneralMessageException] Code: {}, Message: {}", ec.getCode(), message);
+        logByStatus("GeneralMessageException", ec, message, e);
 
         return ResponseEntity
                 .status(ec.getStatus())
@@ -53,12 +56,10 @@ public class GlobalExceptionHandler {
 
         log.warn("[Validation Error] {}", message);
 
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponse.fail(
-                        "COMMON_400_VALIDATION",
-                        message.isBlank() ? "요청 값이 올바르지 않습니다." : message
-                ));
+        return response(
+                CommonErrorCode.VALIDATION_FAILED,
+                message.isBlank() ? CommonErrorCode.VALIDATION_FAILED.getMessage() : message
+        );
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
@@ -68,9 +69,7 @@ public class GlobalExceptionHandler {
         String message = String.format("'%s' 값이 올바르지 않습니다.", e.getName());
         log.warn("[Type Mismatch] Field: {}, Value: {}", e.getName(), e.getValue());
 
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponse.fail("COMMON_400_TYPE_MISMATCH", message));
+        return response(CommonErrorCode.TYPE_MISMATCH, message);
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
@@ -79,12 +78,7 @@ public class GlobalExceptionHandler {
     ) {
         log.warn("[JSON Parse Error] {}", e.getMessage());
 
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponse.fail(
-                        "COMMON_400_BODY_NOT_READABLE",
-                        "요청 본문(JSON)을 올바르게 작성해 주세요."
-                ));
+        return response(CommonErrorCode.BODY_NOT_READABLE);
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
@@ -97,26 +91,65 @@ public class GlobalExceptionHandler {
 
         log.warn("[Constraint Violation] {}", message);
 
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponse.fail(
-                        "COMMON_400_CONSTRAINT",
-                        message.isBlank() ? "요청 값이 올바르지 않습니다." : message
-                ));
+        return response(
+                CommonErrorCode.CONSTRAINT_VIOLATION,
+                message.isBlank() ? CommonErrorCode.CONSTRAINT_VIOLATION.getMessage() : message
+        );
+    }
+
+    @ExceptionHandler(ServletRequestBindingException.class)
+    public ResponseEntity<ApiResponse<Void>> handleRequestBinding(ServletRequestBindingException e) {
+        return handleCommonError(CommonErrorCode.REQUEST_BINDING_FAILED, e);
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> handleNoResourceFound(NoResourceFoundException e) {
+        return handleCommonError(CommonErrorCode.RESOURCE_NOT_FOUND, e);
+    }
+
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<ApiResponse<Void>> handleMethodNotSupported(HttpRequestMethodNotSupportedException e) {
+        return handleCommonError(CommonErrorCode.METHOD_NOT_ALLOWED, e);
+    }
+
+    @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
+    public ResponseEntity<ApiResponse<Void>> handleMediaTypeNotSupported(HttpMediaTypeNotSupportedException e) {
+        return handleCommonError(CommonErrorCode.MEDIA_TYPE_NOT_SUPPORTED, e);
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleException(Exception e) {
         log.error("[Unhandled Exception] ", e);
 
-        return ResponseEntity
-                .status(500)
-                .body(ApiResponse.fail("COMMON_500", "서버 오류가 발생했습니다."));
+        return response(CommonErrorCode.INTERNAL_SERVER_ERROR);
     }
 
     private String formatFieldError(FieldError fe) {
         return String.format("[%s] %s", fe.getField(),
                 (fe.getDefaultMessage() != null ? fe.getDefaultMessage() : "입력값이 올바르지 않습니다."));
+    }
+
+    private ResponseEntity<ApiResponse<Void>> handleCommonError(CommonErrorCode errorCode, Exception e) {
+        log.warn("[{}] Code: {}, Message: {}", e.getClass().getSimpleName(), errorCode.getCode(), e.getMessage());
+        return response(errorCode);
+    }
+
+    private ResponseEntity<ApiResponse<Void>> response(BaseErrorCode errorCode) {
+        return response(errorCode, errorCode.getMessage());
+    }
+
+    private ResponseEntity<ApiResponse<Void>> response(BaseErrorCode errorCode, String message) {
+        return ResponseEntity.status(errorCode.getStatus())
+                .body(ApiResponse.fail(errorCode.getCode(), message));
+    }
+
+    private void logByStatus(String exceptionType, BaseErrorCode errorCode, String message, Exception e) {
+        if (errorCode.getStatus().is5xxServerError()) {
+            log.error("[{}] Code: {}, Message: {}", exceptionType, errorCode.getCode(), message, e);
+            return;
+        }
+
+        log.warn("[{}] Code: {}, Message: {}", exceptionType, errorCode.getCode(), message);
     }
 
     @ExceptionHandler(ExternalApiException.class)
@@ -125,8 +158,7 @@ public class GlobalExceptionHandler {
     ) {
         BaseErrorCode ec = e.getErrorCode();
 
-        log.error("[External API Error] Code: {}, Message: {}",
-                ec.getCode(), ec.getMessage());
+        logByStatus("ExternalApiException", ec, ec.getMessage(), e);
 
         return ResponseEntity
                 .status(ec.getStatus())
