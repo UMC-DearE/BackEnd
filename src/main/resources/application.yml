@@ -57,6 +57,10 @@ external:
     api-key: ${GEMINI_API_KEY}
     model: gemini-3-flash-preview
 
+ai:
+  usage:
+    daily-limit: ${AI_USAGE_DAILY_LIMIT:20}
+
 app:
   frontend-base-url: ${FRONTEND_BASE_URL:https://www.deare.kr}
 
