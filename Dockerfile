@@ -8,4 +8,4 @@ COPY app.jar /app/app.jar
 ENV TZ=Asia/Seoul
 
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "/app/app.jar"]
+ENTRYPOINT ["java", "-Xms512m", "-Xmx1g", "-XX:+UseG1GC", "-jar", "/app/app.jar"]
