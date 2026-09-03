@@ -9,6 +9,7 @@ import com.deare.backend.domain.emotion.repository.EmotionRepository;
 import com.deare.backend.global.common.exception.GeneralException;
 import com.deare.backend.global.external.gemini.adapter.analyze.AnalyzeAdapter;
 import com.deare.backend.global.external.gemini.dto.response.analyze.AnalyzeResponseDTO;
+import com.deare.backend.global.external.gemini.limit.AiUsageLimiter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -24,19 +25,25 @@ public class LetterAnalyzeService {
 
     private final AnalyzeAdapter analyzeAdapter;
     private final EmotionRepository emotionRepository;
+    private final AiUsageLimiter aiUsageLimiter;
 
-    public AnalyzeLetterResponseDTO analyze(AnalyzeLetterRequestDTO request){
-        AnalyzeResult result=getResult(request.getContent());
+    public AnalyzeLetterResponseDTO analyze(AnalyzeLetterRequestDTO request, Long userId){
+        AnalyzeResult result=getResult(request.getContent(), userId);
         return AnalyzeLetterResponseDTO.of(result.summary(), result.emotions());
     }
 
-    public ReAnalyzeResponseDTO analyzeForUpdate(String content){
-        AnalyzeResult result = getResult(content);
+    public ReAnalyzeResponseDTO analyzeForUpdate(String content, Long userId){
+        AnalyzeResult result = getResult(content, userId);
         return ReAnalyzeResponseDTO.of(result.summary(), result.emotions());
     }
 
-    private AnalyzeResult getResult(String content) {
-        AnalyzeResponseDTO analyzeResult = analyzeAdapter.analyze(content);
+    private AnalyzeResult getResult(String content, Long userId) {
+        String usageKey = aiUsageLimiter.reserve(userId);
+
+        // reserve() 이후 이 블록 안에서 무엇이 실패하든(AI 호출 실패, AI 응답 검증 실패 등)
+        // 편지 분석이 최종적으로 성공하지 못한 것이므로, 전부 사용자 귀책이 아닌 실패로 보고 사용량을 반납한다.
+        try {
+            AnalyzeResponseDTO analyzeResult = analyzeAdapter.analyze(content);
 
         String summary=analyzeResult.getSummary();
         List<String> emotionsName = analyzeResult.getEmotions();
@@ -47,6 +54,10 @@ public class LetterAnalyzeService {
 
         validateEmotionExistence(emotionsName, emotions);
         return new AnalyzeResult(summary, emotions);
+        } catch (RuntimeException e) {
+            aiUsageLimiter.release(usageKey);
+            throw e;
+        }
     }
 
     private void validateEmotionCount(List<String> emotionNames){
