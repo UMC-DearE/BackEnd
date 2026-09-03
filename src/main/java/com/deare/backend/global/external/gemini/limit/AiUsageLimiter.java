@@ -30,8 +30,6 @@ public class AiUsageLimiter {
     private static final ZoneId ZONE = ZoneId.of("Asia/Seoul");
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyyMMdd");
 
-    // 현재값이 한도 미만일 때만 증가시키고, 최초 증가 시 자정까지 TTL을 함께 건다 (전부 원자적으로 수행)
-    // 한도를 넘었다면 증가시키지 않고 -1을 반환한다.
     private static final DefaultRedisScript<Long> RESERVE_SCRIPT = new DefaultRedisScript<>(
             """
             local current = tonumber(redis.call('GET', KEYS[1]) or '0')
@@ -39,7 +37,7 @@ public class AiUsageLimiter {
                 return -1
             end
             local newVal = redis.call('INCR', KEYS[1])
-            if newVal == 1 then
+            if redis.call('TTL', KEYS[1]) == -1 then
                 redis.call('EXPIRE', KEYS[1], ARGV[2])
             end
             return newVal
@@ -47,7 +45,6 @@ public class AiUsageLimiter {
             Long.class
     );
 
-    // 선점했던 사용량 1건을 반납한다. 0 밑으로는 내려가지 않는다.
     private static final DefaultRedisScript<Long> RELEASE_SCRIPT = new DefaultRedisScript<>(
             """
             local current = tonumber(redis.call('GET', KEYS[1]) or '0')
@@ -59,10 +56,7 @@ public class AiUsageLimiter {
             Long.class
     );
 
-    /**
-     * 오늘 사용량을 선점한다. AI 호출 직전에 호출하고, 한도를 초과했다면 예외를 던진다.
-     */
-    public void reserve(Long userId) {
+    public String reserve(Long userId) {
         String key = buildKey(userId);
 
         Long result = redisTemplate.execute(
@@ -81,18 +75,15 @@ public class AiUsageLimiter {
             log.info("[AI-USAGE-LIMIT] 일일 한도 초과 - userId: {}, limit: {}", userId, dailyLimit);
             throw new GeneralException(AiUsageErrorCode.DAILY_LIMIT_EXCEEDED);
         }
+
+        return key;
     }
 
-    /**
-     * AI 호출 자체가 실패했을 때, 선점했던 사용량 1건을 반납한다.
-     */
-    public void release(Long userId) {
-        String key = buildKey(userId);
-
+    public void release(String usageKey) {
         try {
-            redisTemplate.execute(RELEASE_SCRIPT, List.of(key));
+            redisTemplate.execute(RELEASE_SCRIPT, List.of(usageKey));
         } catch (Exception e) {
-            log.warn("[AI-USAGE-LIMIT] 사용량 반납 실패 - userId: {}", userId, e);
+            log.warn("[AI-USAGE-LIMIT] 사용량 반납 실패 - key: {}", usageKey, e);
         }
     }
 

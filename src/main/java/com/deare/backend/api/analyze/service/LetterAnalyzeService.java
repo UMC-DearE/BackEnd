@@ -38,16 +38,12 @@ public class LetterAnalyzeService {
     }
 
     private AnalyzeResult getResult(String content, Long userId) {
-        aiUsageLimiter.reserve(userId);
+        String usageKey = aiUsageLimiter.reserve(userId);
 
-        AnalyzeResponseDTO analyzeResult;
+        // reserve() 이후 이 블록 안에서 무엇이 실패하든(AI 호출 실패, AI 응답 검증 실패 등)
+        // 편지 분석이 최종적으로 성공하지 못한 것이므로, 전부 사용자 귀책이 아닌 실패로 보고 사용량을 반납한다.
         try {
-            analyzeResult = analyzeAdapter.analyze(content);
-        } catch (RuntimeException e) {
-            // AI 호출 자체가 실패한 경우(사용자 귀책 아님)이므로 선점했던 사용량을 반납한다.
-            aiUsageLimiter.release(userId);
-            throw e;
-        }
+            AnalyzeResponseDTO analyzeResult = analyzeAdapter.analyze(content);
 
         String summary=analyzeResult.getSummary();
         List<String> emotionsName = analyzeResult.getEmotions();
@@ -58,6 +54,10 @@ public class LetterAnalyzeService {
 
         validateEmotionExistence(emotionsName, emotions);
         return new AnalyzeResult(summary, emotions);
+        } catch (RuntimeException e) {
+            aiUsageLimiter.release(usageKey);
+            throw e;
+        }
     }
 
     private void validateEmotionCount(List<String> emotionNames){

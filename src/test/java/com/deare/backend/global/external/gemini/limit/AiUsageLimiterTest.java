@@ -62,11 +62,11 @@ class AiUsageLimiterTest {
     void release_givesBackSlot() {
         ReflectionTestUtils.setField(aiUsageLimiter, "dailyLimit", 1);
 
-        aiUsageLimiter.reserve(TEST_USER_ID);
+        String usageKey = aiUsageLimiter.reserve(TEST_USER_ID);
         assertThatThrownBy(() -> aiUsageLimiter.reserve(TEST_USER_ID))
                 .isInstanceOf(GeneralException.class);
 
-        aiUsageLimiter.release(TEST_USER_ID);
+        aiUsageLimiter.release(usageKey);
 
         // 반납되었으니 다시 1건 예약 가능해야 한다
         aiUsageLimiter.reserve(TEST_USER_ID);
@@ -76,10 +76,41 @@ class AiUsageLimiterTest {
     @Test
     @DisplayName("release는 0 밑으로 내려가지 않는다")
     void release_neverGoesBelowZero() {
-        aiUsageLimiter.release(TEST_USER_ID);
-        aiUsageLimiter.release(TEST_USER_ID);
+        aiUsageLimiter.release(buildKey());
+        aiUsageLimiter.release(buildKey());
 
         assertThat(redisTemplate.opsForValue().get(buildKey())).isIn(null, "0");
+    }
+
+    @Test
+    @DisplayName("release는 reserve가 반환한 키를 그대로 사용해, 날짜가 바뀌어도 오늘 카운트를 건드리지 않는다")
+    void release_usesReturnedKey_notRecomputedFromNow() {
+        String yesterdayKey = "AI_USAGE:LETTER_ANALYZE:" + TEST_USER_ID + ":20260101";
+        redisTemplate.opsForValue().set(yesterdayKey, "5");
+
+        // 오늘 카운트를 1 선점
+        aiUsageLimiter.reserve(TEST_USER_ID);
+        assertThat(currentCount()).isEqualTo("1");
+
+        // "어제" 키를 반납해도 오늘 카운트는 영향을 받지 않아야 한다
+        aiUsageLimiter.release(yesterdayKey);
+
+        assertThat(currentCount()).isEqualTo("1");
+        assertThat(redisTemplate.opsForValue().get(yesterdayKey)).isEqualTo("4");
+
+        redisTemplate.delete(yesterdayKey);
+    }
+
+    @Test
+    @DisplayName("TTL이 없는 상태(PERSIST)로 키가 남아있어도, 다음 reserve 호출에서 TTL을 다시 건다")
+    void reserve_selfHealsMissingTtl() {
+        aiUsageLimiter.reserve(TEST_USER_ID);
+        redisTemplate.persist(buildKey());
+        assertThat(redisTemplate.getExpire(buildKey())).isEqualTo(-1L);
+
+        aiUsageLimiter.reserve(TEST_USER_ID);
+
+        assertThat(redisTemplate.getExpire(buildKey())).isGreaterThan(0L);
     }
 
     private String currentCount() {
