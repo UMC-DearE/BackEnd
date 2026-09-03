@@ -279,12 +279,12 @@ public class LetterServiceImpl implements LetterService {
                 letterEmotionRepository.saveAll(updateEmotions);
                 letter.updateContent(AiSummary);
 
-            } catch (ExternalApiException e) {
-                throw e;
-            } catch (GeneralException e) {
-                // 일일 AI 사용 한도 초과 등, 이미 의미있는 에러코드를 가진 예외는 그대로 전달
+            } catch (ExternalApiException | GeneralException e) {
+                // 이미 의미있는 에러코드를 가진 예외(AI 연동 실패, 일일 AI 사용 한도 초과 등)는
+                // SUMMARY_INTERNAL_ERROR로 뭉개지 않고 그대로 전달한다.
                 throw e;
             } catch (Exception e) {
+                // 그 외 예상치 못한 예외만 500(SUMMARY_INTERNAL_ERROR)으로 감싼다.
                 throw new GeneralException(LetterErrorCode.SUMMARY_INTERNAL_ERROR);
             }
             contentEncryptionSynchronizer.synchronize(letter, userId, normalizedContent);

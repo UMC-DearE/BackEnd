@@ -38,9 +38,16 @@ public class LetterAnalyzeService {
     }
 
     private AnalyzeResult getResult(String content, Long userId) {
-        aiUsageLimiter.checkAndIncrement(userId);
+        aiUsageLimiter.reserve(userId);
 
-        AnalyzeResponseDTO analyzeResult = analyzeAdapter.analyze(content);
+        AnalyzeResponseDTO analyzeResult;
+        try {
+            analyzeResult = analyzeAdapter.analyze(content);
+        } catch (RuntimeException e) {
+            // AI 호출 자체가 실패한 경우(사용자 귀책 아님)이므로 선점했던 사용량을 반납한다.
+            aiUsageLimiter.release(userId);
+            throw e;
+        }
 
         String summary=analyzeResult.getSummary();
         List<String> emotionsName = analyzeResult.getEmotions();
