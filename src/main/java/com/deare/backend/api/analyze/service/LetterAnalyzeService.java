@@ -9,6 +9,7 @@ import com.deare.backend.domain.emotion.repository.EmotionRepository;
 import com.deare.backend.global.common.exception.GeneralException;
 import com.deare.backend.global.external.gemini.adapter.analyze.AnalyzeAdapter;
 import com.deare.backend.global.external.gemini.dto.response.analyze.AnalyzeResponseDTO;
+import com.deare.backend.global.external.gemini.limit.AiUsageLimiter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -24,18 +25,21 @@ public class LetterAnalyzeService {
 
     private final AnalyzeAdapter analyzeAdapter;
     private final EmotionRepository emotionRepository;
+    private final AiUsageLimiter aiUsageLimiter;
 
-    public AnalyzeLetterResponseDTO analyze(AnalyzeLetterRequestDTO request){
-        AnalyzeResult result=getResult(request.getContent());
+    public AnalyzeLetterResponseDTO analyze(AnalyzeLetterRequestDTO request, Long userId){
+        AnalyzeResult result=getResult(request.getContent(), userId);
         return AnalyzeLetterResponseDTO.of(result.summary(), result.emotions());
     }
 
-    public ReAnalyzeResponseDTO analyzeForUpdate(String content){
-        AnalyzeResult result = getResult(content);
+    public ReAnalyzeResponseDTO analyzeForUpdate(String content, Long userId){
+        AnalyzeResult result = getResult(content, userId);
         return ReAnalyzeResponseDTO.of(result.summary(), result.emotions());
     }
 
-    private AnalyzeResult getResult(String content) {
+    private AnalyzeResult getResult(String content, Long userId) {
+        aiUsageLimiter.checkAndIncrement(userId);
+
         AnalyzeResponseDTO analyzeResult = analyzeAdapter.analyze(content);
 
         String summary=analyzeResult.getSummary();
