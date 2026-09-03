@@ -5,6 +5,7 @@ import com.deare.backend.global.external.feign.exception.ExternalApiException;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
@@ -99,22 +100,22 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ServletRequestBindingException.class)
     public ResponseEntity<ApiResponse<Void>> handleRequestBinding(ServletRequestBindingException e) {
-        return handleCommonError(CommonErrorCode.REQUEST_BINDING_FAILED, e);
+        return handleCommonError(CommonErrorCode.REQUEST_BINDING_FAILED, e, e.getHeaders());
     }
 
     @ExceptionHandler(NoResourceFoundException.class)
     public ResponseEntity<ApiResponse<Void>> handleNoResourceFound(NoResourceFoundException e) {
-        return handleCommonError(CommonErrorCode.RESOURCE_NOT_FOUND, e);
+        return handleCommonError(CommonErrorCode.RESOURCE_NOT_FOUND, e, e.getHeaders());
     }
 
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     public ResponseEntity<ApiResponse<Void>> handleMethodNotSupported(HttpRequestMethodNotSupportedException e) {
-        return handleCommonError(CommonErrorCode.METHOD_NOT_ALLOWED, e);
+        return handleCommonError(CommonErrorCode.METHOD_NOT_ALLOWED, e, e.getHeaders());
     }
 
     @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
     public ResponseEntity<ApiResponse<Void>> handleMediaTypeNotSupported(HttpMediaTypeNotSupportedException e) {
-        return handleCommonError(CommonErrorCode.MEDIA_TYPE_NOT_SUPPORTED, e);
+        return handleCommonError(CommonErrorCode.MEDIA_TYPE_NOT_SUPPORTED, e, e.getHeaders());
     }
 
     @ExceptionHandler(Exception.class)
@@ -129,9 +130,15 @@ public class GlobalExceptionHandler {
                 (fe.getDefaultMessage() != null ? fe.getDefaultMessage() : "입력값이 올바르지 않습니다."));
     }
 
-    private ResponseEntity<ApiResponse<Void>> handleCommonError(CommonErrorCode errorCode, Exception e) {
+    private ResponseEntity<ApiResponse<Void>> handleCommonError(
+            CommonErrorCode errorCode,
+            Exception e,
+            HttpHeaders headers
+    ) {
         log.warn("[{}] Code: {}, Message: {}", e.getClass().getSimpleName(), errorCode.getCode(), e.getMessage());
-        return response(errorCode);
+        return ResponseEntity.status(errorCode.getStatus())
+                .headers(headers)
+                .body(ApiResponse.fail(errorCode.getCode(), errorCode.getMessage()));
     }
 
     private ResponseEntity<ApiResponse<Void>> response(BaseErrorCode errorCode) {
