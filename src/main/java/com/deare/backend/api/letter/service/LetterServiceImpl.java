@@ -260,7 +260,7 @@ public class LetterServiceImpl implements LetterService {
             }
             try {
 
-                ReAnalyzeResponseDTO result = letterAnalyzeService.analyzeForUpdate(normalizedContent);
+                ReAnalyzeResponseDTO result = letterAnalyzeService.analyzeForUpdate(normalizedContent, userId);
 
                 letterEmotionRepository.deleteByLetter(letter);
                 letterEmotionRepository.flush();
@@ -280,6 +280,9 @@ public class LetterServiceImpl implements LetterService {
                 letter.updateContent(AiSummary);
 
             } catch (ExternalApiException e) {
+                throw e;
+            } catch (GeneralException e) {
+                // 일일 AI 사용 한도 초과 등, 이미 의미있는 에러코드를 가진 예외는 그대로 전달
                 throw e;
             } catch (Exception e) {
                 throw new GeneralException(LetterErrorCode.SUMMARY_INTERNAL_ERROR);
