@@ -3,6 +3,7 @@ package com.deare.backend.api.analyze.controller;
 import com.deare.backend.api.analyze.dto.request.AnalyzeLetterRequestDTO;
 import com.deare.backend.api.analyze.dto.response.AnalyzeLetterResponseDTO;
 import com.deare.backend.api.analyze.service.LetterAnalyzeService;
+import com.deare.backend.global.auth.util.SecurityUtil;
 import com.deare.backend.global.common.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
@@ -26,6 +27,7 @@ public class LetterAnalyzeController {
     public ApiResponse<AnalyzeLetterResponseDTO> analyze(
             @RequestBody @Valid AnalyzeLetterRequestDTO request
     ){
-        return ApiResponse.success(letterAnalyzeService.analyze(request));
+        Long userId = SecurityUtil.getCurrentUserId();
+        return ApiResponse.success(letterAnalyzeService.analyze(request, userId));
     }
 }
