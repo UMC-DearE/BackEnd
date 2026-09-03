@@ -10,9 +10,15 @@ import org.springframework.http.HttpStatus;
 public enum AiUsageErrorCode implements BaseErrorCode {
 
     DAILY_LIMIT_EXCEEDED(
-            HttpStatus.BAD_REQUEST,
-            "ANALYZE_LIMIT_40001",
+            HttpStatus.TOO_MANY_REQUESTS,
+            "ANALYZE_LIMIT_42901",
             "일일 편지 분석 한도를 초과했습니다. 내일 다시 시도해주세요."
+    ),
+
+    USAGE_CHECK_FAILED(
+            HttpStatus.INTERNAL_SERVER_ERROR,
+            "ANALYZE_LIMIT_50001",
+            "AI 사용량 확인 중 오류가 발생했습니다."
     );
 
     private final HttpStatus status;
