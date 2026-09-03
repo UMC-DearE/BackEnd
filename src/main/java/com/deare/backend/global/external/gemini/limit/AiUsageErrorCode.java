@@ -11,7 +11,7 @@ public enum AiUsageErrorCode implements BaseErrorCode {
 
     DAILY_LIMIT_EXCEEDED(
             HttpStatus.BAD_REQUEST,
-            "ANALYZE_40002",
+            "ANALYZE_LIMIT_40001",
             "일일 편지 분석 한도를 초과했습니다. 내일 다시 시도해주세요."
     );
 
