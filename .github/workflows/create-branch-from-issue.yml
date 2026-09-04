@@ -14,9 +14,12 @@ jobs:
     steps:
       - name: Extract prefix and title
         id: parse
+        env:
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
         run: |
-          TITLE="${{ github.event.issue.title }}"
-          ISSUE_NUMBER="${{ github.event.issue.number }}"
+          TITLE="$ISSUE_TITLE"
+          ISSUE_NUMBER="$ISSUE_NUMBER"
 
           # [PREFIX] 추출 후 소문자 변환
           PREFIX=$(echo "$TITLE" | grep -oP '(?<=\[)[^\]]+(?=\])' | head -1 | tr '[:upper:]' '[:lower:]')
