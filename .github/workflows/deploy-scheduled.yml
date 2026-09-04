@@ -4,6 +4,10 @@ on:
   schedule:
     - cron: '0 19 * * *'  # 4 AM KST (UTC+9)
   workflow_dispatch:
+    inputs:
+      confirm:
+        description: '⚠️ 수동 실행 시 deploy-tonight 라벨 PR이 즉시 머지됩니다. 서비스 운영 시간 주의. 확인하려면 confirm 입력'
+        required: true
 
 permissions:
   contents: write
@@ -18,6 +22,11 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ github.event.inputs.confirm }}" != "confirm" ]; then
+            echo "확인 값이 올바르지 않습니다. 종료합니다."
+            exit 1
+          fi
+
           REPO=${{ github.repository }}
 
           PR_NUMBERS=$(gh pr list \
