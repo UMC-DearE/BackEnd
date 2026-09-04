@@ -1,0 +1,42 @@
+name: Scheduled Deploy - Merge at 4 AM KST
+
+on:
+  schedule:
+    - cron: '0 19 * * *'  # 4 AM KST (UTC+9)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  scheduled-merge:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Find and merge PRs labeled 'deploy-tonight'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          REPO=${{ github.repository }}
+
+          PR_NUMBERS=$(gh pr list \
+            --label "deploy-tonight" \
+            --state open \
+            --repo "$REPO" \
+            --json number \
+            -q '.[].number')
+
+          if [ -z "$PR_NUMBERS" ]; then
+            echo "No PRs with 'deploy-tonight' label. Exiting."
+            exit 0
+          fi
+
+          echo "$PR_NUMBERS" | while read PR_NUMBER; do
+            echo "Merging PR #$PR_NUMBER..."
+            if gh pr merge "$PR_NUMBER" --merge --repo "$REPO"; then
+              echo "PR #$PR_NUMBER merged successfully."
+            else
+              echo "PR #$PR_NUMBER merge failed (conflict or checks not passed). Skipping."
+            fi
+          done
