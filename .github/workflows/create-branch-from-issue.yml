@@ -1,0 +1,81 @@
+name: Create Branch from Issue
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  contents: write
+
+jobs:
+  create-branch:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Extract prefix and title
+        id: parse
+        run: |
+          TITLE="${{ github.event.issue.title }}"
+          ISSUE_NUMBER="${{ github.event.issue.number }}"
+
+          # [PREFIX] 추출 후 소문자 변환
+          PREFIX=$(echo "$TITLE" | grep -oP '(?<=\[)[^\]]+(?=\])' | head -1 | tr '[:upper:]' '[:lower:]')
+
+          if [ -z "$PREFIX" ]; then
+            echo "No [PREFIX] found in issue title. Skipping branch creation."
+            exit 0
+          fi
+
+          # [PREFIX] 제거한 나머지 제목
+          CLEAN_TITLE=$(echo "$TITLE" | sed 's/\[[^]]*\]//g' | xargs)
+
+          echo "prefix=$PREFIX" >> $GITHUB_OUTPUT
+          echo "clean_title=$CLEAN_TITLE" >> $GITHUB_OUTPUT
+          echo "issue_number=$ISSUE_NUMBER" >> $GITHUB_OUTPUT
+
+      - name: Translate title to branch slug via Groq
+        id: slug
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+        run: |
+          CLEAN_TITLE="${{ steps.parse.outputs.clean_title }}"
+
+          PROMPT="Convert this GitHub issue title to a git branch name slug. Rules: translate Korean to English, lowercase only, hyphens instead of spaces, remove special characters, max 5 words, return the slug only with no explanation.\n\nIssue title: $CLEAN_TITLE"
+
+          RESPONSE=$(curl -s https://api.groq.com/openai/v1/chat/completions \
+            -H "Authorization: Bearer $GROQ_API_KEY" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"model\": \"llama-3.1-8b-instant\",
+              \"messages\": [{\"role\": \"user\", \"content\": \"$PROMPT\"}],
+              \"max_tokens\": 20,
+              \"temperature\": 0
+            }")
+
+          SLUG=$(echo "$RESPONSE" | jq -r '.choices[0].message.content' | tr -d '\n' | xargs | tr ' ' '-' | tr '[:upper:]' '[:lower:]')
+
+          if [ -z "$SLUG" ]; then
+            echo "Groq API returned empty slug. Aborting branch creation."
+            exit 1
+          fi
+
+          echo "slug=$SLUG" >> $GITHUB_OUTPUT
+
+      - name: Create branch
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PREFIX="${{ steps.parse.outputs.prefix }}"
+          ISSUE_NUMBER="${{ steps.parse.outputs.issue_number }}"
+          SLUG="${{ steps.slug.outputs.slug }}"
+
+          BRANCH_NAME="${PREFIX}/#${ISSUE_NUMBER}-${SLUG}"
+
+          echo "Creating branch: $BRANCH_NAME"
+
+          gh api repos/${{ github.repository }}/git/refs \
+            -X POST \
+            -f ref="refs/heads/${BRANCH_NAME}" \
+            -f sha=$(gh api repos/${{ github.repository }}/git/ref/heads/develop -q '.object.sha')
+
+          echo "Branch '$BRANCH_NAME' created from develop."
