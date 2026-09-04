@@ -44,22 +44,27 @@ jobs:
         run: |
           CLEAN_TITLE="$CLEAN_TITLE"
 
-          PROMPT="Convert this GitHub issue title to a git branch name slug. Rules: translate Korean to English, lowercase only, hyphens instead of spaces, remove special characters, max 5 words, return the slug only with no explanation.\n\nIssue title: $CLEAN_TITLE"
+          PROMPT="Convert this GitHub issue title to a git branch name slug. Rules: translate Korean to English, lowercase only, hyphens instead of spaces, remove special characters, max 5 words, return the slug only with no explanation. Issue title: $CLEAN_TITLE"
+
+          BODY=$(jq -n \
+            --arg prompt "$PROMPT" \
+            '{
+              "model": "llama-3.1-8b-instant",
+              "messages": [{"role": "user", "content": $prompt}],
+              "max_tokens": 20,
+              "temperature": 0
+            }')
 
           RESPONSE=$(curl -s https://api.groq.com/openai/v1/chat/completions \
             -H "Authorization: Bearer $GROQ_API_KEY" \
             -H "Content-Type: application/json" \
-            -d "{
-              \"model\": \"llama-3.1-8b-instant\",
-              \"messages\": [{\"role\": \"user\", \"content\": \"$PROMPT\"}],
-              \"max_tokens\": 20,
-              \"temperature\": 0
-            }")
+            -d "$BODY")
 
           SLUG=$(echo "$RESPONSE" | jq -r '.choices[0].message.content' | tr -d '\n' | xargs | tr ' ' '-' | tr '[:upper:]' '[:lower:]')
 
-          if [ -z "$SLUG" ]; then
-            echo "Groq API returned empty slug. Aborting branch creation."
+          if [ -z "$SLUG" ] || [ "$SLUG" = "null" ]; then
+            echo "Groq API returned empty or null slug. Response: $RESPONSE"
+            echo "Aborting branch creation."
             exit 1
           fi
 
