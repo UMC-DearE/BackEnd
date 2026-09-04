@@ -40,8 +40,9 @@ jobs:
         id: slug
         env:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          CLEAN_TITLE: ${{ steps.parse.outputs.clean_title }}
         run: |
-          CLEAN_TITLE="${{ steps.parse.outputs.clean_title }}"
+          CLEAN_TITLE="$CLEAN_TITLE"
 
           PROMPT="Convert this GitHub issue title to a git branch name slug. Rules: translate Korean to English, lowercase only, hyphens instead of spaces, remove special characters, max 5 words, return the slug only with no explanation.\n\nIssue title: $CLEAN_TITLE"
 
@@ -67,10 +68,13 @@ jobs:
       - name: Create branch
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PREFIX: ${{ steps.parse.outputs.prefix }}
+          ISSUE_NUMBER: ${{ steps.parse.outputs.issue_number }}
+          SLUG: ${{ steps.slug.outputs.slug }}
         run: |
-          PREFIX="${{ steps.parse.outputs.prefix }}"
-          ISSUE_NUMBER="${{ steps.parse.outputs.issue_number }}"
-          SLUG="${{ steps.slug.outputs.slug }}"
+          PREFIX="$PREFIX"
+          ISSUE_NUMBER="$ISSUE_NUMBER"
+          SLUG="$SLUG"
 
           BRANCH_NAME="${PREFIX}/#${ISSUE_NUMBER}-${SLUG}"
 
