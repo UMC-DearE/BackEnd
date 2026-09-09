@@ -68,7 +68,7 @@ public class HomeServiceImpl implements HomeService {
         );
 
         List<HomeStickerDto> stickerDtos = stickerRepository
-                .findAllByUser_IdOrderByPosZAsc(userId)
+                .findAllWithImageByUser_IdOrderByPosZAsc(userId)
                 .stream()
                 .map(this::toStickerDto)
                 .toList();

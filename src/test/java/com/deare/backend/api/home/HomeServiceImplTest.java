@@ -49,7 +49,7 @@ class HomeServiceImplTest {
         setting.requestInviteeHomeGuide();
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(settingRepository.findByUser_Id(1L)).thenReturn(Optional.of(setting));
-        when(stickerRepository.findAllByUser_IdOrderByPosZAsc(1L)).thenReturn(List.of());
+        when(stickerRepository.findAllWithImageByUser_IdOrderByPosZAsc(1L)).thenReturn(List.of());
 
         HomeDashboardResponse response = service.getHome(1L);
 
@@ -78,7 +78,7 @@ class HomeServiceImplTest {
         setting.requestInviterFeatureGuide();
         when(userRepository.findById(1L)).thenReturn(Optional.of(createUser()));
         when(settingRepository.findByUser_Id(1L)).thenReturn(Optional.of(setting));
-        when(stickerRepository.findAllByUser_IdOrderByPosZAsc(1L)).thenReturn(List.of());
+        when(stickerRepository.findAllWithImageByUser_IdOrderByPosZAsc(1L)).thenReturn(List.of());
 
         HomeDashboardResponse response = service.getHome(1L);
 
