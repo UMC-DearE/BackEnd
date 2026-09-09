@@ -1,5 +1,6 @@
 package com.deare.backend.domain.letter.repository;
 
+import com.deare.backend.domain.folder.entity.Folder;
 import com.deare.backend.domain.letter.entity.Letter;
 import com.deare.backend.domain.letter.repository.query.dto.FromLetterRankingProjection;
 import jakarta.persistence.LockModeType;
@@ -14,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Repository
 public interface LetterRepository extends JpaRepository<Letter, Long>, LetterRepositoryCustom {
@@ -60,6 +62,21 @@ public interface LetterRepository extends JpaRepository<Letter, Long>, LetterRep
            and l.isDeleted = false
     """)
     int clearFolder(@Param("userId") Long userId, @Param("folderId") Long folderId);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+        update Letter l
+           set l.folder = :folder,
+               l.updatedAt = CURRENT_TIMESTAMP
+         where l.id in :letterIds
+           and l.user.id = :userId
+           and l.isDeleted = false
+    """)
+    int bulkChangeFolder(
+            @Param("userId") Long userId,
+            @Param("letterIds") Set<Long> letterIds,
+            @Param("folder") Folder folder
+    );
 
     List<Letter> findAllByUser_Id(Long userId);
 
