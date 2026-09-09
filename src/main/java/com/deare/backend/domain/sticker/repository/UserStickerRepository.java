@@ -12,7 +12,15 @@ import java.util.List;
 
 @Repository
 public interface UserStickerRepository extends JpaRepository<UserSticker,Long> {
-    List<UserSticker>findAllByUser_IdOrderByPosZAsc(Long userId);
+
+    @Query("""
+        select us
+          from UserSticker us
+          join fetch us.image
+         where us.user.id = :userId
+         order by us.posZ asc
+    """)
+    List<UserSticker> findAllWithImageByUser_IdOrderByPosZAsc(@Param("userId") Long userId);
 
     /**
      * 해당 유저의 모든 userSticker 삭제
