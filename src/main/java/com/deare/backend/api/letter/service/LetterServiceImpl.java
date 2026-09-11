@@ -10,6 +10,7 @@ import com.deare.backend.api.letter.dto.request.LetterUpdateRequestDTO;
 import com.deare.backend.api.letter.dto.response.*;
 import com.deare.backend.api.letter.mapper.LetterItemMapper;
 import com.deare.backend.api.letter.dto.result.*;
+import com.deare.backend.api.letter.util.LetterContentChangeRateCalculator;
 import com.deare.backend.domain.emotion.entity.Emotion;
 import com.deare.backend.domain.emotion.entity.LetterEmotion;
 import com.deare.backend.domain.emotion.repository.EmotionRepository;
@@ -31,6 +32,7 @@ import com.deare.backend.domain.user.repository.UserRepository;
 import com.deare.backend.global.common.exception.GeneralException;
 import com.deare.backend.global.external.feign.exception.ExternalApiException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -46,6 +48,9 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class LetterServiceImpl implements LetterService {
+
+    @Value("${letter.reanalyze.change-rate-threshold:0.15}")
+    private double reanalyzeChangeRateThreshold;
 
     private final LetterRepository letterRepository;
     private final LetterEmotionQueryRepository letterEmotionQueryRepository;
@@ -255,37 +260,41 @@ public class LetterServiceImpl implements LetterService {
 
         if (StringUtils.hasText(req.getContent())) {
             String normalizedContent = req.getContent().trim();
-            if (normalizedContent.equals(contentReader.read(letter))) {
+            String previousContent = contentReader.read(letter);
+            if (normalizedContent.equals(previousContent)) {
                 return;
             }
-            try {
 
-                ReAnalyzeResponseDTO result = letterAnalyzeService.analyzeForUpdate(normalizedContent, userId);
+            double changeRate = LetterContentChangeRateCalculator.calculateWordChangeRate(
+                    previousContent, normalizedContent);
 
-                letterEmotionRepository.deleteByLetter(letter);
-                letterEmotionRepository.flush();
+            if (changeRate >= reanalyzeChangeRateThreshold) {
+                try {
 
-                String AiSummary = result.getSummary();
-                List<Long> emotionIds = result.getEmotions().stream()
-                        .map(EmotionDTO::getEmotionId)
-                        .toList();
+                    ReAnalyzeResponseDTO result = letterAnalyzeService.analyzeForUpdate(normalizedContent, userId);
 
-                List<Emotion> emotions = emotionRepository.findAllById(emotionIds);
+                    letterEmotionRepository.deleteByLetter(letter);
+                    letterEmotionRepository.flush();
 
-                List<LetterEmotion> updateEmotions = emotions.stream()
-                        .map(emotion -> new LetterEmotion(letter, emotion))
-                        .toList();
+                    String AiSummary = result.getSummary();
+                    List<Long> emotionIds = result.getEmotions().stream()
+                            .map(EmotionDTO::getEmotionId)
+                            .toList();
 
-                letterEmotionRepository.saveAll(updateEmotions);
-                letter.updateContent(AiSummary);
+                    List<Emotion> emotions = emotionRepository.findAllById(emotionIds);
 
-            } catch (ExternalApiException | GeneralException e) {
-                // 이미 의미있는 에러코드를 가진 예외(AI 연동 실패, 일일 AI 사용 한도 초과 등)는
-                // SUMMARY_INTERNAL_ERROR로 뭉개지 않고 그대로 전달한다.
-                throw e;
-            } catch (Exception e) {
-                // 그 외 예상치 못한 예외만 500(SUMMARY_INTERNAL_ERROR)으로 감싼다.
-                throw new GeneralException(LetterErrorCode.SUMMARY_INTERNAL_ERROR);
+                    List<LetterEmotion> updateEmotions = emotions.stream()
+                            .map(emotion -> new LetterEmotion(letter, emotion))
+                            .toList();
+
+                    letterEmotionRepository.saveAll(updateEmotions);
+                    letter.updateContent(AiSummary);
+
+                } catch (ExternalApiException | GeneralException e) {
+                    throw e;
+                } catch (Exception e) {
+                    throw new GeneralException(LetterErrorCode.SUMMARY_INTERNAL_ERROR);
+                }
             }
             contentEncryptionSynchronizer.synchronize(letter, userId, normalizedContent);
             searchTokenSynchronizer.replaceTokens(letter, userId, normalizedContent);
