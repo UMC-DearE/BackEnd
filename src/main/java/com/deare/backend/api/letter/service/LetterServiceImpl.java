@@ -47,6 +47,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class LetterServiceImpl implements LetterService {
 
+    private static final int MAX_LETTERS = 50;
+
     private final LetterRepository letterRepository;
     private final LetterEmotionQueryRepository letterEmotionQueryRepository;
     private final FromRepository fromRepository;
@@ -166,6 +168,11 @@ public class LetterServiceImpl implements LetterService {
 
         From from = fromRepository.findByIdAndUser_IdAndIsDeletedFalse(req.fromId(), userId)
                 .orElseThrow(() -> new GeneralException(LetterErrorCode.FROM_NOT_FOUND));
+
+        long letterCount = letterRepository.countByUser_IdAndIsDeletedFalse(userId);
+        if (letterCount >= MAX_LETTERS) {
+            throw new GeneralException(LetterErrorCode.MAX_LETTER_LIMIT_EXCEEDED);
+        }
 
         String content = req.content().trim();
         String aiSummary = req.aiSummary().trim();
