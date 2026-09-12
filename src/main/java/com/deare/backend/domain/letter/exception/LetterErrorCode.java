@@ -49,6 +49,12 @@ public enum LetterErrorCode implements BaseErrorCode {
             "삭제된 편지입니다."
     ),
 
+    MAX_LETTER_LIMIT_EXCEEDED(
+            HttpStatus.UNPROCESSABLE_ENTITY,
+            "LETTER_42201",
+            "편지는 최대 50개까지 저장할 수 있습니다."
+    ),
+
     INTERNAL_ERROR(
             HttpStatus.INTERNAL_SERVER_ERROR,
             "LETTER_50001",
