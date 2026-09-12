@@ -151,6 +151,31 @@ class LetterServiceOwnershipTest {
     }
 
     @Test
+    void rejectsLetterCreationWhenLimitReached() {
+        User user = mock(User.class);
+        com.deare.backend.domain.from.entity.From from =
+                mock(com.deare.backend.domain.from.entity.From.class);
+        LetterCreateRequestDTO request = new LetterCreateRequestDTO(
+                "content",
+                "summary",
+                List.of(1L),
+                FROM_ID,
+                null,
+                List.of()
+        );
+        when(userRepository.findById(USER_ID)).thenReturn(Optional.of(user));
+        when(fromRepository.findByIdAndUser_IdAndIsDeletedFalse(FROM_ID, USER_ID))
+                .thenReturn(Optional.of(from));
+        when(letterRepository.countByUser_IdAndIsDeletedFalse(USER_ID)).thenReturn(50L);
+
+        assertThatThrownBy(() -> letterService.createLetter(USER_ID, request))
+                .isInstanceOf(GeneralException.class)
+                .satisfies(error -> assertThat(((GeneralException) error).getErrorCode())
+                        .isEqualTo(LetterErrorCode.MAX_LETTER_LIMIT_EXCEEDED));
+        verify(letterRepository, never()).save(any());
+    }
+
+    @Test
     void rejectsForeignFromWhenUpdatingLetter() {
         Letter letter = mock(Letter.class);
         LetterUpdateRequestDTO request = new LetterUpdateRequestDTO();
