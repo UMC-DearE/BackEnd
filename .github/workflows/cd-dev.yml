@@ -1,8 +1,7 @@
 name: CD-dev - build/push image & deploy to dev EC2 on develop push
 
 on:
-  push:
-    branches: ["develop"]
+  workflow_dispatch:
 
 env:
   IMAGE_NAME: deare-backend
