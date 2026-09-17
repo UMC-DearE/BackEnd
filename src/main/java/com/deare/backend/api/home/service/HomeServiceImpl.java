@@ -31,6 +31,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class HomeServiceImpl implements HomeService {
 
+    private static final int MAX_STICKERS = 10;
+
     private final UserRepository userRepository;
     private final UserSettingRepository userSettingRepository;
     private final UserStickerRepository stickerRepository;
@@ -95,9 +97,13 @@ public class HomeServiceImpl implements HomeService {
         }
         userSetting.updateHomeColor(request.homeColor());
 
+        List<StickerRequest> stickerRequests = request.stickers();
+        if (stickerRequests.size() > MAX_STICKERS) {
+            throw new GeneralException(HomeErrorCode.MAX_STICKER_LIMIT_EXCEEDED);
+        }
+
         stickerRepository.deleteAllByUserId(userId);
 
-        List<StickerRequest> stickerRequests = request.stickers();
         if (stickerRequests.isEmpty()) {
             return;
         }

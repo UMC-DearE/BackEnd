@@ -11,6 +11,12 @@ public enum HomeErrorCode implements BaseErrorCode {
             "사용자를 찾을 수 없습니다."
     ),
 
+    MAX_STICKER_LIMIT_EXCEEDED(
+            HttpStatus.UNPROCESSABLE_ENTITY,
+            "HOME_42201",
+            "스티커는 최대 10개까지 등록할 수 있습니다."
+    ),
+
     HOME_INTERNAL_ERROR(
             HttpStatus.INTERNAL_SERVER_ERROR,
             "HOME_50001",
