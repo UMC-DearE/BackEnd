@@ -54,6 +54,9 @@ public class LetterServiceImpl implements LetterService {
 
     private static final int MAX_LETTERS = 50;
 
+    @Value("${letter.reanalyze.change-rate-threshold:0.15}")
+    private double reanalyzeChangeRateThreshold;
+
     private final LetterRepository letterRepository;
     private final LetterEmotionQueryRepository letterEmotionQueryRepository;
     private final FromRepository fromRepository;
