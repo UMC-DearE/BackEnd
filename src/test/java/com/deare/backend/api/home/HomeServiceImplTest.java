@@ -49,7 +49,7 @@ class HomeServiceImplTest {
         setting.requestInviteeHomeGuide();
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(settingRepository.findByUser_Id(1L)).thenReturn(Optional.of(setting));
-        when(stickerRepository.findAllByUser_IdOrderByPosZAsc(1L)).thenReturn(List.of());
+        when(stickerRepository.findAllWithImageByUser_IdOrderByPosZAsc(1L)).thenReturn(List.of());
 
         HomeDashboardResponse response = service.getHome(1L);
 
@@ -78,7 +78,7 @@ class HomeServiceImplTest {
         setting.requestInviterFeatureGuide();
         when(userRepository.findById(1L)).thenReturn(Optional.of(createUser()));
         when(settingRepository.findByUser_Id(1L)).thenReturn(Optional.of(setting));
-        when(stickerRepository.findAllByUser_IdOrderByPosZAsc(1L)).thenReturn(List.of());
+        when(stickerRepository.findAllWithImageByUser_IdOrderByPosZAsc(1L)).thenReturn(List.of());
 
         HomeDashboardResponse response = service.getHome(1L);
 
@@ -142,6 +142,51 @@ class HomeServiceImplTest {
                         .isEqualTo(MembershipErrorCode.PLUS_REQUIRED));
 
         assertThat(setting.getHomeColor()).isEqualTo("#FFFFFF");
+        verify(stickerRepository, never()).deleteAllByUserId(1L);
+    }
+
+    /**
+     * 홈 꾸미기 스티커 개수 제약 검증
+     * (1) 스티커가 10개를 초과하면 예외가 발생하는가?
+     * (2) 초과 시 기존 스티커가 삭제되지 않는가?
+     */
+    @Test
+    void rejectsHomeEditWhenStickerCountExceedsLimit() {
+        UserRepository userRepository = mock(UserRepository.class);
+        UserSettingRepository settingRepository = mock(UserSettingRepository.class);
+        UserStickerRepository stickerRepository = mock(UserStickerRepository.class);
+        HomeServiceImpl service = new HomeServiceImpl(
+                userRepository,
+                settingRepository,
+                stickerRepository,
+                mock(ImageRepository.class),
+                mock(SettingWriteService.class)
+        );
+        User user = createUser();
+        UserSetting setting = UserSetting.createDefault(user, "#FFFFFF");
+        setting.upgradeToPlus();
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(settingRepository.findByUser_Id(1L)).thenReturn(Optional.of(setting));
+
+        List<HomeEditRequestDTO.StickerRequest> tooManyStickers = java.util.stream.IntStream.rangeClosed(1, 11)
+                .mapToObj(i -> new HomeEditRequestDTO.StickerRequest(
+                        (long) i,
+                        java.math.BigDecimal.ZERO,
+                        java.math.BigDecimal.ZERO,
+                        i,
+                        java.math.BigDecimal.ZERO,
+                        java.math.BigDecimal.ONE
+                ))
+                .toList();
+
+        assertThatThrownBy(() -> service.editHome(
+                1L,
+                new HomeEditRequestDTO("#000000", tooManyStickers)
+        ))
+                .isInstanceOf(GeneralException.class)
+                .satisfies(error -> assertThat(((GeneralException) error).getErrorCode())
+                        .isEqualTo(com.deare.backend.api.home.exception.HomeErrorCode.MAX_STICKER_LIMIT_EXCEEDED));
+
         verify(stickerRepository, never()).deleteAllByUserId(1L);
     }
 

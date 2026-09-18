@@ -145,7 +145,7 @@ public class FolderServiceImpl implements FolderService {
             throw new GeneralException(LetterErrorCode.FORBIDDEN);
         }
 
-        letters.forEach(letter -> letter.changeFolder(folder));
+        letterRepository.bulkChangeFolder(userId, distinctIds, folder);
         return new FolderLettersResponseDTO(folderId, distinctIds.size());
     }
 

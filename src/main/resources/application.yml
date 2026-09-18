@@ -61,6 +61,10 @@ ai:
   usage:
     daily-limit: ${AI_USAGE_DAILY_LIMIT:20}
 
+letter:
+  reanalyze:
+    change-rate-threshold: ${LETTER_REANALYZE_CHANGE_RATE_THRESHOLD:0.15}
+
 app:
   frontend-base-url: ${FRONTEND_BASE_URL:https://www.deare.kr}
 
