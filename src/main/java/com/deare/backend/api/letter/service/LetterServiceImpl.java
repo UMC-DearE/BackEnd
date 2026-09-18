@@ -49,9 +49,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class LetterServiceImpl implements LetterService {
 
-    @Value("${letter.reanalyze.change-rate-threshold:0.15}")
-    private double reanalyzeChangeRateThreshold;
-
     private static final int MAX_LETTERS = 50;
 
     @Value("${letter.reanalyze.change-rate-threshold:0.15}")
