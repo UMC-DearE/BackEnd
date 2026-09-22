@@ -42,9 +42,16 @@ jobs:
           fi
 
           echo "$PR_NUMBERS" | while read PR_NUMBER; do
-            echo "Merging PR #$PR_NUMBER..."
+            BASE=$(gh pr view "$PR_NUMBER" --repo "$REPO" --json baseRefName -q '.baseRefName')
+            echo "Merging PR #$PR_NUMBER (base: $BASE)..."
             if gh pr merge "$PR_NUMBER" --merge --repo "$REPO"; then
               echo "PR #$PR_NUMBER merged successfully."
+              if [ "$BASE" = "main" ]; then
+                gh api repos/$REPO/dispatches \
+                  --method POST \
+                  -f event_type=deploy-prod
+                echo "CD triggered via repository_dispatch."
+              fi
             else
               echo "PR #$PR_NUMBER merge failed (conflict or checks not passed). Skipping."
             fi
