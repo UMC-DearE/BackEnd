@@ -27,6 +27,7 @@ public class ReportAnalyzedAdapterImpl implements ReportAnalyzedAdapter {
 
     private static final int DESCRIPTION_MIN_LENGTH = 100;
     private static final int DESCRIPTION_MAX_LENGTH = 200;
+    private static final String DESCRIPTION_PREFIX = "당신";
 
     private final GeminiFeignClient feignClient;
     private final ObjectMapper om;
@@ -179,6 +180,18 @@ public class ReportAnalyzedAdapterImpl implements ReportAnalyzedAdapter {
 
             throw new ExternalApiException(
                     ExternalApiErrorCode.AI_PERSONA_LENGTH_INVALID
+            );
+        }
+
+        if (!description.strip().startsWith(DESCRIPTION_PREFIX)) {
+
+            log.warn(
+                    "[ReportAnalyze] 지칭어 검증 실패 - description={}",
+                    description
+            );
+
+            throw new ExternalApiException(
+                    ExternalApiErrorCode.AI_PERSONA_PREFIX_INVALID
             );
         }
 
