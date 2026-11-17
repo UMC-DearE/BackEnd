@@ -213,9 +213,11 @@ public class ReportAnalyzedAdapterImpl implements ReportAnalyzedAdapter {
                 || description.length() > DESCRIPTION_MAX_LENGTH) {
 
             log.warn(
-                    "[ReportAnalyze] description 길이 검증 실패 - length={}, description={}",
+                    "[ReportAnalyze] description 길이 검증 실패 - reason={}, length={}, allowed={}~{}",
+                    ExternalApiErrorCode.AI_PERSONA_LENGTH_INVALID.getCode(),
                     description == null ? null : description.length(),
-                    description
+                    DESCRIPTION_MIN_LENGTH,
+                    DESCRIPTION_MAX_LENGTH
             );
 
             throw new ExternalApiException(
@@ -226,8 +228,10 @@ public class ReportAnalyzedAdapterImpl implements ReportAnalyzedAdapter {
         if (!description.strip().startsWith(DESCRIPTION_PREFIX)) {
 
             log.warn(
-                    "[ReportAnalyze] 지칭어 검증 실패 - description={}",
-                    description
+                    "[ReportAnalyze] 지칭어 검증 실패 - reason={}, length={}, expectedPrefix={}",
+                    ExternalApiErrorCode.AI_PERSONA_PREFIX_INVALID.getCode(),
+                    description.length(),
+                    DESCRIPTION_PREFIX
             );
 
             throw new ExternalApiException(
