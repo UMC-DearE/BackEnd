@@ -31,7 +31,8 @@ public class ReportAnalyzedAdapterImpl implements ReportAnalyzedAdapter {
     private static final int DESCRIPTION_MAX_LENGTH = 200;
     private static final String DESCRIPTION_PREFIX = "당신";
 
-    // 응답 검증 실패 시 최초 시도 포함 총 시도 횟수 (Feign Retryer 정책과 동일)
+    private static final List<String> FORBIDDEN_REFERENCE_TERMS = List.of("수신자", "사용자");
+
     private static final int MAX_ATTEMPTS = 3;
 
     // AI 응답 내용 문제로 재호출 시 개선될 수 있는 오류만 재시도 대상
@@ -239,6 +240,21 @@ public class ReportAnalyzedAdapterImpl implements ReportAnalyzedAdapter {
             );
         }
 
+        String forbiddenTerm = findForbiddenReferenceTerm(description);
+        if (forbiddenTerm != null) {
+
+            log.warn(
+                    "[ReportAnalyze] 금지 지칭어 검증 실패 - reason={}, length={}, forbiddenTerm={}",
+                    ExternalApiErrorCode.AI_PERSONA_PREFIX_INVALID.getCode(),
+                    description.length(),
+                    forbiddenTerm
+            );
+
+            throw new ExternalApiException(
+                    ExternalApiErrorCode.AI_PERSONA_PREFIX_INVALID
+            );
+        }
+
         if (!isValidHashtag(result.getHashtag1())
                 || !isValidHashtag(result.getHashtag2())) {
 
@@ -252,6 +268,13 @@ public class ReportAnalyzedAdapterImpl implements ReportAnalyzedAdapter {
                     ExternalApiErrorCode.AI_PERSONA_HASHTAG_INVALID
             );
         }
+    }
+
+    private String findForbiddenReferenceTerm(String description) {
+        return FORBIDDEN_REFERENCE_TERMS.stream()
+                .filter(description::contains)
+                .findFirst()
+                .orElse(null);
     }
 
     private boolean isValidHashtag(String tag) {
