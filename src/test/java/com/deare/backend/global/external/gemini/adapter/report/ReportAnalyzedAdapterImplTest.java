@@ -98,6 +98,49 @@ class ReportAnalyzedAdapterImplTest {
         verify(feignClient, times(3)).chatText(anyString(), any());
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {"수신자", "사용자"})
+    @DisplayName("'당신'으로 시작해도 이후 문장에 다른 지칭어가 있으면 재시도한다")
+    void retry_onForbiddenReferenceTermInBody(String term) {
+        String description = "당신은 주변 사람들에게 따뜻한 위로를 건네는 사람이에요. "
+                + term + "는 많은 사람에게 사랑받고 있어요." + BODY;
+        when(feignClient.chatText(anyString(), any()))
+                .thenReturn(response(json(description, "다정한_마음", "따뜻한_위로")))
+                .thenReturn(response(validJson()));
+
+        ReportAnalyzeResponseDTO result = adapter.reportAnalyze(SUMMARIES);
+
+        assertThat(result.getDescription()).doesNotContain(term);
+        verify(feignClient, times(2)).chatText(anyString(), any());
+    }
+
+    @Test
+    @DisplayName("3회 모두 다른 지칭어가 포함되면 AI_PERSONA_PREFIX_INVALID 예외가 발생한다")
+    void retry_exhausted_forbiddenReferenceTerm() {
+        String description = "당신은 따뜻한 사람이에요. 수신자는 사랑받고 있어요." + BODY;
+        when(feignClient.chatText(anyString(), any()))
+                .thenReturn(response(json(description, "다정한_마음", "따뜻한_위로")));
+
+        assertThatThrownBy(() -> adapter.reportAnalyze(SUMMARIES))
+                .isInstanceOf(ExternalApiException.class)
+                .extracting(e -> ((ExternalApiException) e).getErrorCode())
+                .isEqualTo(ExternalApiErrorCode.AI_PERSONA_PREFIX_INVALID);
+
+        verify(feignClient, times(3)).chatText(anyString(), any());
+    }
+
+    @Test
+    @DisplayName("'너무', '그대로'처럼 일반 단어에 포함된 글자는 지칭어로 판단하지 않는다")
+    void forbiddenReferenceTerm_noFalsePositive() {
+        String description = "당신은 너무 따뜻한 사람이에요. 그 마음을 그대로 전해주세요." + BODY;
+        when(feignClient.chatText(anyString(), any()))
+                .thenReturn(response(json(description, "다정한_마음", "따뜻한_위로")));
+
+        adapter.reportAnalyze(SUMMARIES);
+
+        verify(feignClient, times(1)).chatText(anyString(), any());
+    }
+
     @Test
     @DisplayName("3회 모두 실패하면 마지막 시도의 실패 사유로 예외가 발생한다")
     void retry_exhausted_throwsLastError() {
