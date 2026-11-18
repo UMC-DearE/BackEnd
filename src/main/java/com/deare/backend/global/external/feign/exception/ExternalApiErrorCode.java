@@ -90,6 +90,12 @@ public enum ExternalApiErrorCode implements BaseErrorCode {
             HttpStatus.BAD_GATEWAY,
             "AI_50209",
             "AI 해시태그 형식이 올바르지 않습니다."
+    ),
+
+    AI_PERSONA_PREFIX_INVALID(
+            HttpStatus.BAD_GATEWAY,
+            "AI_50210",
+            "AI 분석 문장의 지칭어가 올바르지 않습니다."
     );
 
 
