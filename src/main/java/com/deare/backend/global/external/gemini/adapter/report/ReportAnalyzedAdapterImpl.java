@@ -18,7 +18,9 @@ import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 
 @Slf4j
 @Component
@@ -27,6 +29,20 @@ public class ReportAnalyzedAdapterImpl implements ReportAnalyzedAdapter {
 
     private static final int DESCRIPTION_MIN_LENGTH = 100;
     private static final int DESCRIPTION_MAX_LENGTH = 200;
+    private static final String DESCRIPTION_PREFIX = "당신";
+
+    private static final List<String> FORBIDDEN_REFERENCE_TERMS = List.of("수신자", "사용자");
+
+    private static final int MAX_ATTEMPTS = 3;
+
+    // AI 응답 내용 문제로 재호출 시 개선될 수 있는 오류만 재시도 대상
+    private static final Set<ExternalApiErrorCode> RETRYABLE_RESPONSE_ERRORS = EnumSet.of(
+            ExternalApiErrorCode.AI_RESPONSE_FORMAT_INVALID,
+            ExternalApiErrorCode.AI_RESPONSE_PARSE_ERROR,
+            ExternalApiErrorCode.AI_PERSONA_LENGTH_INVALID,
+            ExternalApiErrorCode.AI_PERSONA_PREFIX_INVALID,
+            ExternalApiErrorCode.AI_PERSONA_HASHTAG_INVALID
+    );
 
     private final GeminiFeignClient feignClient;
     private final ObjectMapper om;
@@ -40,6 +56,35 @@ public class ReportAnalyzedAdapterImpl implements ReportAnalyzedAdapter {
 
     @Override
     public ReportAnalyzeResponseDTO reportAnalyze(List<String> summaries) {
+        GeminiTextRequestDTO request =
+                ReportAnalyzePromptFactory.fromSummaries(model, summaries);
+
+        for (int attempt = 1; ; attempt++) {
+            try {
+                return analyzeOnce(request);
+
+            } catch (ExternalApiException e) {
+                if (!RETRYABLE_RESPONSE_ERRORS.contains(e.getErrorCode())) {
+                    throw e;
+                }
+
+                if (attempt >= MAX_ATTEMPTS) {
+                    log.warn(
+                            "{} callType=REPORT {}/{}번째 시도까지 응답 검증 실패, 재시도 소진 - reason={}",
+                            AiCallLogTag.RETRY, attempt, MAX_ATTEMPTS, e.getErrorCode().getCode()
+                    );
+                    throw e;
+                }
+
+                log.warn(
+                        "{} callType=REPORT {}/{}번째 시도 응답 검증 실패, 재시도 진행 - reason={}",
+                        AiCallLogTag.RETRY, attempt, MAX_ATTEMPTS, e.getErrorCode().getCode()
+                );
+            }
+        }
+    }
+
+    private ReportAnalyzeResponseDTO analyzeOnce(GeminiTextRequestDTO request) {
         AiCallCounter.CallCount count = counter.nextReport();
         long attemptSeq = count.attemptSeq();
         long total = count.total();
@@ -49,9 +94,6 @@ public class ReportAnalyzedAdapterImpl implements ReportAnalyzedAdapter {
         long start = System.currentTimeMillis();
         try {
             log.info("{} attemptSeq={} total={} START", AiCallLogTag.REPORT, attemptSeq, total);
-
-            GeminiTextRequestDTO request =
-                    ReportAnalyzePromptFactory.fromSummaries(model, summaries);
 
             GeminiTextResponseDTO response = feignClient.chatText(
                     "Bearer " + apiKey,
@@ -172,13 +214,44 @@ public class ReportAnalyzedAdapterImpl implements ReportAnalyzedAdapter {
                 || description.length() > DESCRIPTION_MAX_LENGTH) {
 
             log.warn(
-                    "[ReportAnalyze] description 길이 검증 실패 - length={}, description={}",
+                    "[ReportAnalyze] description 길이 검증 실패 - reason={}, length={}, allowed={}~{}",
+                    ExternalApiErrorCode.AI_PERSONA_LENGTH_INVALID.getCode(),
                     description == null ? null : description.length(),
-                    description
+                    DESCRIPTION_MIN_LENGTH,
+                    DESCRIPTION_MAX_LENGTH
             );
 
             throw new ExternalApiException(
                     ExternalApiErrorCode.AI_PERSONA_LENGTH_INVALID
+            );
+        }
+
+        if (!description.strip().startsWith(DESCRIPTION_PREFIX)) {
+
+            log.warn(
+                    "[ReportAnalyze] 지칭어 검증 실패 - reason={}, length={}, expectedPrefix={}",
+                    ExternalApiErrorCode.AI_PERSONA_PREFIX_INVALID.getCode(),
+                    description.length(),
+                    DESCRIPTION_PREFIX
+            );
+
+            throw new ExternalApiException(
+                    ExternalApiErrorCode.AI_PERSONA_PREFIX_INVALID
+            );
+        }
+
+        String forbiddenTerm = findForbiddenReferenceTerm(description);
+        if (forbiddenTerm != null) {
+
+            log.warn(
+                    "[ReportAnalyze] 금지 지칭어 검증 실패 - reason={}, length={}, forbiddenTerm={}",
+                    ExternalApiErrorCode.AI_PERSONA_PREFIX_INVALID.getCode(),
+                    description.length(),
+                    forbiddenTerm
+            );
+
+            throw new ExternalApiException(
+                    ExternalApiErrorCode.AI_PERSONA_PREFIX_INVALID
             );
         }
 
@@ -195,6 +268,13 @@ public class ReportAnalyzedAdapterImpl implements ReportAnalyzedAdapter {
                     ExternalApiErrorCode.AI_PERSONA_HASHTAG_INVALID
             );
         }
+    }
+
+    private String findForbiddenReferenceTerm(String description) {
+        return FORBIDDEN_REFERENCE_TERMS.stream()
+                .filter(description::contains)
+                .findFirst()
+                .orElse(null);
     }
 
     private boolean isValidHashtag(String tag) {
